@@ -3,43 +3,34 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-abstract class CommonNode extends Node {
-    protected int currentOccupancy;
-    protected List<Player> yurtOwners;
-    protected String region; 
+class SingleNode extends CommonNode {
+    protected String city;
+    protected final int maxCapacity = 1;
+    protected List<TreasureType> treasures;
 
-    CommonNode(String region) {
-        super();
-        this.region = region;
-        this.currentOccupancy = 0;
-        this.yurtOwners = new ArrayList<>();
+    SingleNode(String region, String city) {
+        super(region);
+        this.city = city;
+        this.treasures = new ArrayList<>();
     }
 
-    boolean hasYurt() {
-        return !this.yurtOwners.isEmpty();
+    @Override
+    int getMaxCapacity() {
+        return this.maxCapacity;
     }
 
-    boolean buildYurt(Player player) {
-        if (this.yurtOwners.size() < getMaxCapacity()) {
-            this.yurtOwners.add(player);
-            return true;
+    String getCityName() {
+        return this.city;
+    }
+
+    TreasureType plunderTreasure(int index) {
+        if (index >= 0 && index < this.treasures.size()) {
+            return this.treasures.remove(index);
         }
-        return false;
+        return null;
     }
 
-    boolean enterNode() {
-        if (this.currentOccupancy < getMaxCapacity()) {
-            this.currentOccupancy++;
-            return true;
-        }
-        return false;
+    boolean isConquered() {
+        return this.treasures.isEmpty() && this.hasYurt();
     }
-
-    void leaveNode() {
-        if (this.currentOccupancy > 0) {
-            this.currentOccupancy--;
-        }
-    }
-
-    abstract int getMaxCapacity();
 }
