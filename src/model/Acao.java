@@ -11,19 +11,6 @@ enum tiposAcao {
 }
 
 
-enum DebugRetAction {
-	retSuccess,
-	missingPlayer,
-	missingNode,
-	missingAction,
-	noMovementLeft,
-	noHouseLeft,
-	noSwordLeft,
-	noHandLeft,
-	noValidAction
-}
-
-
 /**
  * Class that represents all available actions for the player
  * 
