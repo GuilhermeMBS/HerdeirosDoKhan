@@ -1,11 +1,12 @@
 package Model;
 
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
+
 
 abstract class Node {
-    protected List<Province> provinces;
-    protected List<Node> neighbors;
+    protected ArrayList<Province> provinces;
+    protected ArrayList<Node> neighbors;
 
     protected boolean hasYurt;
 
@@ -15,35 +16,42 @@ abstract class Node {
     }
 }
 
+
 abstract class CommonNode extends Node {
     protected int currentOccupancy;
     protected String region; 
 }
+
 
 class SingleNode extends CommonNode {
     protected String city;
     protected final int maxCapacity = 1;
 }
 
+
 class DoubleNode extends CommonNode {
     protected TradingPost tradingPost;
     protected final int maxCapacity = 2;
 }
 
+
 class CentralNode extends Node {
     protected TradingPost tradingPost;
 }
+
 
 class Province {
     protected int resourceCount;
     protected int khan; // 0 for None, or 1, 2, 3, 4
 }
 
+
 class Khan {
     protected boolean isUpgrade;
     protected int position; // -1 (off map) or other position value
     protected Province[][] provinces = new Province[4][3];
 }
+
 
 class TradingPost {
     protected int voteCount;

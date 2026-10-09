@@ -3,12 +3,29 @@ package Model;
 import java.util.*;
 
 
+/**
+ * Is a collection of resources of the game
+ * 
+ * <p>Once this file is loaded for the first onto the virtual machine, it
+ *  creates all the resources and shuffles them.</p>
+ *  
+ * <p>Available methods:</p>
+ * <ul>
+ * 		<li></li>
+ * </ul>
+ * 
+ * @author joaop
+ * @version 1.0
+ */
 public class Mapa {
-	private static final int QTD_CIDADES = 8;
 	
-	private ArrayList<Cidade> cityArray = new ArrayList<Cidade>(QTD_CIDADES);
-	private ArrayList<No> listaNo;
+	private ArrayList<Cidade> cityArray = new ArrayList<Cidade>();
+	private ArrayList<Node> listaNo;
 	
+	/**
+	 * When creating an instance of this variable,
+	 * it creates all the city and nodes for the map
+	 */
 	public Mapa() {
 		// Chinese region (red)
 		cityArray.add(new Cidade("Cantão"));
@@ -26,9 +43,15 @@ public class Mapa {
 		cityArray.add(new Cidade("Samarcanda"));
 	}
 	
-	boolean todasCidadesConquistadas() {
+	
+	/**
+	 * Checks if all city have been conquered
+	 * @return {@code true} if all city have been dominated,
+	 * else {@code false}
+	 */
+	public boolean allCityConquered() {
 		for (Cidade city : cityArray) {
-			if (city.dominatedByPlayer() == null) return false;
+			if (city.dominatedBy() == null) return false;
 		}
 		return true;
 	}

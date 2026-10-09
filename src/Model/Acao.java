@@ -1,5 +1,6 @@
 package Model;
 
+
 enum tiposAcao {
 	movimento,
 	yurt,
@@ -23,41 +24,56 @@ enum DebugRetAction {
 }
 
 
+/**
+ * Class that represents all available actions for the player
+ * 
+ * <p>Available methods:</p>
+ * <ul>
+ * 		<li></li>
+ * </ul>
+ * 
+ * @see No
+ * @see Jogador
+ * 
+ * @author joaop
+ * @version 1.0
+ */
 public class Acao {
-	private No noAtual = null;
-	private tiposAcao tipo = null;
+	private Node currNode = null;
+	private tiposAcao type = null;
 	private Jogador player = null;
 	
-	public boolean setTipo(tiposAcao tipo) {
-		this.tipo = tipo;
+	public boolean setType(tiposAcao tipo) {
+		this.type = tipo;
 		return true;
 	}
 	
-	public boolean setNo(No no) {
-		noAtual = no;
+	public boolean setNode(Node no) {
+		currNode = no;
 		return true;
 	}
 	
-	public boolean setJogador(Jogador jog) {
+	public boolean setPlayer(Jogador jog) {
 		player = jog;
 		return true;
 	}
 	
 	private boolean resetInfo() {
-		noAtual = null;
-		tipo = null;
+		currNode = null;
+		type = null;
 		player = null;
 		
 		return true;
 	}
 	
-	public DebugRetAction realizarAcao(int qtd) {
+	public DebugRetAction doAction(int qtd) {
 		if (player == null) return DebugRetAction.missingPlayer;
-		if (tipo == null) return DebugRetAction.missingAction;
-		if (noAtual == null) return DebugRetAction.missingNode;
+		if (type == null) return DebugRetAction.missingAction;
+		if (currNode == null) return DebugRetAction.missingNode;
 		
 		boolean ret;
-		switch (tipo) {
+		// Criar uma interface com as infos das ações e depois criar outros tipos que as implementem
+		switch (type) {
 		case movimento:
 			ret = player.removerMovimento(qtd);
 			if (ret == false) return DebugRetAction.noMovementLeft;
@@ -67,7 +83,7 @@ public class Acao {
 			ret = player.removerAssentamento(qtd);
 			if (!ret) return DebugRetAction.noHouseLeft;
 			
-			noAtual.colocarYurt(player);
+			currNode.colocarYurt(player);
 			
 			break;
 		case saquear:
