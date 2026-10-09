@@ -24,7 +24,7 @@ class Cidade {
 	private String name;
 	private boolean saqueavel = false;
 	private Jogador player = null;
-	private ArrayList<typeResource> listaRecursos = new ArrayList<typeResource>();
+	private ArrayList<resourceType> listaRecursos = new ArrayList<resourceType>();
 	
 	
 	/**
@@ -56,10 +56,10 @@ class Cidade {
 	 * @return the removed resource, or {@code null} if the city can not
 	 * be sacked
 	 */
-	public typeResource removeResource(int ind) {
+	public resourceType removeResource(int ind) {
 		if (!saqueavel || listaRecursos.isEmpty()) return null;
 		
-		typeResource r = listaRecursos.get(ind);
+		resourceType r = listaRecursos.get(ind);
 		listaRecursos.remove(ind);
 		return r;
 	}
