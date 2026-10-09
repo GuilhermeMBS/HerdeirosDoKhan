@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import java.util.*;
 
@@ -6,12 +6,12 @@ import java.util.*;
 /**
  * Enum to represent the multiple types of resources in the game
  */
-enum typeResource {
-	iron,
-	treasure,
-	wool,
-	silk,
-	grain
+enum ResourceType {
+	IRON,
+	TREASURE,
+	WOOL,
+	SILK,
+	GRAIN
 }
 
 
@@ -29,8 +29,8 @@ enum typeResource {
  * @author joaop
  * @version 1.0
  */
-class Recursos {
-	private static ArrayList<typeResource> resources = new ArrayList<typeResource>();
+class Resource {
+	private static ArrayList<ResourceType> resources = new ArrayList<ResourceType>();
 	private static final int QTY_PER_RESOURCE = 8; // I understood that there are these many resources for each type
 	
 	
@@ -38,7 +38,7 @@ class Recursos {
 	 * Static creation of the array for all resources
 	 */
 	static {
-		for (typeResource tipo : typeResource.values()) {
+		for (ResourceType tipo : ResourceType.values()) {
 			for (int i = 0; i < QTY_PER_RESOURCE; i++) {
 				resources.add(tipo);
 			}
@@ -51,12 +51,12 @@ class Recursos {
 	/**
 	 * Creates the 4 resources for the city to be sacked
 	 * @return {@code null} if all resources have been consumed,
-	 * or an {@code ArrayList<typeResource>} with the 4 resources of the city
+	 * or an {@code ArrayList<ResourceType>} with the 4 resources of the city
 	 */
-	public static ArrayList<typeResource> generateResources() {
+	public static ArrayList<ResourceType> generateResources() {
 		if (resources.isEmpty()) return null;
 		
-		ArrayList<typeResource> tmp = new ArrayList<typeResource>();
+		ArrayList<ResourceType> tmp = new ArrayList<ResourceType>();
 		for (int i = 0; i < 4; i++) {
 			tmp.add(resources.remove(0));
 		}
