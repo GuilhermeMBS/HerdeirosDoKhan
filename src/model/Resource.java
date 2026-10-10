@@ -4,7 +4,8 @@ import java.util.*;
 
 
 /**
- * Enum to represent the multiple types of resources in the game
+ * Enum to represent the multiple types of 
+ * resources to be sacked from the cities
  */
 enum TreasureType {
     FUR, 

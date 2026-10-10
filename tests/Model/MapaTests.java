@@ -25,20 +25,20 @@ public class MapaTests {
 	@Test
 	public void testMapa() {
 		assertEquals(4, map.getLengthNodeArray()); // 3 regions + central node
-		assertEquals(11, map.getNodePerRegion());
-		assertEquals(9, map.getAmountCity());
+		assertEquals(11, map.getNodePerRegion()); // 11 nodes per region
+		assertEquals(9, map.getAmountCity()); // There are 9 cities in total
 		
 		// The order must be maintained as in "createCities" inside Mapa.java
-		String[] cityNames = map.getNameOrder();
+		String[][] cityNames = map.getNameOrder();
 		
-		assertEquals(cityNames.length, cityArray.size());
-		
-		for (int i = 0; i < cityNames.length; i++) {
-			assertEquals(
-				"Missmatch at index " + i,
-				cityNames[i], 
-				cityArray.get(i).getName()
-			);
+		for (regions region : regions.values()) {
+			for (int i = 0; i < 3; i++) {
+				assertEquals(
+					"Missmatch at index " + i + " (region " + region.toString() + ")",
+					cityNames[region.ordinal()][i],
+					cityArray.get(region.ordinal()*3 + i).getName()
+				);
+			}
 		}
 	}
 	

@@ -3,6 +3,10 @@ package Model;
 import java.util.*;
 
 
+/**
+ * Must keep this order, or change the order in 
+ * {@link #cityNames}
+ */
 enum regions {
 	CHINA,
 	RUSSIA,
@@ -38,16 +42,22 @@ public class Mapa {
 	// The order for the nodes will be clockwise, starting from the top (for each city)
 	private ArrayList<ArrayList<Node>> nodeArray = new ArrayList<ArrayList<Node>>();
 	
-	private final String[] cityNames = {
-			"Pequim",
-			"Kaesong",
-			"Cantão",
-			"Sarai",
-			"Moscou",
-			"Kiev",
-			"Samarcanda",
-			"Cabul",
-			"Bagdá"
+	private final String[][] cityNames = {
+			{
+				"Pequim",
+				"Kaesong",
+				"Cantão"
+			},
+			{
+				"Sarai",
+				"Moscou",
+				"Kiev"
+			},
+			{
+				"Samarcanda",
+				"Cabul",
+				"Bagdá"
+			}
 	};
 	
 	
@@ -56,7 +66,6 @@ public class Mapa {
 	 * it creates all the city and nodes for the map
 	 */
 	public Mapa() {
-		// Chinese region (red)
 		createCities();
 		initializeNodes();
 		initializeConnections();
@@ -70,7 +79,7 @@ public class Mapa {
 	private void createCities() {
 		for (regions region : regions.values()) {
 			for (int i = 0; i < 3; i++) {
-				cityArray.add(new Cidade(cityNames[region.ordinal()*3 + i]));
+				cityArray.add(new Cidade(cityNames[region.ordinal()][i]));
 			}
 		}
 		
@@ -97,9 +106,9 @@ public class Mapa {
 			nodeArray.add(regionNodes);
 		}
 		
-		ArrayList<Node> centraCity = new ArrayList<Node>();
-		centraCity.add(new CentralNode());
-		nodeArray.add(centraCity);
+		ArrayList<Node> centralCity = new ArrayList<Node>();
+		centralCity.add(new CentralNode());
+		nodeArray.add(centralCity);
 		
 		return;
 	}
@@ -255,7 +264,7 @@ public class Mapa {
 	}
 	
 	
-	public String[] getNameOrder() {
+	public String[][] getNameOrder() {
 		return cityNames;
 	}
 }
