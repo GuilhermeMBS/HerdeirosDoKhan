@@ -1,10 +1,16 @@
 package Model;
 
+
+import java.util.*;
+
+
 abstract class Card {
-	Mission m1;
-	Mission m2;
-	Mission m3;
-	Player p;
+	protected Mission m1;
+	protected Mission m2;
+	protected Mission m3;
+	protected Player p;
+	protected static ArrayList<Card> cards;
+	protected static ArrayList<Card> cardsInGame;
 	
 	abstract boolean hasBeenCompleted();
 }
