@@ -3,10 +3,10 @@ package model;
 class Province {
     protected int resourceCount;
     protected int khanPosition; 
-    protected TreasureType treasureType;
+    protected TributeType tributeType;
 
-    Province(TreasureType type) {
-        this.treasureType = type;
+    Province(TributeType type) {
+        this.tributeType = type;
         this.resourceCount = 1; 
         this.khanPosition = 0;
     }
@@ -25,7 +25,7 @@ class Province {
         }
     }
 
-    TreasureType getTreasureType() {
-        return this.treasureType;
+    TributeType getTributeType() {
+        return this.tributeType;
     }
 }

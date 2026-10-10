@@ -8,13 +8,12 @@ import java.util.*;
  * resources to be sacked from the cities
  */
 enum TreasureType {
-    FUR, 
-    ANIMAL, 
-    SILK, 
+    FUR,
+    ANIMAL,
+    SILK,
     IRON, 
     SPICE
 }
-
 
 
 /**
