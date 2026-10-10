@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class MapaTests {
 	private Mapa map;
-	private Jogador p;
+	private Player p;
 	private ArrayList<Cidade> cityArray;
 	private Cidade city;
 
@@ -16,7 +16,7 @@ public class MapaTests {
 	@Before
 	public void initializeVariables() {
 		map = new Mapa();
-		p = new Jogador();
+		p = new Player();
 		cityArray = map.createCityCopies();
 		city = cityArray.get(0);
 	}
@@ -29,12 +29,16 @@ public class MapaTests {
 		assertEquals(9, map.getAmountCity());
 		
 		// The order must be maintained as in "createCities" inside Mapa.java
-		String[] cityNames = {"Cantão", "Pequim", "Kaesong", "Moscou", "Kiev", "Sarai", "Cabul", "Bagdá", "Samarcanda"};
-		int i = 0;
+		String[] cityNames = map.getNameOrder();
 		
-		for (String name : cityNames) {
-			assertTrue(cityArray.get(i).getName().equals(name));
-			i++;
+		assertEquals(cityNames.length, cityArray.size());
+		
+		for (int i = 0; i < cityNames.length; i++) {
+			assertEquals(
+				"Missmatch at index " + i,
+				cityNames[i], 
+				cityArray.get(i).getName()
+			);
 		}
 	}
 	
@@ -65,14 +69,20 @@ public class MapaTests {
 	public void testAllCityConquered() {		
 		assertFalse(map.allCityConquered());
 		
-		for (Cidade city : cityArray) {
-			city.activateSacking();
-			for (int i = 0; i < 4; i++)
-				city.removeResource(0);
-			map.setCityConquered(city.getName(), p);
+		for (Cidade cidades : cityArray) {
+			conquerCity(cidades, p);
 		}
 		
 		assertTrue(map.allCityConquered());
+	}
+	
+	
+	private void conquerCity(Cidade city, Player player) {
+		city.activateSacking();
+		for (int i = 0; i < 4; i++)
+			city.removeResource(0);
+		city.defineDomination(player);
+		return;
 	}
 
 }

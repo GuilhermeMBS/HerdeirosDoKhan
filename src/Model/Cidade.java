@@ -1,4 +1,4 @@
-package model;
+package Model;
 
 import java.util.*;
 
@@ -23,8 +23,8 @@ import java.util.*;
 class Cidade {
 	private String name;
 	private boolean saqueavel = false;
-	private Jogador player = null;
-	private ArrayList<ResourceType> listaRecursos = new ArrayList<ResourceType>();
+	private Player player = null;
+	private ArrayList<TreasureType> listaRecursos = new ArrayList<TreasureType>();
 	
 	
 	/**
@@ -56,10 +56,10 @@ class Cidade {
 	 * @return the removed resource, or {@code null} if the city can not
 	 * be sacked
 	 */
-	public ResourceType removeResource(int ind) {
+	public TreasureType removeResource(int ind) {
 		if (!saqueavel || listaRecursos.isEmpty()) return null;
 		
-		ResourceType r = listaRecursos.get(ind);
+		TreasureType r = listaRecursos.get(ind);
 		listaRecursos.remove(ind);
 		return r;
 	}
@@ -70,7 +70,7 @@ class Cidade {
 	 * @param num the reference to which player conquered the city
 	 * @return {@code true} if it could assign the player as the conquerer
 	 */
-	public boolean defineDomination(Jogador num) {
+	public boolean defineDomination(Player num) {
 		if (!(saqueavel && listaRecursos.isEmpty())) return false;
 		
 		player = num;
@@ -83,10 +83,10 @@ class Cidade {
 	/**
 	 * Get which player conquered the city
 	 * @return {@code null} if the city has not been conquered, 
-	 * else {@code Jogador} that has dominated the city
+	 * else {@code Player} that has dominated the city
 	 */
-	public Jogador dominatedBy() {
-		return player;
+	public Player dominatedBy() {
+		return this.player;
 	}	
 	
 	

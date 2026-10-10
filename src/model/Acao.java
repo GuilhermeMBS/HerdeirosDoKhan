@@ -1,4 +1,4 @@
-package model;
+package Model;
 
 
 enum tiposAcao {
@@ -20,7 +20,7 @@ enum tiposAcao {
  * </ul>
  * 
  * @see No
- * @see Jogador
+ * @see Player
  * 
  * @author joaop
  * @version 1.0
@@ -28,7 +28,7 @@ enum tiposAcao {
 public class Acao {
 	private Node currNode = null;
 	private tiposAcao type = null;
-	private Jogador player = null;
+	private Player player = null;
 	
 	public boolean setType(tiposAcao tipo) {
 		this.type = tipo;
@@ -40,7 +40,7 @@ public class Acao {
 		return true;
 	}
 	
-	public boolean setPlayer(Jogador jog) {
+	public boolean setPlayer(Player jog) {
 		player = jog;
 		return true;
 	}
@@ -53,34 +53,34 @@ public class Acao {
 		return true;
 	}
 	
-	public DebugRetAction doAction(int qtd) {
-		if (player == null) return DebugRetAction.missingPlayer;
-		if (type == null) return DebugRetAction.missingAction;
-		if (currNode == null) return DebugRetAction.missingNode;
+	public DebugReturn doAction(int qtd) {
+		if (player == null) return DebugReturn.missingPlayer;
+		if (type == null) return DebugReturn.missingAction;
+		if (currNode == null) return DebugReturn.missingNode;
 		
 		boolean ret;
 		// Criar uma interface com as infos das ações e depois criar outros tipos que as implementem
 		switch (type) {
 		case movimento:
 			ret = player.removerMovimento(qtd);
-			if (ret == false) return DebugRetAction.noMovementLeft;
+			if (ret == false) return DebugReturn.noMovementLeft;
 			
 			break;
 		case yurt:
 			ret = player.removerAssentamento(qtd);
-			if (!ret) return DebugRetAction.noHouseLeft;
+			if (!ret) return DebugReturn.noHouseLeft;
 			
 			currNode.colocarYurt(player);
 			
 			break;
 		case saquear:
 			ret = player.removerEspada(qtd);
-			if (!ret) return DebugRetAction.noSwordLeft;
+			if (!ret) return DebugReturn.noSwordLeft;
 			
 			break;
 		case pegarTributo:
 			ret = player.removerMao(qtd);
-			if (!ret) return DebugRetAction.noHandLeft;
+			if (!ret) return DebugReturn.noHandLeft;
 			
 			break;
 		case moverKhan:
@@ -88,11 +88,11 @@ public class Acao {
 		case troca:
 			break;
 		default:
-			return DebugRetAction.noValidAction;
+			return DebugReturn.noValidAction;
 		}
 		
 		resetInfo();
-		return retSuccess;
+		return DebugReturn.retSuccess;
 	}
 
 
