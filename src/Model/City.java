@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import java.util.*;
 
@@ -20,7 +20,7 @@ import java.util.*;
  * @author joaop
  * @version 1.0
  */
-class Cidade {
+class City {
 	private String name;
 	private boolean saqueavel = false;
 	private Player player = null;
@@ -28,11 +28,11 @@ class Cidade {
 	
 	
 	/**
-	 * Constructor for the class "Cidade".
+	 * Constructor for the class "City".
 	 * 
 	 * @param name the name of the city
 	 */
-	public Cidade(String name) {
+	public City(String name) {
 		this.name = name;
 	}
 	

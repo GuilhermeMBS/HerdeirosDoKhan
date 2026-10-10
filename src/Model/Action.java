@@ -1,13 +1,13 @@
-package Model;
+package model;
 
 
-enum tiposAcao {
-	movimento,
-	yurt,
-	pegarTributo,
-	troca,
-	saquear,
-	moverKhan
+enum ActionType {
+	MOVIMENT,
+	YURT,
+	TAKE_TRIBUTE,
+	TRADE,
+	SACK,
+	MOVE_KHAN
 }
 
 
@@ -25,12 +25,12 @@ enum tiposAcao {
  * @author joaop
  * @version 1.0
  */
-public class Acao {
+public class Action {
 	private Node currNode = null;
-	private tiposAcao type = null;
+	private ActionType type = null;
 	private Player player = null;
 	
-	public boolean setType(tiposAcao tipo) {
+	public boolean setType(ActionType tipo) {
 		this.type = tipo;
 		return true;
 	}
@@ -54,45 +54,45 @@ public class Acao {
 	}
 	
 	public DebugReturn doAction(int qtd) {
-		if (player == null) return DebugReturn.missingPlayer;
-		if (type == null) return DebugReturn.missingAction;
-		if (currNode == null) return DebugReturn.missingNode;
+		if (player == null) return DebugReturn.MISSING_PLAYER;
+		if (type == null) return DebugReturn.MISSING_ACTION;
+		if (currNode == null) return DebugReturn.MISSING_NODE;
 		
 		boolean ret;
 		// Criar uma interface com as infos das ações e depois criar outros tipos que as implementem
 		switch (type) {
-		case movimento:
+		case MOVIMENT:
 			ret = player.removerMovimento(qtd);
-			if (ret == false) return DebugReturn.noMovementLeft;
+			if (ret == false) return DebugReturn.EMPTY_MOVIMENT;
 			
 			break;
-		case yurt:
+		case YURT:
 			ret = player.removerAssentamento(qtd);
-			if (!ret) return DebugReturn.noHouseLeft;
+			if (!ret) return DebugReturn.EMPTY_HOUSES;
 			
 			currNode.colocarYurt(player);
 			
 			break;
-		case saquear:
+		case SACK:
 			ret = player.removerEspada(qtd);
-			if (!ret) return DebugReturn.noSwordLeft;
+			if (!ret) return DebugReturn.EMPTY_SWORDS;
 			
 			break;
-		case pegarTributo:
+		case TAKE_TRIBUTE:
 			ret = player.removerMao(qtd);
-			if (!ret) return DebugReturn.noHandLeft;
+			if (!ret) return DebugReturn.EMPTY_ACTIONS;
 			
 			break;
-		case moverKhan:
+		case MOVE_KHAN:
 			break;
-		case troca:
+		case TRADE:
 			break;
 		default:
-			return DebugReturn.noValidAction;
+			return DebugReturn.EMPTY_ACTIONS;
 		}
 		
 		resetInfo();
-		return DebugReturn.retSuccess;
+		return DebugReturn.SUCCESS;
 	}
 
 

@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 class DoubleNode extends CommonNode {
     protected TradingPost tradingPost;

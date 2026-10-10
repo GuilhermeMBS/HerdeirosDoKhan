@@ -1,11 +1,11 @@
-package Model;
+package model;
 
 
 import java.util.*;
 
 
 class OpenCounselor extends Card {
-	public OpenCounselor(int qtd, missionType type) {
+	public OpenCounselor(int qtd, MissionType type) {
 		m1 = new Mission(qtd, type, 1);
 		m2 = m3 = null;
 		p = null;
@@ -15,32 +15,32 @@ class OpenCounselor extends Card {
 	
 	static {
 		// Don't know
-		cards.add(new OpenCounselor(4, missionType.SWORD));
+		cards.add(new OpenCounselor(4, MissionType.SWORD));
 		
 		// Have n yurts
-		cards.add(new OpenCounselor(6, missionType.YURT));
-		cards.add(new OpenCounselor(10, missionType.YURT));
+		cards.add(new OpenCounselor(6, MissionType.YURT));
+		cards.add(new OpenCounselor(10, MissionType.YURT));
 		
 		// Have n yurts in each region
-		cards.add(new OpenCounselor(1, missionType.YURTREGION));
-		cards.add(new OpenCounselor(2, missionType.YURTREGION));
+		cards.add(new OpenCounselor(1, MissionType.YURTREGION));
+		cards.add(new OpenCounselor(2, MissionType.YURTREGION));
 		
 		// Treasures
-		cards.add(new OpenCounselor(4, missionType.TREASURE));
-		cards.add(new OpenCounselor(1, missionType.EACHRESOURCE));
+		cards.add(new OpenCounselor(4, MissionType.TREASURE));
+		cards.add(new OpenCounselor(1, MissionType.EACHRESOURCE));
 		
 		// Have n points
-		cards.add(new OpenCounselor(2, missionType.POINTS));
-		cards.add(new OpenCounselor(3, missionType.POINTS));
+		cards.add(new OpenCounselor(2, MissionType.POINTS));
+		cards.add(new OpenCounselor(3, MissionType.POINTS));
 		
 		// Have n city conquered
-		cards.add(new OpenCounselor(2, missionType.CITIESDOMINATED));
-		cards.add(new OpenCounselor(3, missionType.CITIESDOMINATED));
+		cards.add(new OpenCounselor(2, MissionType.CITIESDOMINATED));
+		cards.add(new OpenCounselor(3, MissionType.CITIESDOMINATED));
 		
 		// Have 1 line of power ups
-		cards.add(new OpenCounselor(1, missionType.POWERUPS_LINE));
-		cards.add(new OpenCounselor(1, missionType.POWERUPS_COL));
-		cards.add(new OpenCounselor(1, missionType.POWERUPS_SQUARE));
+		cards.add(new OpenCounselor(1, MissionType.POWERUPS_LINE));
+		cards.add(new OpenCounselor(1, MissionType.POWERUPS_COL));
+		cards.add(new OpenCounselor(1, MissionType.POWERUPS_SQUARE));
 		
 		Collections.shuffle(cards);
 	}

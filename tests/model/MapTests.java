@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -6,16 +6,21 @@ import java.util.*;
 
 import org.junit.Test;
 
-public class MapaTests {
-	private Mapa map;
+import model.City;
+import model.Map;
+import model.Player;
+import model.Region;
+
+public class MapTests {
+	private Map map;
 	private Player p;
-	private ArrayList<Cidade> cityArray;
-	private Cidade city;
+	private ArrayList<City> cityArray;
+	private City city;
 
 
 	@Before
 	public void initializeVariables() {
-		map = new Mapa();
+		map = new Map();
 		p = new Player();
 		cityArray = map.createCityCopies();
 		city = cityArray.get(0);
@@ -31,7 +36,7 @@ public class MapaTests {
 		// The order must be maintained as in "createCities" inside Mapa.java
 		String[][] cityNames = map.getNameOrder();
 		
-		for (regions region : regions.values()) {
+		for (Region region : Region.values()) {
 			for (int i = 0; i < 3; i++) {
 				assertEquals(
 					"Missmatch at index " + i + " (region " + region.toString() + ")",
@@ -69,7 +74,7 @@ public class MapaTests {
 	public void testAllCityConquered() {		
 		assertFalse(map.allCityConquered());
 		
-		for (Cidade cidades : cityArray) {
+		for (City cidades : cityArray) {
 			conquerCity(cidades, p);
 		}
 		
@@ -77,7 +82,7 @@ public class MapaTests {
 	}
 	
 	
-	private void conquerCity(Cidade city, Player player) {
+	private void conquerCity(City city, Player player) {
 		city.activateSacking();
 		for (int i = 0; i < 4; i++)
 			city.removeResource(0);

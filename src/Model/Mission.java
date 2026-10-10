@@ -1,7 +1,7 @@
-package Model;
+package model;
 
 
-enum missionType {
+enum MissionType {
 	YURT,
 	YURTREGION,
 	YURTINSEQUENCE,
@@ -18,10 +18,10 @@ enum missionType {
 
 class Mission {
 	int target;
-	missionType type;
+	MissionType type;
 	int bonus;
 	
-	public Mission(int qtd, missionType type, int bonus) {
+	public Mission(int qtd, MissionType type, int bonus) {
 		target = qtd;
 		this.type = type;
 		this.bonus = bonus;

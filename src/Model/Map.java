@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import java.util.*;
 
@@ -7,14 +7,14 @@ import java.util.*;
  * Must keep this order, or change the order in 
  * {@link #cityNames}
  */
-enum regions {
+enum Region {
 	CHINA,
 	RUSSIA,
 	PERSIA
 }
 
 
-enum posNode {
+enum NodePosition {
 	TOP,
 	RIGHT,
 	LEFT
@@ -35,9 +35,9 @@ enum posNode {
  * @author joaop
  * @version 1.0
  */
-public class Mapa {
+public class Map {
 	
-	private ArrayList<Cidade> cityArray = new ArrayList<Cidade>();
+	private ArrayList<City> cityArray = new ArrayList<City>();
 	
 	// The order for the nodes will be clockwise, starting from the top (for each city)
 	private ArrayList<ArrayList<Node>> nodeArray = new ArrayList<ArrayList<Node>>();
@@ -65,7 +65,7 @@ public class Mapa {
 	 * When creating an instance of this variable,
 	 * it creates all the city and nodes for the map
 	 */
-	public Mapa() {
+	public Map() {
 		createCities();
 		initializeNodes();
 		initializeConnections();
@@ -77,9 +77,9 @@ public class Mapa {
 	 * starting from connection to the central node
 	 */
 	private void createCities() {
-		for (regions region : regions.values()) {
+		for (Region region : Region.values()) {
 			for (int i = 0; i < 3; i++) {
-				cityArray.add(new Cidade(cityNames[region.ordinal()][i]));
+				cityArray.add(new City(cityNames[region.ordinal()][i]));
 			}
 		}
 		
@@ -88,7 +88,7 @@ public class Mapa {
 	
 	
 	private void initializeNodes() {
-		for (regions region : regions.values()) {
+		for (Region region : Region.values()) {
 			// Nodes per region
 			ArrayList<Node> regionNodes = new ArrayList<Node>();
 			
@@ -114,7 +114,7 @@ public class Mapa {
 	}
 	
 	
-	private void connect(regions regionA, int nodeAInd, regions regionB, int nodeBInd) {
+	private void connect(Region regionA, int nodeAInd, Region regionB, int nodeBInd) {
 		Node a = nodeArray.get(regionA.ordinal()).get(nodeAInd);
 		Node b = nodeArray.get(regionB.ordinal()).get(nodeBInd);
 		
@@ -123,7 +123,7 @@ public class Mapa {
 	}
 	
 	
-	private void connectCityNodes(regions region, int nodeAInd) {
+	private void connectCityNodes(Region region, int nodeAInd) {
 		Node a = nodeArray.get(region.ordinal()).get(nodeAInd);
 		Node b = nodeArray.get(region.ordinal()).get(nodeAInd + 1);
 		Node c = nodeArray.get(region.ordinal()).get(nodeAInd + 2);
@@ -137,9 +137,9 @@ public class Mapa {
 	private void initializeConnections() {		
 		Node centralNode = nodeArray.get(3).get(0);
 		
-		int top = posNode.TOP.ordinal();
-		int right = posNode.RIGHT.ordinal();
-		int left = posNode.LEFT.ordinal();
+		int top = NodePosition.TOP.ordinal();
+		int right = NodePosition.RIGHT.ordinal();
+		int left = NodePosition.LEFT.ordinal();
 		
 		int city1 = 0;
 		int city2 = 1;
@@ -149,7 +149,7 @@ public class Mapa {
 		int trade1 = (city3 + 1)*3;
 		int trade2 = trade1 + 1;
 		
-		for (regions region : regions.values()) {
+		for (Region region : Region.values()) {
 			// Connect the 3 single nodes from each city
 			for (int i = 0; i < 3; i++) {
 				connectCityNodes(region, region.ordinal()*3 + i);
@@ -161,59 +161,59 @@ public class Mapa {
 				nodeArray.get(region.ordinal()).get(city1*3 + top).addNeighbor(centralNode);
 				
 				// Connections between cities from the same region
-				connect(regions.CHINA, city1*3 + top, regions.CHINA, city2*3 + left);
-				connect(regions.CHINA, city1*3 + right, regions.CHINA, city3*3 + top);
+				connect(Region.CHINA, city1*3 + top, Region.CHINA, city2*3 + left);
+				connect(Region.CHINA, city1*3 + right, Region.CHINA, city3*3 + top);
 				
-				connect(regions.CHINA, city1*3 + left, regions.CHINA, trade2);
-				connect(regions.CHINA, city2*3 + left, regions.CHINA, trade1);
-				connect(regions.CHINA, city3*3 + top, regions.CHINA, trade1);
+				connect(Region.CHINA, city1*3 + left, Region.CHINA, trade2);
+				connect(Region.CHINA, city2*3 + left, Region.CHINA, trade1);
+				connect(Region.CHINA, city3*3 + top, Region.CHINA, trade1);
 				
-				// Connections between regions
-				connect(regions.CHINA, city2*3 + top, regions.RUSSIA, trade2);
-				connect(regions.CHINA, trade2, regions.PERSIA, city2*3 + right);
+				// Connections between Region
+				connect(Region.CHINA, city2*3 + top, Region.RUSSIA, trade2);
+				connect(Region.CHINA, trade2, Region.PERSIA, city2*3 + right);
 				
-				connect(regions.CHINA, city1*3 + left, regions.PERSIA, city2*3 + top);
+				connect(Region.CHINA, city1*3 + left, Region.PERSIA, city2*3 + top);
 				break;
 			case RUSSIA:
 				// Connection to the central node
 				nodeArray.get(region.ordinal()).get(city1*3 + left).addNeighbor(centralNode);
 				
 				// Connections between cities from the same region
-				connect(regions.RUSSIA, city1*3 + left, regions.RUSSIA, city2*3 + top);
-				connect(regions.RUSSIA, city2*3 + left, regions.RUSSIA, city3*3 + top);
+				connect(Region.RUSSIA, city1*3 + left, Region.RUSSIA, city2*3 + top);
+				connect(Region.RUSSIA, city2*3 + left, Region.RUSSIA, city3*3 + top);
 				
-				connect(regions.RUSSIA, city3*3 + top, regions.RUSSIA, trade1);
-				connect(regions.RUSSIA, city2*3 + top, regions.RUSSIA, trade1);
-				connect(regions.RUSSIA, city1*3 + right, regions.RUSSIA, trade2);
+				connect(Region.RUSSIA, city3*3 + top, Region.RUSSIA, trade1);
+				connect(Region.RUSSIA, city2*3 + top, Region.RUSSIA, trade1);
+				connect(Region.RUSSIA, city1*3 + right, Region.RUSSIA, trade2);
 				nodeArray.get(region.ordinal()).get(trade2).addNeighbor(centralNode);
 				
-				// Connections between regions
-				connect(regions.RUSSIA, city3*3+right, regions.PERSIA, trade1);
-				connect(regions.RUSSIA, city2*3+left, regions.PERSIA, trade1);
-				connect(regions.RUSSIA, trade2, regions.CHINA, city2*3 + top);
+				// Connections between Region
+				connect(Region.RUSSIA, city3*3+right, Region.PERSIA, trade1);
+				connect(Region.RUSSIA, city2*3+left, Region.PERSIA, trade1);
+				connect(Region.RUSSIA, trade2, Region.CHINA, city2*3 + top);
 				
-				connect(regions.RUSSIA, city2*3 + right, regions.PERSIA, city1*3 + top);
+				connect(Region.RUSSIA, city2*3 + right, Region.PERSIA, city1*3 + top);
 				break;
 			case PERSIA:
 				// Connection to the central node
 				nodeArray.get(region.ordinal()).get(city1*3 + right).addNeighbor(centralNode);
 				
 				// Connections between cities from the same region
-				connect(regions.PERSIA, city1*3 + right, regions.PERSIA, city2*3 + top);
-				connect(regions.PERSIA, city1*3 + left, regions.PERSIA, city3*3 + top);
+				connect(Region.PERSIA, city1*3 + right, Region.PERSIA, city2*3 + top);
+				connect(Region.PERSIA, city1*3 + left, Region.PERSIA, city3*3 + top);
 				
-				connect(regions.PERSIA, city1*3 + top, regions.PERSIA, trade1);
-				connect(regions.PERSIA, city3*3 + top, regions.PERSIA, trade1);
-				connect(regions.PERSIA, city3*3 + right, regions.PERSIA, trade2);
-				connect(regions.PERSIA, city2*3 + top, regions.PERSIA, trade2);
+				connect(Region.PERSIA, city1*3 + top, Region.PERSIA, trade1);
+				connect(Region.PERSIA, city3*3 + top, Region.PERSIA, trade1);
+				connect(Region.PERSIA, city3*3 + right, Region.PERSIA, trade2);
+				connect(Region.PERSIA, city2*3 + top, Region.PERSIA, trade2);
 				
-				// Connections between regions
-				connect(regions.PERSIA, city1*3 + top, regions.RUSSIA, city2*3 + right);
-				connect(regions.PERSIA, city2*3 + top, regions.CHINA, city1*3 + left);
+				// Connections between Region
+				connect(Region.PERSIA, city1*3 + top, Region.RUSSIA, city2*3 + right);
+				connect(Region.PERSIA, city2*3 + top, Region.CHINA, city1*3 + left);
 				
-				connect(regions.PERSIA, city2*3 + right, regions.CHINA, trade2);
-				connect(regions.PERSIA, trade1, regions.RUSSIA, city3*3 + right);
-				connect(regions.PERSIA, trade1, regions.RUSSIA, city2*3 + left);
+				connect(Region.PERSIA, city2*3 + right, Region.CHINA, trade2);
+				connect(Region.PERSIA, trade1, Region.RUSSIA, city3*3 + right);
+				connect(Region.PERSIA, trade1, Region.RUSSIA, city2*3 + left);
 				break;
 			}
 		}
@@ -226,7 +226,7 @@ public class Mapa {
 	 * else {@code false}
 	 */
 	public boolean allCityConquered() {
-		for (Cidade city : cityArray) {
+		for (City city : cityArray) {
 			if (city.dominatedBy() == null) return false;
 		}
 		return true;
@@ -234,7 +234,7 @@ public class Mapa {
 	
 	
 	public boolean setCityConquered(String name, Player player) {
-		for (Cidade city : cityArray) {
+		for (City city : cityArray) {
 			if (city.getName().equals(name)) {
 				city.defineDomination(player);
 				return true;
@@ -259,8 +259,8 @@ public class Mapa {
 	}
 	
 	
-	public ArrayList<Cidade> createCityCopies(){
-		return new ArrayList<Cidade>(cityArray);
+	public ArrayList<City> createCityCopies(){
+		return new ArrayList<City>(cityArray);
 	}
 	
 	

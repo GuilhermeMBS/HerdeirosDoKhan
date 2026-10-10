@@ -1,13 +1,13 @@
-package Model;
+package model;
 
 public enum DebugReturn {
-	retSuccess,
-	missingPlayer,
-	missingNode,
-	missingAction,
-	noMovementLeft,
-	noHouseLeft,
-	noSwordLeft,
-	noHandLeft,
-	noValidAction
+	SUCCESS,
+	MISSING_PLAYER,
+	MISSING_NODE,
+	MISSING_ACTION,
+	EMPTY_MOVIMENT,
+	EMPTY_HOUSES,
+	EMPTY_SWORDS,
+	EMPTY_HANDS,
+	EMPTY_ACTIONS
 }
