@@ -21,7 +21,7 @@ public class KhanAction implements GameAction {
 		} else {
 			if (khan.isAtProvince(province)) return DebugReturn.REPEAT_KHAN_POS;
 
-			khan.moveToProvince(province, null);
+			khan.moveToProvince(province, node.getProvinces());
 		}
 		
 		p.useKhan();

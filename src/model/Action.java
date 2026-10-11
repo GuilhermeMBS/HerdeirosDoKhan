@@ -1,16 +1,6 @@
 package model;
 
 
-enum ActionType {
-	MOVIMENT,
-	YURT,
-	TAKE_TRIBUTE,
-	TRADE,
-	SACK,
-	MOVE_KHAN
-}
-
-
 /**
  * Class that represents all available actions for the player
  * 
@@ -38,8 +28,8 @@ public class Action {
 	}
 	
 	
-	public boolean setAction(GameAction tipo) {
-		this.action = tipo;
+	public boolean setAction(GameAction type) {
+		this.action = type;
 		return true;
 	}
 	
@@ -63,7 +53,7 @@ public class Action {
 	}
 	
 	
-	public DebugReturn doAction(int qtd) {
+	public DebugReturn doAction() {
 		if (player == null) return DebugReturn.MISSING_PLAYER;
 		if (action == null) return DebugReturn.MISSING_ACTION;
 		if (node == null) return DebugReturn.MISSING_NODE;

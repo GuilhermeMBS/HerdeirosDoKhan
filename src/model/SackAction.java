@@ -15,9 +15,9 @@ public class SackAction implements GameAction {
 	
 	@Override
 	public DebugReturn execute(Player p, Node node) {
-		if (!p.spendTribute(TributeType.SWORD, qtySword)) return DebugReturn.EMPTY_SWORDS;
-		
 		if (!city.canBeSacked()) return DebugReturn.CANT_SACK_CITY;
+		
+		if (!p.spendTribute(TributeType.SWORD, qtySword)) return DebugReturn.EMPTY_SWORDS;
 		
 		p.addTreasure(city.removeResource(indTreasure), 1);
 		

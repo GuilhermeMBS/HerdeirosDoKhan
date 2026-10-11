@@ -4,19 +4,6 @@ import java.util.*;
 
 
 /**
- * Enum to represent the multiple types of 
- * resources to be sacked from the cities
- */
-enum TreasureType {
-    FUR,
-    ANIMAL,
-    SILK,
-    IRON, 
-    SPICE
-}
-
-
-/**
  * Is a collection of resources of the game
  * 
  * <p>Once this file is loaded for the first onto the virtual machine, it
@@ -39,6 +26,10 @@ class Resource {
 	 * Static creation of the array for all resources
 	 */
 	static {
+		resetResources();
+	}
+	
+	static void resetResources() {
 		for (TreasureType tipo : TreasureType.values()) {
 			for (int i = 0; i < QTY_PER_RESOURCE; i++) {
 				resources.add(tipo);

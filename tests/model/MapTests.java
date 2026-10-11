@@ -9,12 +9,13 @@ import org.junit.Test;
 public class MapTests {
 	private Map map;
 	private Player p;
-	private ArrayList<City> cityArray;
+	private List<City> cityArray;
 	private City city;
 
 
 	@Before
 	public void initializeVariables() {
+		Resource.resetResources();
 		map = new Map(false);
 		p = new Player();
 		cityArray = map.createCityCopies();
@@ -27,6 +28,7 @@ public class MapTests {
 		assertEquals(4, map.getLengthNodeArray()); // 3 regions + central node
 		assertEquals(11, map.getNodePerRegion()); // 11 nodes per region
 		assertEquals(9, map.getAmountCity()); // There are 9 cities in total
+		assertEquals(12, map.getAmountProvinces());
 	}
 	
 	

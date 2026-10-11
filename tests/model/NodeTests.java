@@ -1,5 +1,6 @@
 package model;
 
+
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -7,11 +8,6 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-class Player {
-    private String name;
-    Player(String name) { this.name = name; }
-    String getName() { return this.name; }
-}
 
 /**
  * JUnit 4 Test Suite validating topological invariants, state mutations,

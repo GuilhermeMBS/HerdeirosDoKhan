@@ -6,6 +6,7 @@ import org.junit.runners.*;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+	ActionTests.class,
 	ColumnTests.class,
 	NodeTests.class,
 	MapTests.class,
