@@ -7,11 +7,6 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-// Stub enumerations and classes to satisfy the test context.
-// Replace these with your actual enums/Player class in the final project.
-enum TreasureType { FUR, ANIMAL, SILK, IRON, SPICE }
-enum TributeType { COIN, SWORD, YURT }
-
 class Player {
     private String name;
     Player(String name) { this.name = name; }

@@ -18,22 +18,22 @@ class CentralNode extends Node {
     CentralNode(boolean alternativeTreasureReq) {
         super();
         
-        TreasureRequirements[] requisitosKarakorum;
+        TreasureRequirements[] karakorumRequirements;
         if (alternativeTreasureReq) {
-            requisitosKarakorum = new TreasureRequirements[] {
+            karakorumRequirements = new TreasureRequirements[] {
                     new TreasureRequirements(TreasureType.IRON, 1),
                     new TreasureRequirements(TreasureType.SILK, 1),
                     new TreasureRequirements(TreasureType.SPICE, 1)
             };
         } else {
-            requisitosKarakorum = new TreasureRequirements[] {
+            karakorumRequirements = new TreasureRequirements[] {
                     new TreasureRequirements(TreasureType.FUR, 1),
                     new TreasureRequirements(TreasureType.IRON, 1),
                     new TreasureRequirements(TreasureType.ANIMAL, 1)
             };          
         }
         
-        this.tradingPost = new TradingPost(2, requisitosKarakorum, 0);
+        this.tradingPost = new TradingPost(2, karakorumRequirements, 0);
         this.toluiYurt = null;
     }
 
