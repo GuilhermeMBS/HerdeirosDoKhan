@@ -99,8 +99,19 @@ public class Map {
 				}
 			}
 			
-			for (int i = 0; i < 2; i++) {
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost()));
+			switch(region) {
+			case RUSSIA :
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 2, 0, 0, 0}))); // {vaca, ferro, tecido, grao, seda, bau}
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 2, 0, 0, 0, 0})));
+				break;
+			case CHINA :
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {2, 0, 0, 0, 0, 0})));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 0, 0, 3})));
+				break;
+			case PERSIA :
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 0, 2, 0})));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 2, 0, 0})));
+				break;
 			}
 
 			nodeArray.add(regionNodes);

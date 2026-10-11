@@ -6,11 +6,6 @@ import java.util.*;
 
 import org.junit.Test;
 
-import model.City;
-import model.Map;
-import model.Player;
-import model.Region;
-
 public class MapTests {
 	private Map map;
 	private Player p;

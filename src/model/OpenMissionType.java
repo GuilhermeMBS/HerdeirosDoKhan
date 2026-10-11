@@ -1,0 +1,14 @@
+package model;
+
+enum OpenMissionType implements MissionType {
+	YURT,
+	YURTREGION,
+	SWORD,
+	EACHRESOURCE,
+	TREASURE,
+	CITIESDOMINATED,
+	POWERUPS_LINE,
+	POWERUPS_COL,
+	POWERUPS_SQUARE,
+	POINTS
+}
