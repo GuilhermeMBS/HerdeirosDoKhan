@@ -7,5 +7,10 @@ abstract class Card {
 	protected Mission m3;
 	protected Player p;
 	
-	abstract protected boolean hasBeenCompleted();
+	
+	/**
+	 * Calculates how many points this Counselor gives to the player
+	 * @return The amount of points that the player will receive from this card ({@code int})
+	 */
+	abstract public int gainPoints();
 }

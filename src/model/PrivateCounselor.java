@@ -4,21 +4,59 @@ package model;
 import java.util.*;
 
 
+enum PrivateMissionType implements MissionType {
+	POWERUPS_DIFF,
+	POWERUPS_SAME,
+	YURTINSEQUENCE,
+	POWERUPS_QTD,
+	CITY_YURT,
+	POWERUPS_HORSE_HAND,
+	YURT_TRADINGPOST,
+	POWERUPS_YURT,
+	YURT_KHAN,
+	CITY_2YURT
+}
+
+
+/**
+ * Creates all instances of Private Counselor automatically
+ * 
+ * <p>Available methods:</p>
+ * <ul>
+ * 		<li>{@link #giveTwoCards()}</li>
+ * 		<li>{@link #setFinished(Mission m)}</li>
+ * 		<li>{@link #gainPoints()}</li>
+ * 		<li>{@link #getName()}</li>
+ * </ul>
+ * 
+ * @author joaop
+ * @version 1.0
+ */
 class PrivateCounselor extends Card {
-	private boolean hasFinished;
 	private String name;
-	protected static ArrayList<PrivateCounselor> cards = new ArrayList<PrivateCounselor>();
+	private static ArrayList<PrivateCounselor> cards = new ArrayList<PrivateCounselor>();
 	
-	
+	/**
+	 * 
+	 * @param m1 mission 1
+	 * @param m2 mission 2
+	 * @param m3 mission 3
+	 * @param name name of the card
+	 */
 	public PrivateCounselor(Mission m1, Mission m2, Mission m3, String name) {
 		this.m1 = m1;
 		this.m2 = m2;
 		this.m3 = m3;
-		hasFinished = false;
 		this.name = name;
+		this.p = null;
 	}
 	
 	
+	/**
+	 * Creates all instances of Private Counselors
+	 * when it loads for the first time into the 
+	 * java virtual machine
+	 */
 	static {
 		// Code
 		cards.add(new PrivateCounselor(
@@ -75,6 +113,11 @@ class PrivateCounselor extends Card {
 	}
 	
 	
+	/**
+	 * Gives 2 Private Counselors from the original {@code ArrayList} and removes them,
+	 * so no other player can get them
+	 * @return {@code ArrayList<PrivateCounselor>} with 2 elements
+	 */
 	public static ArrayList<PrivateCounselor> giveTwoCards() {
 		ArrayList<PrivateCounselor> tmp = new ArrayList<PrivateCounselor>();
 		for (int i = 0; i < 2; i++)
@@ -83,20 +126,12 @@ class PrivateCounselor extends Card {
 	}
 	
 	
-	@Override
-	protected boolean hasBeenCompleted() {
-		return hasFinished == true;
-	}
-	
-	
-	public boolean setOwner(Player p) {
-		if (this.p != null) return false;
-		
-		this.p = p;
-		return true;
-	}
-	
-	
+	/**
+	 * Set a mission as completed
+	 * @param m mission that was completed
+	 * @return {@code true} if the mission was not completed and could set it as complete,
+	 * {@code false} otherwise
+	 */
 	public boolean setFinished(Mission m) {
 		if (!m.hasFinishedMission()) {
 			m.setFinished();
@@ -107,12 +142,17 @@ class PrivateCounselor extends Card {
 	}
 	
 	
+	@Override
 	public int gainPoints() {
 		int ret = (m1.hasFinishedMission() ? 1 : 0) + (m2.hasFinishedMission() ? 1 : 0) + (m3.hasFinishedMission() ? 1 : 0);
 		return ret;
 	}
 	
 	
+	/**
+	 * Get the name of the Counselor
+	 * @return {@code String} with the name of the Counselor
+	 */
 	public String getName() {
 		return name;
 	}

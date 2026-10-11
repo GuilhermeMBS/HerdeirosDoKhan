@@ -22,14 +22,13 @@ enum NodePosition {
 
 
 /**
- * Is a collection of resources of the game
  * 
- * <p>Once this file is loaded for the first onto the virtual machine, it
- *  creates all the resources and shuffles them.</p>
+ * 
+ * <p>  </p>
  *  
  * <p>Available methods:</p>
  * <ul>
- * 		<li></li>
+ * 		<li>{@link #allCityConquered()}</li>
  * </ul>
  * 
  * @author joaop
@@ -42,23 +41,7 @@ public class Map {
 	// The order for the nodes will be clockwise, starting from the top (for each city)
 	private ArrayList<ArrayList<Node>> nodeArray = new ArrayList<ArrayList<Node>>();
 	
-	private final String[][] cityNames = {
-			{
-				"Pequim",
-				"Kaesong",
-				"Cantão"
-			},
-			{
-				"Sarai",
-				"Moscou",
-				"Kiev"
-			},
-			{
-				"Samarcanda",
-				"Cabul",
-				"Bagdá"
-			}
-	};
+	private EnumMap<Region, String[]> cityNames = new EnumMap<>(Region.class);
 	
 	
 	/**
@@ -77,9 +60,20 @@ public class Map {
 	 * starting from connection to the central node
 	 */
 	private void createCities() {
+		cityNames.put(Region.CHINA, new String[] {
+			"Pequim", "Kaesong", "Cantão"
+		});
+		cityNames.put(Region.RUSSIA, new String[] {
+			"Sarai", "Moscou", "Kiev"
+		});
+		cityNames.put(Region.PERSIA, new String[] {
+			"Samarcanda", "Cabul", "Bagdá"
+		});
+		
 		for (Region region : Region.values()) {
+			String[] names = cityNames.get(region);
 			for (int i = 0; i < 3; i++) {
-				cityArray.add(new City(cityNames[region.ordinal()][i]));
+				cityArray.add(new City(names[i]));
 			}
 		}
 		
@@ -91,9 +85,10 @@ public class Map {
 		for (Region region : Region.values()) {
 			// Nodes per region
 			ArrayList<Node> regionNodes = new ArrayList<Node>();
+			String[] names = cityNames.get(region);
 			
 			for (int i = 0; i < 3; i++) {
-				String cityName = cityArray.get(region.ordinal()*3 + i).getName();
+				String cityName = names[i];
 				for (int j = 0; j < 3; j++) {
 					regionNodes.add(new SingleNode(region.toString(), cityName));					
 				}
@@ -272,10 +267,5 @@ public class Map {
 	
 	public ArrayList<City> createCityCopies(){
 		return new ArrayList<City>(cityArray);
-	}
-	
-	
-	public String[][] getNameOrder() {
-		return cityNames;
 	}
 }

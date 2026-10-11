@@ -4,11 +4,44 @@ package model;
 import java.util.*;
 
 
+enum OpenMissionType implements MissionType {
+	YURT,
+	YURTREGION,
+	SWORD,
+	EACHRESOURCE,
+	TREASURE,
+	CITIESDOMINATED,
+	POWERUPS_LINE,
+	POWERUPS_COL,
+	POWERUPS_SQUARE,
+	POINTS
+}
+
+
+
+/**
+ * Creates all instances of Open Counselor automatically
+ * 
+ * <p>Available methods:</p>
+ * <ul>
+ * 		<li>{@link #giveCardsInGame()}</li>
+ * 		<li>{@link #playerHasCompleted(Player p)}</li>
+ * 		<li>{@link #gainPoints()}</li>
+ * </ul>
+ * 
+ * @author joaop
+ * @version 1.0
+ */
 class OpenCounselor extends Card {
 	private static ArrayList<OpenCounselor> cardsInGame = null;
-	protected static ArrayList<OpenCounselor> cards = new ArrayList<OpenCounselor>();
+	private static ArrayList<OpenCounselor> cards = new ArrayList<OpenCounselor>();
 	
 	
+	/**
+	 * 
+	 * @param qtd the amount necessary to complete the mission
+	 * @param type type of mission to be done
+	 */
 	public OpenCounselor(int qtd, OpenMissionType type) {
 		m1 = new Mission(qtd, type);
 		m2 = m3 = null;
@@ -16,6 +49,11 @@ class OpenCounselor extends Card {
 	}
 	
 	
+	/**
+	 * Creates all instances of Open Counselors
+	 * when it loads for the first time into the 
+	 * java virtual machine
+	 */
 	static {
 		// Don't know
 		cards.add(new OpenCounselor(4, OpenMissionType.SWORD));
@@ -49,6 +87,11 @@ class OpenCounselor extends Card {
 	}
 	
 	
+	/**
+	 * Creates all instances of Open Counselors
+	 * when it loads for the first time into the 
+	 * java virtual machine
+	 */
 	private static boolean createFourCards() {
 		cardsInGame = new ArrayList<OpenCounselor>();
 		for (int i = 0; i < 4; i++)
@@ -57,12 +100,25 @@ class OpenCounselor extends Card {
 	}
 	
 	
+	/**
+	 * Creates the 4 cards that will be in the game, 
+	 * if they were not created up until that point
+	 * 
+	 * @return {@code ArrayList<OpenCounselor>} with 4 elements that
+	 * represents all cards that will be in the game
+	 */
 	public static ArrayList<OpenCounselor> giveCardsInGame() {
 		if (cardsInGame == null) createFourCards();
 		return cardsInGame;
 	}
 	
 	
+	/**
+	 * Sets a player as the one who has completed that card
+	 * @param p the Player who has finished the mission
+	 * @return {@code true} if the card was not already assigned to a player,
+	 * else {@code false} if there were already a player assigned to the card.
+	 */
 	public boolean playerHasCompleted(Player p) {
 		if (this.p != null) return false;
 		this.p = p;
@@ -71,14 +127,13 @@ class OpenCounselor extends Card {
 		return true;
 	}
 	
-	
+	@Override
 	public int gainPoints() {
 		return hasBeenCompleted() ? 1: 0;
 	}
 	
 	
-	@Override
-	protected boolean hasBeenCompleted() {
+	private boolean hasBeenCompleted() {
 		return p != null;
 	}
 }
