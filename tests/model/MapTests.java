@@ -15,7 +15,7 @@ public class MapTests {
 
 	@Before
 	public void initializeVariables() {
-		map = new Map();
+		map = new Map(false);
 		p = new Player();
 		cityArray = map.createCityCopies();
 		city = cityArray.get(0);

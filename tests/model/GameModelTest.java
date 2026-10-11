@@ -22,8 +22,13 @@ public class GameModelTest {
 
     @Test
     public void testDoubleNodeOccupancyLimit() {
-        int[] requirements = {1, 1, 0, 0, 0, 0};
-        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements));
+    	TreasureRequirements[] requirements = {
+    			new TreasureRequirements(TreasureType.FUR, 1),
+    			new TreasureRequirements(TreasureType.ANIMAL, 1),
+    			new TreasureRequirements(TreasureType.SILK, 1)
+    	};
+    	
+        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements, 0));
         
         assertTrue(node.enterNode());
         assertTrue(node.enterNode());
@@ -35,8 +40,11 @@ public class GameModelTest {
 
     @Test
     public void testDoubleNodeYurtLimit() {
-        int[] requirements = {1, 1, 0, 0, 0, 0};
-        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements));
+    	TreasureRequirements[] requirements = {
+    			new TreasureRequirements(TreasureType.FUR, 1),
+    			new TreasureRequirements(TreasureType.ANIMAL, 1)
+    	};
+        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements, 0));
         
         assertTrue(node.buildYurt(this.playerBatu));
         assertTrue(node.buildYurt(this.playerOgedei));
@@ -45,7 +53,7 @@ public class GameModelTest {
 
     @Test
     public void testCentralNodeToluiException() {
-        CentralNode karakorum = new CentralNode();
+        CentralNode karakorum = new CentralNode(false);
         
         assertFalse(karakorum.buildYurt(this.playerBatu));
         assertTrue(karakorum.buildYurt(this.playerTolui));
@@ -90,13 +98,21 @@ public class GameModelTest {
 
     @Test
     public void testTradingPostDeliveryValidation() {
-        int[] requirements = {2, 0, 0, 0, 0, 0};
-        TradingPost post = new TradingPost(1, requirements);
+    	TreasureRequirements[] requirements = {
+    			new TreasureRequirements(TreasureType.FUR, 2)
+    	};
+        TradingPost post = new TradingPost(1, requirements, 0);
         
-        int[] insufficientOffer = {1, 5, 5, 0, 0, 0};
+        TreasureRequirements[] insufficientOffer = {
+    			new TreasureRequirements(TreasureType.FUR, 1),
+    			new TreasureRequirements(TreasureType.ANIMAL, 5),
+    			new TreasureRequirements(TreasureType.SILK, 5)
+    	};
         assertFalse(post.processDelivery(insufficientOffer));
         
-        int[] validOffer = {2, 0, 0, 0, 0, 0};
+        TreasureRequirements[] validOffer = {
+    			new TreasureRequirements(TreasureType.FUR, 2)
+    	};
         assertTrue(post.processDelivery(validOffer));
     }
 

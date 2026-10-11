@@ -16,6 +16,11 @@ class Khan {
         this.isAtUpgradesArea = true;
         this.currentProvince = null;
     }
+    
+    
+    boolean isAtProvince(Province province) {
+    	return currentProvince == province;
+    }
 
     void moveToProvince(Province targetProvince, List<Province> adjacentProvinces) {
         this.isAtUpgradesArea = false;

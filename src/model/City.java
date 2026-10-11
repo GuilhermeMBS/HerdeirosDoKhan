@@ -12,6 +12,7 @@ import java.util.*;
  * <p>Available methods:</p>
  * <ul>
  * 		<li>{@link #activateSacking()}</li>
+ * 		<li>{@link #canBeSacked()}</li>
  * 		<li>{@link #removeResource()}</li>
  * 		<li>{@link #dominatedBy()}</li>
  * 		<li>{@link #getName()}</li>
@@ -47,6 +48,14 @@ class City {
 		
 		return true;
 	}
+	
+	
+	/**
+	 * Check if the city can be sacked
+	 * @return {@code true} if the city can be sacked,
+	 * {@code false} otherwise
+	 */
+	public boolean canBeSacked() { return saqueavel; }
 	
 	
 	/**

@@ -7,10 +7,25 @@ class CentralNode extends Node {
     // Alocação física restrita à anomalia da capital.
     protected Player toluiYurt; 
 
-    CentralNode() {
+    CentralNode(boolean alternativeTreasureReq) {
         super();
-        int[] requisitosKarakorum = {1, 1, 1, 0, 0, 0}; 
-        this.tradingPost = new TradingPost(2, requisitosKarakorum);
+        
+        TreasureRequirements[] requisitosKarakorum;
+        if (alternativeTreasureReq) {
+        	requisitosKarakorum = new TreasureRequirements[] {
+        			new TreasureRequirements(TreasureType.IRON, 1),
+        			new TreasureRequirements(TreasureType.SILK, 1),
+        			new TreasureRequirements(TreasureType.SPICE, 1)
+        	};
+        } else {
+        	// Default
+        	requisitosKarakorum = new TreasureRequirements[] {
+        			new TreasureRequirements(TreasureType.FUR, 1),
+        			new TreasureRequirements(TreasureType.IRON, 1),
+        			new TreasureRequirements(TreasureType.ANIMAL, 1)
+        	};        	
+        }
+        this.tradingPost = new TradingPost(2, requisitosKarakorum, 0);
         this.toluiYurt = null;
     }
 

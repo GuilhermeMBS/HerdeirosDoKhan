@@ -48,9 +48,9 @@ public class Map {
 	 * When creating an instance of this variable,
 	 * it creates all the city and nodes for the map
 	 */
-	public Map() {
+	public Map(boolean alternativeKarakorum) {
 		createCities();
-		initializeNodes();
+		initializeNodes(alternativeKarakorum);
 		initializeConnections();
 	}
 	
@@ -81,7 +81,7 @@ public class Map {
 	}
 	
 	
-	private void initializeNodes() {
+	private void initializeNodes(boolean alternativeKarakorum) {
 		for (Region region : Region.values()) {
 			// Nodes per region
 			ArrayList<Node> regionNodes = new ArrayList<Node>();
@@ -96,16 +96,26 @@ public class Map {
 			
 			switch(region) {
 			case RUSSIA :
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 2, 0, 0, 0}))); // {vaca, ferro, tecido, grao, seda, bau}
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 2, 0, 0, 0, 0})));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
+						new TreasureRequirements(TreasureType.SILK, 2)
+				}, 0)));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
+						new TreasureRequirements(TreasureType.IRON, 2)
+				}, 0)));
 				break;
 			case CHINA :
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {2, 0, 0, 0, 0, 0})));
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 0, 0, 3})));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
+						new TreasureRequirements(TreasureType.ANIMAL, 2)
+				}, 0)));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {}, 3)));
 				break;
 			case PERSIA :
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 0, 2, 0})));
-				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new int[] {0, 0, 0, 2, 0, 0})));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
+						new TreasureRequirements(TreasureType.FUR, 2)
+				}, 0)));
+				regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
+						new TreasureRequirements(TreasureType.SPICE, 2)
+				}, 0)));
 				break;
 			}
 
@@ -113,7 +123,7 @@ public class Map {
 		}
 		
 		ArrayList<Node> centralCity = new ArrayList<Node>();
-		centralCity.add(new CentralNode());
+		centralCity.add(new CentralNode(alternativeKarakorum));
 		nodeArray.add(centralCity);
 		
 		return;
