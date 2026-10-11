@@ -7,7 +7,7 @@ import org.junit.runners.*;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	ColumnTests.class,
-	GameModelTest.class,
+	NodeTests.class,
 	MapTests.class,
 	PlayerBoardTests.class,
 	PlayerTests.class,

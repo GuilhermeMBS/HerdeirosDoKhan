@@ -1,30 +1,38 @@
 package model;
 
+/**
+ * Specialized representation for the capital city (Karakorum).
+ * Accommodates all active players and enforces strict localized construction rules.
+ */
 class CentralNode extends Node {
     protected TradingPost tradingPost;
     protected final int maxCapacity = 5;
     
-    // Alocação física restrita à anomalia da capital.
     protected Player toluiYurt; 
 
+    /**
+     * Initializes the central hub with a specialized Trading Post.
+     * 
+     * @param alternativeTreasureReq Flag to switch between default and randomized setup conditions.
+     */
     CentralNode(boolean alternativeTreasureReq) {
         super();
         
         TreasureRequirements[] requisitosKarakorum;
         if (alternativeTreasureReq) {
-        	requisitosKarakorum = new TreasureRequirements[] {
-        			new TreasureRequirements(TreasureType.IRON, 1),
-        			new TreasureRequirements(TreasureType.SILK, 1),
-        			new TreasureRequirements(TreasureType.SPICE, 1)
-        	};
+            requisitosKarakorum = new TreasureRequirements[] {
+                    new TreasureRequirements(TreasureType.IRON, 1),
+                    new TreasureRequirements(TreasureType.SILK, 1),
+                    new TreasureRequirements(TreasureType.SPICE, 1)
+            };
         } else {
-        	// Default
-        	requisitosKarakorum = new TreasureRequirements[] {
-        			new TreasureRequirements(TreasureType.FUR, 1),
-        			new TreasureRequirements(TreasureType.IRON, 1),
-        			new TreasureRequirements(TreasureType.ANIMAL, 1)
-        	};        	
+            requisitosKarakorum = new TreasureRequirements[] {
+                    new TreasureRequirements(TreasureType.FUR, 1),
+                    new TreasureRequirements(TreasureType.IRON, 1),
+                    new TreasureRequirements(TreasureType.ANIMAL, 1)
+            };          
         }
+        
         this.tradingPost = new TradingPost(2, requisitosKarakorum, 0);
         this.toluiYurt = null;
     }
@@ -34,10 +42,12 @@ class CentralNode extends Node {
         return this.toluiYurt != null;
     }
 
+    /**
+     * Validates yurt placement in the capital. 
+     * Exceptionally hardcoded to reject all players except the designated heir "Tolui".
+     */
     @Override
     boolean buildYurt(Player player) {
-        // A validação encapsula a verificação da identidade do herdeiro.
-        // A constante "Tolui" deve ser gerenciada pelas propriedades da classe Player.
         if (this.toluiYurt == null && player.getName().equals("Tolui")) {
             this.toluiYurt = player;
             return true;
