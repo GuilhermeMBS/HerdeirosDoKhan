@@ -3,17 +3,6 @@ package model;
 import java.util.*;
 
 
-/**
- * Must keep this order, or change the order in 
- * {@link #cityNames}
- */
-enum Region {
-	CHINA,
-	RUSSIA,
-	PERSIA
-}
-
-
 enum NodePosition {
 	TOP,
 	RIGHT,
@@ -27,25 +16,6 @@ enum CityPosition {
 	CITY3
 }
 
-
-/**
- * <p>The order in here is starting at the left top corner
- * and following clockwise order for all the provinces.</p>
- */
-enum ProvinceId {
-	RUSSIA_YURT1,
-	RUSSIA_SWORD1,
-	RUSSIA_YURT2,
-	RUSSIA_COIN1,
-	CHINA_SWORD1,
-	CHINA_COIN1,
-	CHINA_YURT1,
-	CHINA_SWORD2,
-	PERSIA_YURT1,
-	PERSIA_COIN1,
-	PERSIA_SWORD1,
-	PERSIA_COIN2,
-}
 
 
 /**
@@ -78,6 +48,8 @@ public class Map {
 	private final EnumMap<ProvinceId, Province> provinces = new EnumMap<>(ProvinceId.class);
 	EnumMap<TributeType, ProvinceId[]> provinceType = new EnumMap<>(TributeType.class);
 	
+	private Khan khan;
+	
 	private final int top = NodePosition.TOP.ordinal();
 	private final int right = NodePosition.RIGHT.ordinal();
 	private final int left = NodePosition.LEFT.ordinal();
@@ -101,6 +73,7 @@ public class Map {
 		initializeNodes(alternativeKarakorum);
 		initializeConnections();
 		connectNodeProvinces();
+		khan = new Khan();
 	}
 	
 	
@@ -496,5 +469,36 @@ public class Map {
 	 */
 	List<City> createCityCopies(){
 		return Collections.unmodifiableList(cityArray);
+	}
+	
+	
+	public Node getCentralNode() {
+		return nodeArray.get(3).get(0);
+	}
+	
+	
+	public City getCity(int ind) {
+		if (ind < 0 || ind >= getAmountCity()) return null;
+		
+		return cityArray.get(ind);
+	}
+	
+	
+	public Province getProvince(int ind) {
+		if (ind < 0 || ind >= getAmountProvinces()) return null;
+		
+		ProvinceId id = ProvinceId.values()[ind];
+		
+		return provinces.get(id);
+	}
+	
+	
+	public Khan getKhan() { return khan; }
+	
+	
+	public TradingPost getTradingPost(Region region, boolean firstTradePost) {
+		int post = (firstTradePost) ? trade1 : trade2;
+		
+		return ((DoubleNode) nodeArray.get(region.ordinal()).get(post)).getTradingPost();
 	}
 }

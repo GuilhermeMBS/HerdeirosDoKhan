@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author Vinicius
  */
-enum Heir {
+public enum Heir {
     ALTANI(ColumnColor.RED, ColumnColor.GREEN, ColumnColor.YELLOW, 2),
     JOCHI(ColumnColor.GREEN, ColumnColor.YELLOW, ColumnColor.RED, 1),
     CHAGATAI(ColumnColor.RED, ColumnColor.YELLOW, ColumnColor.GREEN, 1),
@@ -49,7 +49,7 @@ enum Heir {
      * Finds the heir with the given name, ignoring upper/lower case.
      * @return the heir, or {@code null} if no heir has that name
      */
-    static Heir fromName(String name) {
+    public static Heir fromName(String name) {
         for (Heir h : values()) {
             if (h.name().equalsIgnoreCase(name)) {
                 return h;

@@ -3,7 +3,7 @@ package model;
 /**
  * Colors of the players' pawns.
  */
-enum PlayerColor {
+public enum PlayerColor {
     BLUE, 
     RED, 
     GREEN, 

@@ -22,8 +22,9 @@ import java.util.Map;
  * </ol>
  *
  * @author Vinicius
+ * @version 1.1
  */
-class Player {
+public class Player {
     static final int INITIAL_YURTS = 12;
     static final int UPGRADE_COST = 2;
 
@@ -72,7 +73,7 @@ class Player {
      * @param startNode where the pawns start (Karakorum)
      * @param initialCoins 1 for the first two players, 2 for the others
      */
-    Player(PlayerColor color, Heir heir, Node startNode, int initialCoins) {
+    public Player(PlayerColor color, Heir heir, Node startNode, int initialCoins) {
         this(heir.getDisplayName(), color, heir, startNode, initialCoins);
     }
 
@@ -101,7 +102,7 @@ class Player {
     /** The player's name (the heir's name, e.g. "Tolui"). */
     String getName() { return name; }
 
-    PlayerColor getColor() { return color; }
+    public PlayerColor getColor() { return color; }
     Heir getHeir() { return heir; }
     PlayerBoard getBoard() { return board; }
 
@@ -177,7 +178,7 @@ class Player {
     Pawn getActivePawn() { return activePawn; }
 
     /** Node of the active pawn. */
-    Node getCurrentNode() { return activePawn.getCurrentNode(); }
+    public Node getCurrentNode() { return activePawn.getCurrentNode(); }
 
     /** Moves the active pawn. Nodes skipped through own yurts must not be passed. */
     void moveTo(Node node) { activePawn.moveTo(node); }
