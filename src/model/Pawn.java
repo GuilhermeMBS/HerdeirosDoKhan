@@ -18,6 +18,9 @@ class Pawn {
     Pawn(PlayerColor color, Node startNode) {
         this.color = color;
         this.currentNode = startNode;
+        if (startNode != null) {
+            startNode.enterNode();
+        }
     }
 
     PlayerColor getColor() { return color; }
@@ -36,6 +39,24 @@ class Pawn {
     void moveTo(Node node) {
         currentNode = node;
         turnPath.add(node);
+    }
+
+    /**
+     * Walks through the given stops and ends the movement at the last one.
+     * The pawn may pass through full stops, but it must fit in the last one.
+     * @param stops the stops on the way, in order (the destination is the last one)
+     * @return {@code false} (and the pawn does not move) if the destination is full
+     */
+    boolean walk(List<Node> stops) {
+        Node destination = stops.get(stops.size() - 1);
+        if (!destination.enterNode()) {
+            return false;
+        }
+        currentNode.leaveNode();
+        for (Node stop : stops) {
+            moveTo(stop);
+        }
+        return true;
     }
 
     boolean hasVisited(Node node) { return turnPath.contains(node); }

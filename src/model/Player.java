@@ -1,9 +1,14 @@
 package model;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * One of the Khan's heirs.
@@ -117,7 +122,7 @@ public class Player {
      * @return {@code false} (and nothing changes) if the pawn does not
      * exist or the column is occupied
      */
-    boolean startTurn(ColumnColor column, int pawnIndex) {
+    public boolean startTurn(ColumnColor column, int pawnIndex) {
         if (pawnIndex < 0 || pawnIndex >= pawns.size()) {
             return false;
         }
@@ -138,7 +143,7 @@ public class Player {
     }
 
     /** Discards unused movements, hands and virtual tributes. */
-    void endTurn() {
+    public void endTurn() {
         board.endTurn();
         movementsLeft = 0;
         handsLeft = 0;
@@ -148,7 +153,7 @@ public class Player {
         }
     }
 
-    int getMovementsLeft() { return movementsLeft; }
+    public int getMovementsLeft() { return movementsLeft; }
     int getHandsLeft() { return handsLeft; }
 
     boolean useMovement(int qty) {
@@ -186,6 +191,99 @@ public class Player {
     boolean hasVisited(Node node) { return activePawn.hasVisited(node); }
 
     List<Node> getTurnPath() { return activePawn.getTurnPath(); }
+
+    /**
+     * Moves the active pawn to the destination, following the game rules:
+     * <ul>
+     *   <li>each horse moves the pawn to an adjacent stop;</li>
+     *   <li>the pawn can jump over the player's own yurts;</li>
+     *   <li>the pawn can pass through full stops, but must fit in the destination.</li>
+     * </ul>
+     * Only the horses needed are spent; the others stay for later in the turn.
+     * @return {@code false} (and nothing changes) if the move is not allowed
+     */
+    boolean moveActivePawn(Node destination) {
+        List<Node> stops = findPath(destination);
+        if (stops == null) {
+            return false;
+        }
+        if (!activePawn.walk(stops)) {
+            return false;
+        }
+        useMovement(stops.size());
+        return true;
+    }
+
+    /**
+     * Finds the shortest way (fewest horses) from the active pawn to the
+     * destination, using at most the movements left in this turn.
+     * It is a breadth-first search: first it finds every stop reachable with
+     * 1 horse, then with 2 horses, and so on.
+     * @return the stops on the way, in order and ending at the destination
+     * (one stop per horse), or {@code null} if the destination cannot be reached
+     */
+    List<Node> findPath(Node destination) {
+        Node start = getCurrentNode();
+        if (start == null || destination == null || destination == start) {
+            return null;
+        }
+
+        // horsesUsed.get(n): how many horses it takes to reach n
+        // previous.get(n): the stop the pawn was at right before n
+        Map<Node, Integer> horsesUsed = new HashMap<>();
+        Map<Node, Node> previous = new HashMap<>();
+        Queue<Node> toVisit = new ArrayDeque<>();
+
+        horsesUsed.put(start, 0);
+        toVisit.add(start);
+        while (!toVisit.isEmpty()) {
+            Node stop = toVisit.poll();
+            int used = horsesUsed.get(stop);
+            if (used == movementsLeft) {
+                continue;
+            }
+            for (Node next : stopsInOneMove(stop)) {
+                if (!horsesUsed.containsKey(next)) {
+                    horsesUsed.put(next, used + 1);
+                    previous.put(next, stop);
+                    toVisit.add(next);
+                }
+            }
+        }
+
+        if (!horsesUsed.containsKey(destination)) {
+            return null;
+        }
+        // Walks backwards from the destination to rebuild the way
+        LinkedList<Node> stops = new LinkedList<>();
+        for (Node n = destination; n != start; n = previous.get(n)) {
+            stops.addFirst(n);
+        }
+        return stops;
+    }
+
+    /**
+     * Stops the active pawn can reach from {@code from} using only one horse:
+     * its neighbors and, when a neighbor has a yurt of this player, also the
+     * stops behind that yurt (the pawn jumps over it).
+     */
+    private Set<Node> stopsInOneMove(Node from) {
+        Set<Node> stops = new HashSet<>();
+        addStopsInOneMove(from, stops);
+        return stops;
+    }
+
+    private void addStopsInOneMove(Node from, Set<Node> stops) {
+        for (Node neighbor : from.getNeighbors()) {
+            if (stops.contains(neighbor)) {
+                continue;
+            }
+            stops.add(neighbor);
+            if (neighbor.hasYurtOf(this)) {
+                addStopsInOneMove(neighbor, stops);
+            }
+        }
+    }
 
     // ------------------------------------------------------------ tributes
 

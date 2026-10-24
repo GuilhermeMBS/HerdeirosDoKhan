@@ -30,6 +30,11 @@ abstract class CommonNode extends Node {
     }
 
     @Override
+    boolean hasYurtOf(Player player) {
+        return this.yurtOwners.contains(player);
+    }
+
+    @Override
     boolean buildYurt(Player player) {
         if (this.yurtOwners.size() < getMaxCapacity()) {
             this.yurtOwners.add(player);
@@ -44,6 +49,7 @@ abstract class CommonNode extends Node {
      * 
      * @return true if the pawn successfully enters the node.
      */
+    @Override
     boolean enterNode() {
         if (this.currentOccupancy < getMaxCapacity()) {
             this.currentOccupancy++;
@@ -55,6 +61,7 @@ abstract class CommonNode extends Node {
     /**
      * Removes a pawn from this node, decreasing its internal occupancy counter.
      */
+    @Override
     void leaveNode() {
         if (this.currentOccupancy > 0) {
             this.currentOccupancy--;

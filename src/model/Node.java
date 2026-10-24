@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,13 +23,27 @@ abstract class Node {
 
     /**
      * Connects this node to an adjacent node on the topological map.
-     * 
+     * The connection goes both ways, because the roads on the board
+     * can be used in both directions.
+     *
      * @param neighbor The adjacent Node instance to link.
      */
     void addNeighbor(Node neighbor) {
         if (!this.neighbors.contains(neighbor)) {
             this.neighbors.add(neighbor);
         }
+        if (!neighbor.neighbors.contains(this)) {
+            neighbor.neighbors.add(this);
+        }
+    }
+
+    /**
+     * Retrieves the adjacent nodes, used to validate the pawns' movements.
+     *
+     * @return A read-only list of the neighbors.
+     */
+    List<Node> getNeighbors() {
+        return Collections.unmodifiableList(this.neighbors);
     }
 
     /**
@@ -66,4 +81,25 @@ abstract class Node {
      * @return true if there is a yurt present.
      */
     abstract boolean hasYurt();
+
+    /**
+     * Checks if the given player has a Yurt on this node.
+     * A pawn can jump over the yurts of its own player.
+     *
+     * @param player The player to check.
+     * @return true if one of the yurts here belongs to the player.
+     */
+    abstract boolean hasYurtOf(Player player);
+
+    /**
+     * Attempts to place a pawn on this node.
+     *
+     * @return true if there was room and the pawn entered the node.
+     */
+    abstract boolean enterNode();
+
+    /**
+     * Removes a pawn from this node.
+     */
+    abstract void leaveNode();
 }

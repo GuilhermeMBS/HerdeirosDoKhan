@@ -42,6 +42,24 @@ class CentralNode extends Node {
         return this.toluiYurt != null;
     }
 
+    @Override
+    boolean hasYurtOf(Player player) {
+        return this.toluiYurt == player;
+    }
+
+    /**
+     * All the pawns of the game fit in Karakorum, so a pawn can always enter.
+     */
+    @Override
+    boolean enterNode() {
+        return true;
+    }
+
+    @Override
+    void leaveNode() {
+        // Nothing to do: Karakorum does not count its pawns.
+    }
+
     /**
      * Validates yurt placement in the capital. 
      * Exceptionally hardcoded to reject all players except the designated heir "Tolui".
