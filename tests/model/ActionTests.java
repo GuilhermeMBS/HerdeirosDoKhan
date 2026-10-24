@@ -17,7 +17,7 @@ public class ActionTests {
 	
 	
 	private void createMovementAction() {
-		action = new Action(p, node, new MovementAction(1));
+		action = new Action(p, node, new MovementAction());
 	}
 	
 	private void createYurtAction() {
@@ -72,14 +72,24 @@ public class ActionTests {
 
 	@Test
 	public void testDoActionMovement() {
+		// Karakorum -> node -> node2
+		Node node2 = new SingleNode("c", "d");
+		centralNode.addNeighbor(node);
+		node.addNeighbor(node2);
 		p.startTurn(ColumnColor.GREEN, 0);
 
 		createMovementAction();
 		assertEquals(DebugReturn.SUCCESS, action.doAction());
-		
+
+		// The pawn is already there
+		createMovementAction();
+		assertEquals(DebugReturn.EMPTY_MOVEMENT, action.doAction());
+
+		node = node2;
 		createMovementAction();
 		assertEquals(DebugReturn.SUCCESS, action.doAction());
-		
+
+		node = centralNode;
 		createMovementAction();
 		assertEquals(DebugReturn.EMPTY_MOVEMENT, action.doAction());
 	}

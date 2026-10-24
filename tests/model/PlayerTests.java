@@ -157,6 +157,65 @@ public class PlayerTests {
 	}
 
 	/**
+	 * Goal: each horse moves the pawn to an adjacent stop.
+	 * Scenario: Karakorum - A - B. Tolui activates the yellow column (1 horse)
+	 * and tries to go to B, then to A.
+	 * Expected: B is too far and nothing changes; A works and spends the horse.
+	 */
+	@Test
+	public void moveNeedsOneHorsePerStop() {
+		karakorum.addNeighbor(nodeA);
+		nodeA.addNeighbor(nodeB);
+		tolui.startTurn(ColumnColor.YELLOW, 0);
+
+		assertFalse(tolui.moveActivePawn(nodeB));
+		assertSame(karakorum, tolui.getCurrentNode());
+		assertEquals(1, tolui.getMovementsLeft());
+
+		assertTrue(tolui.moveActivePawn(nodeA));
+		assertSame(nodeA, tolui.getCurrentNode());
+		assertEquals(0, tolui.getMovementsLeft());
+	}
+
+	/**
+	 * Goal: a pawn can pass through a full stop, but cannot stop there.
+	 * Scenario: Karakorum - A - B, and A (fits 1 pawn) already has a pawn.
+	 * Tolui activates the green column (2 horses).
+	 * Expected: stopping at A fails; going to B through A works and uses 2 horses.
+	 */
+	@Test
+	public void pawnPassesThroughFullStopButCannotStopThere() {
+		karakorum.addNeighbor(nodeA);
+		nodeA.addNeighbor(nodeB);
+		nodeA.enterNode();
+		tolui.startTurn(ColumnColor.GREEN, 0);
+
+		assertFalse(tolui.moveActivePawn(nodeA));
+
+		assertTrue(tolui.moveActivePawn(nodeB));
+		assertEquals(Arrays.asList(karakorum, nodeA, nodeB), tolui.getTurnPath());
+		assertEquals(0, tolui.getMovementsLeft());
+	}
+
+	/**
+	 * Goal: a pawn jumps over its own yurts.
+	 * Scenario: Karakorum - A - B, and Tolui has a yurt at A.
+	 * Tolui activates the yellow column (1 horse) and goes to B.
+	 * Expected: the move uses 1 horse and A is not part of the turn path.
+	 */
+	@Test
+	public void pawnJumpsOverOwnYurt() {
+		karakorum.addNeighbor(nodeA);
+		nodeA.addNeighbor(nodeB);
+		nodeA.buildYurt(tolui);
+		tolui.startTurn(ColumnColor.YELLOW, 0);
+
+		assertTrue(tolui.moveActivePawn(nodeB));
+		assertEquals(Arrays.asList(karakorum, nodeB), tolui.getTurnPath());
+		assertEquals(0, tolui.getMovementsLeft());
+	}
+
+	/**
 	 * Goal: a player created only by name uses the matching heir.
 	 * Scenario: players named "Altani" and "Batu" (Batu is not an heir).
 	 * Expected: "Altani" gets her 2 pawns; "Batu" keeps his name and the default board.
