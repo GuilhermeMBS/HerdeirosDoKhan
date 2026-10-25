@@ -1,5 +1,5 @@
 package model;
 
-public interface GameAction {
-	abstract DebugReturn execute(Player p, Node node);
+interface GameAction {
+    DebugReturn execute(Player p, Node node);
 }

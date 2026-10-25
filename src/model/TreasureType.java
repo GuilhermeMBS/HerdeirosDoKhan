@@ -1,14 +1,12 @@
 package model;
 
-
 /**
- * Enum to represent the multiple types of 
- * resources to be sacked from the cities
+ * Enum representing the five types of treasures sacked from cities.
  */
-enum TreasureType {
-	FUR,
+public enum TreasureType {
+    FUR,
     ANIMAL,
     SILK,
-    IRON, 
+    IRON,
     SPICE
 }

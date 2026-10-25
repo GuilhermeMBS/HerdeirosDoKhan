@@ -1,22 +1,18 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * An intermediate topological class for nodes that reside within standard geographic regions
- * and follow basic occupancy and construction constraints.
+ * Intermediate topological class for nodes that reside within standard geographic regions
+ * and follow capacity-based occupancy and construction constraints.
  */
 abstract class CommonNode extends Node {
     protected int currentOccupancy;
     protected List<Player> yurtOwners;
     protected String region;
 
-    /**
-     * Instantiates a common node tied to a specific geographic region.
-     * 
-     * @param region The name of the territory (e.g., "Russia", "China").
-     */
     CommonNode(String region) {
         super();
         this.region = region;
@@ -35,20 +31,19 @@ abstract class CommonNode extends Node {
     }
 
     @Override
+    boolean canBuildYurt(Player player) {
+        return player != null && this.yurtOwners.size() < getMaxCapacity();
+    }
+
+    @Override
     boolean buildYurt(Player player) {
-        if (this.yurtOwners.size() < getMaxCapacity()) {
+        if (canBuildYurt(player)) {
             this.yurtOwners.add(player);
             return true;
         }
         return false;
     }
 
-    /**
-     * Attempts to place a pawn on this node.
-     * Validates against the specific maximum structural capacity of the derived class.
-     * 
-     * @return true if the pawn successfully enters the node.
-     */
     @Override
     boolean enterNode() {
         if (this.currentOccupancy < getMaxCapacity()) {
@@ -58,9 +53,6 @@ abstract class CommonNode extends Node {
         return false;
     }
 
-    /**
-     * Removes a pawn from this node, decreasing its internal occupancy counter.
-     */
     @Override
     void leaveNode() {
         if (this.currentOccupancy > 0) {
@@ -68,10 +60,13 @@ abstract class CommonNode extends Node {
         }
     }
 
-    /**
-     * Defines the maximum allowed concurrent occupants (pawns/yurts) for this specific node type.
-     * 
-     * @return The maximum numeric capacity.
-     */
+    List<Player> getYurtOwners() {
+        return Collections.unmodifiableList(this.yurtOwners);
+    }
+
+    String getRegion() {
+        return this.region;
+    }
+
     abstract int getMaxCapacity();
 }

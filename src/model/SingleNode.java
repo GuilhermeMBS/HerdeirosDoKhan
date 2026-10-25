@@ -1,27 +1,24 @@
 package model;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a standard city on the board, restricted to single occupancy.
- * Stores a dynamic pool of lootable treasures.
+ * Represents a single-capacity transit node adjacent to a City entity.
+ * Delegates resource plunder and conquest mechanics to the associated City instance.
  */
 class SingleNode extends CommonNode {
-    protected String city;
+    protected City city;
     protected final int maxCapacity = 1;
-    protected List<TreasureType> treasures;
+    protected final List<TreasureType> treasures;
 
-    /**
-     * Initializes a city node.
-     * 
-     * @param region The geographic territory of the city.
-     * @param city   The unique identifier name of the city.
-     */
-    SingleNode(String region, String city) {
+    SingleNode(String region, City city) {
         super(region);
-        this.city = city;
-        this.treasures = new ArrayList<>();
+        this.city = city != null ? city : new City("");
+        this.treasures = this.city.getResourcesInternal();
+    }
+
+    SingleNode(String region, String cityName) {
+        this(region, new City(cityName));
     }
 
     @Override
@@ -29,30 +26,29 @@ class SingleNode extends CommonNode {
         return this.maxCapacity;
     }
 
-    String getCityName() {
+    City getCity() {
         return this.city;
     }
 
-    /**
-     * Extracts a treasure from the city's stash based on an internal index.
-     * 
-     * @param index The zero-based position of the targeted treasure.
-     * @return The removed TreasureType if found, or null if the index is out of bounds.
-     */
-    TreasureType plunderTreasure(int index) {
-        if (index >= 0 && index < this.treasures.size()) {
-            return this.treasures.remove(index);
-        }
-        return null;
+    String getCityName() {
+        return this.city != null ? this.city.getName() : "";
     }
 
-    /**
-     * Determines the geopolitical subjugation status of the city.
-     * A city falls when its treasury is empty AND a yurt has been established.
-     * 
-     * @return true if the conquest conditions are met.
-     */
+    TreasureType plunderTreasure(int index) {
+        if (this.city == null) {
+            return null;
+        }
+        if (!this.city.canBeSacked() && !this.treasures.isEmpty()) {
+            return this.treasures.remove(index);
+        }
+        return this.city.removeResource(index);
+    }
+
     boolean isConquered() {
-        return this.treasures.isEmpty() && this.hasYurt();
+        if (this.city == null) {
+            return false;
+        }
+        boolean cityDominatedOrEmpty = (this.city.dominatedBy() != null) || this.treasures.isEmpty();
+        return cityDominatedOrEmpty && this.hasYurt();
     }
 }

@@ -1,66 +1,49 @@
 package model;
 
-
 /**
- * Class that represents all available actions for the player
- * 
- * <p>Available methods:</p>
- * <ul>
- * 		<li></li>
- * </ul>
- * 
- * @see No
- * @see Player
- * 
- * @author joaop
- * @version 1.0
+ * Command wrapper executing a player action on a target node.
  */
-public class Action {
-	private Node node = null;
-	private GameAction action = null;
-	private Player player = null;
-	
-	
-	public Action(Player p, Node n, GameAction action) {
-		node = n;
-		player = p;
-		this.action = action;
-	}
-	
-	
-	public boolean setAction(GameAction type) {
-		this.action = type;
-		return true;
-	}
-	
-	
-	public boolean setNode(Node no) {
-		node = no;
-		return true;
-	}
-	
-	
-	public boolean setPlayer(Player jog) {
-		player = jog;
-		return true;
-	}
-	
-	
-	private void resetInfo() {
-		node = null;
-		action = null;
-		player = null;
-	}
-	
-	
-	public DebugReturn doAction() {
-		if (player == null) return DebugReturn.MISSING_PLAYER;
-		if (action == null) return DebugReturn.MISSING_ACTION;
-		if (node == null) return DebugReturn.MISSING_NODE;
-		
-		DebugReturn result = action.execute(player, node);
-		
-		if (result == DebugReturn.SUCCESS) resetInfo();
-		return result;
-	}
+class Action {
+    private Node node;
+    private GameAction action;
+    private Player player;
+
+    Action(Player p, Node n, GameAction action) {
+        this.node = n;
+        this.player = p;
+        this.action = action;
+    }
+
+    boolean setAction(GameAction type) {
+        this.action = type;
+        return true;
+    }
+
+    boolean setNode(Node no) {
+        this.node = no;
+        return true;
+    }
+
+    boolean setPlayer(Player jog) {
+        this.player = jog;
+        return true;
+    }
+
+    private void resetInfo() {
+        this.node = null;
+        this.action = null;
+        this.player = null;
+    }
+
+    DebugReturn doAction() {
+        if (this.player == null) return DebugReturn.MISSING_PLAYER;
+        if (this.action == null) return DebugReturn.MISSING_ACTION;
+        if (this.node == null) return DebugReturn.MISSING_NODE;
+
+        DebugReturn result = this.action.execute(this.player, this.node);
+        if (result == DebugReturn.SUCCESS) {
+            resetInfo();
+        }
+        return result;
+    }
 }

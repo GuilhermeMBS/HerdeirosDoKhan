@@ -1,27 +1,36 @@
 package model;
 
-public class SackAction implements GameAction {
-	private final City city;
-	private final int qtySword;
-	private final int indTreasure;
-	
-	
-	public SackAction(City city, int qtySword, int indTreasure) {
-		this.city = city;
-		this.qtySword = qtySword;
-		this.indTreasure = indTreasure;
-	}
+class SackAction implements GameAction {
+    private final City city;
+    private final int qtySword;
+    private final int indTreasure;
 
-	
-	@Override
-	public DebugReturn execute(Player p, Node node) {
-		if (!city.canBeSacked()) return DebugReturn.CANT_SACK_CITY;
-		
-		if (!p.spendTribute(TributeType.SWORD, qtySword)) return DebugReturn.EMPTY_SWORDS;
-		
-		p.addTreasure(city.removeResource(indTreasure), 1);
-		
-		return DebugReturn.SUCCESS;
-	}
+    SackAction(City city, int qtySword, int indTreasure) {
+        this.city = city;
+        this.qtySword = qtySword;
+        this.indTreasure = indTreasure;
+    }
 
+    @Override
+    public DebugReturn execute(Player p, Node node) {
+        if (this.city == null || !this.city.canBeSacked()) {
+            return DebugReturn.CANT_SACK_CITY;
+        }
+        if (this.indTreasure < 0 || this.indTreasure >= this.city.getResources().size()) {
+            return DebugReturn.CANT_SACK_CITY;
+        }
+        if (!p.spendTribute(TributeType.SWORD, this.qtySword)) {
+            return DebugReturn.EMPTY_SWORDS;
+        }
+
+        TreasureType looted = this.city.removeResource(this.indTreasure);
+        p.addTreasure(looted, 1);
+
+        if (this.city.getResources().isEmpty() && this.city.defineDomination(p)) {
+            p.takeYurtFromStock();
+            p.registerConqueredCity();
+        }
+
+        return DebugReturn.SUCCESS;
+    }
 }

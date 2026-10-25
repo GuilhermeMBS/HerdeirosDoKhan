@@ -16,14 +16,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import controller.Controller;
 import loader.GameStateLoader;
-
 import model.GameData;
 
 /**
- * Initial configuration window allowing players to start a new match, load a saved match,
- * choose the number of active players (2 to 5), select the Karakorum setup variant
- * (default or alternative), and assign an Heir character to each player slot.
+ * Initial configuration window allowing players to start a new match or load a saved state.
  */
 public class InitialSetupFrame extends JFrame {
 
@@ -37,9 +35,6 @@ public class InitialSetupFrame extends JFrame {
     private final JRadioButton alternativeKarakorumRadio;
     private final List<JComboBox<String>> heirSelectors;
 
-    /**
-     * Constructs the initial setup window.
-     */
     public InitialSetupFrame() {
         super("Heirs of the Khan - Match Setup");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,7 +45,7 @@ public class InitialSetupFrame extends JFrame {
         configPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         configPanel.add(new JLabel("Number of Players (2 - 5):"));
-        this.playerCountCombo = new JComboBox<>(new Integer[] {2, 3, 4, 5});
+        this.playerCountCombo = new JComboBox<>(new Integer[] { 2, 3, 4, 5 });
         configPanel.add(this.playerCountCombo);
 
         configPanel.add(new JLabel("Karakorum Trading Post Mode:"));
@@ -88,9 +83,6 @@ public class InitialSetupFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    /**
-     * Binds listeners using classic anonymous classes (no lambda expressions).
-     */
     private void bindSetupListeners(JButton startNewMatchButton, JButton continueSavedButton) {
         this.playerCountCombo.addActionListener(new ActionListener() {
             @Override
@@ -114,9 +106,6 @@ public class InitialSetupFrame extends JFrame {
         });
     }
 
-    /**
-     * Enables or disables player heir dropdowns according to the selected player count.
-     */
     private void updateActiveHeirSelectors() {
         Integer selectedCount = (Integer) this.playerCountCombo.getSelectedItem();
         int count = selectedCount != null ? selectedCount.intValue() : 2;
@@ -125,9 +114,6 @@ public class InitialSetupFrame extends JFrame {
         }
     }
 
-    /**
-     * Closes the setup screen and opens the main board window.
-     */
     private void launchConfiguredMatch(boolean loadFromDisk) {
         GameStateLoader loader = new GameStateLoader();
 
@@ -140,8 +126,9 @@ public class InitialSetupFrame extends JFrame {
         }
 
         boolean altMode = this.alternativeKarakorumRadio.isSelected();
-        GameData facade = GameData.createData(altMode);
-        facade.setupMatch(chosenHeirs, altMode);
+        Controller controller = Controller.getController();
+        controller.setupMatch(chosenHeirs, altMode);
+        GameData facade = controller.getGameData();
 
         MainGameFrame mainFrame = new MainGameFrame(facade, loader);
         if (loadFromDisk) {

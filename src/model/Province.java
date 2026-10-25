@@ -1,29 +1,24 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Geographic zone bordered by the travel paths, capable of generating passive tributes.
+ * Geographic zone bordered by travel paths, capable of generating tributes.
  */
 class Province {
     protected int resourceCount;
-    protected int khanPosition; 
+    protected int khanPosition;
     protected TributeType tributeType;
+    private final List<Province> khanNeighbors = new ArrayList<>();
 
-    /**
-     * Initializes a province yielding a specific tribute.
-     * 
-     * @param type The enumerated type of the generated tribute.
-     */
     Province(TributeType type) {
         this.tributeType = type;
-        this.resourceCount = 1; 
+        this.resourceCount = 1;
         this.khanPosition = 0;
     }
 
-    /**
-     * Extracts a single tribute from the province.
-     * 
-     * @return true if successful; false if the province is barren.
-     */
     boolean collectResource() {
         if (this.resourceCount > 0) {
             this.resourceCount--;
@@ -32,9 +27,6 @@ class Province {
         return false;
     }
 
-    /**
-     * Increments the tribute count up to the strict mechanical limit of 3.
-     */
     void addResource() {
         if (this.resourceCount < 3) {
             this.resourceCount++;
@@ -43,5 +35,19 @@ class Province {
 
     TributeType getTributeType() {
         return this.tributeType;
+    }
+
+    int getResourceCount() {
+        return this.resourceCount;
+    }
+
+    void addKhanNeighbor(Province neighbor) {
+        if (neighbor != null && neighbor != this && !this.khanNeighbors.contains(neighbor)) {
+            this.khanNeighbors.add(neighbor);
+        }
+    }
+
+    List<Province> getKhanNeighbors() {
+        return Collections.unmodifiableList(this.khanNeighbors);
     }
 }

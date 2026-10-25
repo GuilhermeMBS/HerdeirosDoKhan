@@ -1,58 +1,37 @@
 package model;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
- * Is a collection of resources of the game
- * 
- * <p>Once this file is loaded for the first onto the virtual machine, it
- *  creates all the resources and shuffles them.</p>
- *  
- * <p>Available methods:</p>
- * <ul>
- * 		<li>{@link #generateResources()}</li>
- * </ul>
- * 
- * @author joaop
- * @version 1.0
+ * Manages the global deck of 40 treasure tokens (8 of each of the 5 types).
  */
 class Resource {
-	private static ArrayList<TreasureType> resources = new ArrayList<TreasureType>();
-	private static final int QTY_PER_RESOURCE = 8; // I understood that there are these many resources for each type
-	
-	
-	/**
-	 * Static creation of the array for all resources
-	 */
-	static {
-		resetResources();
-	}
-	
-	static void resetResources() {
-		for (TreasureType tipo : TreasureType.values()) {
-			for (int i = 0; i < QTY_PER_RESOURCE; i++) {
-				resources.add(tipo);
-			}
-		}
-		
-		Collections.shuffle(resources);
-	}
-	
-	
-	/**
-	 * Creates the 4 resources for the city to be sacked
-	 * @return {@code null} if all resources have been consumed,
-	 * or an {@code ArrayList<TreasureType>} with the 4 resources of the city
-	 */
-	public static ArrayList<TreasureType> generateResources() {
-		if (resources.isEmpty()) return null;
-		
-		ArrayList<TreasureType> tmp = new ArrayList<TreasureType>();
-		for (int i = 0; i < 4; i++) {
-			tmp.add(resources.remove(0));
-		}
-		
-		return tmp;
-	}
+    private static final ArrayList<TreasureType> resources = new ArrayList<>();
+    private static final int QTY_PER_RESOURCE = 8;
+
+    static {
+        resetResources();
+    }
+
+    static void resetResources() {
+        resources.clear();
+        for (TreasureType type : TreasureType.values()) {
+            for (int i = 0; i < QTY_PER_RESOURCE; i++) {
+                resources.add(type);
+            }
+        }
+        Collections.shuffle(resources);
+    }
+
+    static ArrayList<TreasureType> generateResources() {
+        if (resources.size() < 4) {
+            return null;
+        }
+        ArrayList<TreasureType> tmp = new ArrayList<>(4);
+        for (int i = 0; i < 4; i++) {
+            tmp.add(resources.remove(0));
+        }
+        return tmp;
+    }
 }

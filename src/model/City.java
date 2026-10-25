@@ -1,109 +1,65 @@
 package model;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * Represents a city in the game
- * 
- * <p>A city can be sacked by a player to obtain resources. Once all resources
- * have been removed, the city will be dominated by the player. </p>
- * 
- * <p>Available methods:</p>
- * <ul>
- * 		<li>{@link #activateSacking()}</li>
- * 		<li>{@link #canBeSacked()}</li>
- * 		<li>{@link #removeResource()}</li>
- * 		<li>{@link #dominatedBy()}</li>
- * 		<li>{@link #getName()}</li>
- * </ul>
- * 
- * @author joaop
- * @version 1.0
+ * Represents a city on the board that can be sacked for treasures and conquered.
  */
 class City {
-	private String name;
-	private boolean saqueavel = false;
-	private Player player = null;
-	private ArrayList<TreasureType> listaRecursos = new ArrayList<TreasureType>();
-	
-	
-	/**
-	 * Constructor for the class "City".
-	 * 
-	 * @param name the name of the city
-	 */
-	public City(String name) {
-		this.name = name;
-	}
-	
-	
-	/**
-	 * Makes it possible so the player can sack the city and add the resources for it
-	 * @return {@code true} if it could make the city available for sacking
-	 */
-	public boolean activateSacking() {
-		saqueavel = true;
-		listaRecursos = Resource.generateResources();
-		
-		return true;
-	}
-	
-	
-	/**
-	 * Check if the city can be sacked
-	 * @return {@code true} if the city can be sacked,
-	 * {@code false} otherwise
-	 */
-	public boolean canBeSacked() { return saqueavel; }
-	
-	
-	/**
-	 * Removes a resource from a city, if available, and returns it.
-	 * 
-	 * @param ind position of the resource that the player wants
-	 * @return the removed resource, or {@code null} if the city can not
-	 * be sacked
-	 */
-	public TreasureType removeResource(int ind) {
-		if (!saqueavel || listaRecursos.isEmpty()) return null;
-		
-		TreasureType r = listaRecursos.get(ind);
-		listaRecursos.remove(ind);
-		return r;
-	}
-	
-	
-	/**
-	 * Attach the city to a player which collected the last resource
-	 * @param num the reference to which player conquered the city
-	 * @return {@code true} if it could assign the player as the conquerer
-	 */
-	public boolean defineDomination(Player num) {
-		if (!(saqueavel && listaRecursos.isEmpty())) return false;
-		
-		player = num;
-		saqueavel = false;
-		
-		return true;
-	}
-	
-	
-	/**
-	 * Get which player conquered the city
-	 * @return {@code null} if the city has not been conquered, 
-	 * else {@code Player} that has dominated the city
-	 */
-	public Player dominatedBy() {
-		return this.player;
-	}	
-	
-	
-	/**
-	 * Get the name of the city
-	 * @return the name ({@code String}) of the city
-	 */
-	public String getName() {
-		return name;
-	}
+    private final String name;
+    private boolean sackable = false;
+    private Player conqueror = null;
+    private final ArrayList<TreasureType> resources = new ArrayList<>();
+
+    City(String name) {
+        this.name = name;
+    }
+
+    boolean activateSacking() {
+        this.sackable = true;
+        this.resources.clear();
+        List<TreasureType> generated = Resource.generateResources();
+        if (generated != null) {
+            this.resources.addAll(generated);
+        }
+        return true;
+    }
+
+    boolean canBeSacked() {
+        return this.sackable;
+    }
+
+    TreasureType removeResource(int ind) {
+        if (!this.sackable || this.resources.isEmpty() || ind < 0 || ind >= this.resources.size()) {
+            return null;
+        }
+        return this.resources.remove(ind);
+    }
+
+    boolean defineDomination(Player player) {
+        if (!(this.sackable && this.resources.isEmpty())) {
+            return false;
+        }
+        this.conqueror = player;
+        this.sackable = false;
+        return true;
+    }
+
+    Player dominatedBy() {
+        return this.conqueror;
+    }
+
+    String getName() {
+        return this.name;
+    }
+
+    List<TreasureType> getResources() {
+        return Collections.unmodifiableList(this.resources);
+    }
+
+    ArrayList<TreasureType> getResourcesInternal() {
+        return this.resources;
+    }
 }
