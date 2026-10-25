@@ -8,7 +8,7 @@ class CentralNode extends Node {
     protected TradingPost tradingPost;
     protected final int maxCapacity = 5;
     
-    protected Player toluiYurt; 
+    protected Player toluiYurt;
 
     /**
      * Initializes the central hub with a specialized Trading Post.

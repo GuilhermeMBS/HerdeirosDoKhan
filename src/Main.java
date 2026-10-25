@@ -17,6 +17,6 @@ public class Main {
 		}
 		
 		s.close();
-		System.out.printf("A m2édia da turma foi: %.1f\n", soma/i);
+		System.out.printf("A média da turma foi: %.1f\n", soma/i);
 	}
 }
