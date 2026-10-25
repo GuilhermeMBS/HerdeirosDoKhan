@@ -8,8 +8,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
 import loader.GameStateLoader;
-import model.HerdeirosFacade;
+
+import model.GameData;
 
 /**
  * Main application window housing the Java2D board canvas, the lateral action controls,
@@ -31,7 +33,7 @@ public class MainGameFrame extends JFrame {
      * @param modelFacade The initialized domain model facade.
      * @param stateLoader The persistence helper for saving/loading match states.
      */
-    public MainGameFrame(HerdeirosFacade modelFacade, GameStateLoader stateLoader) {
+    public MainGameFrame(GameData modelFacade, GameStateLoader stateLoader) {
         super("Heirs of the Khan - Board View");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(new Dimension(MAX_ALLOWED_WIDTH, MAX_ALLOWED_HEIGHT));
@@ -70,7 +72,7 @@ public class MainGameFrame extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                HerdeirosFacade facade = new HerdeirosFacade();
+                GameData facade = GameData.getData();
                 GameStateLoader loader = new GameStateLoader();
                 MainGameFrame frame = new MainGameFrame(facade, loader);
                 frame.setVisible(true);

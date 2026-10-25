@@ -6,6 +6,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 
 import controller.Controller;
+
 import model.PlayerColor;
 
 /**
@@ -17,7 +18,7 @@ import model.PlayerColor;
 public class PlayerBoardDemo {
 
     public static void main(String[] args) {
-        Controller controller = new Controller();
+        Controller controller = Controller.getController();
         controller.startGame(false);
         controller.setPlayerAmount(3);
         controller.setHeirPlayer(0, PlayerColor.BLUE, "Tolui");
@@ -26,7 +27,7 @@ public class PlayerBoardDemo {
 
         PlayerBoardPanel boardPanel = new PlayerBoardPanel(controller);
         JButton endTurnButton = new JButton("Passar a vez");
-        endTurnButton.addActionListener(new EndTurnListener(controller, boardPanel));
+        endTurnButton.addActionListener(new EndTurnListener(boardPanel));
 
         JFrame frame = new JFrame("Teste da cartela");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

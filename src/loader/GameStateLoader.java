@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import model.HerdeirosFacade;
+import model.GameData;
 import view.BoardPanel;
 
 /**
@@ -24,14 +24,14 @@ public class GameStateLoader {
      */
     public boolean saveMatchState(
         String filePath,
-        HerdeirosFacade modelFacade,
+        GameData modelFacade,
         BoardPanel boardPanel,
         String activePlayerName
     ) {
         Properties props = new Properties();
         props.setProperty("activePlayer", activePlayerName);
         props.setProperty("alternativeKarakorum", String.valueOf(modelFacade.isAlternativeKarakorum()));
-        props.setProperty("khanAtUpgrades", String.valueOf(modelFacade.isKhanAtUpgradesArea()));
+        props.setProperty("khanAtUpgrades", String.valueOf(modelFacade.isKhanAtUpgradeArea()));
         props.setProperty("pawn.0.node", boardPanel.getPawnLocation(0));
         props.setProperty("pawn.1.node", boardPanel.getPawnLocation(1));
 
@@ -56,7 +56,7 @@ public class GameStateLoader {
      * @param boardPanel  The board panel to update and repaint.
      * @return True if loaded successfully; false if the file does not exist or fails to parse.
      */
-    public boolean loadMatchState(String filePath, HerdeirosFacade modelFacade, BoardPanel boardPanel) {
+    public boolean loadMatchState(String filePath, GameData modelFacade, BoardPanel boardPanel) {
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream(filePath)) {
             props.load(in);

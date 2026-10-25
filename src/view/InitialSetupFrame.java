@@ -15,8 +15,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+
 import loader.GameStateLoader;
-import model.HerdeirosFacade;
+
+import model.GameData;
 
 /**
  * Initial configuration window allowing players to start a new match, load a saved match,
@@ -27,7 +29,7 @@ public class InitialSetupFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private static final String[] AVAILABLE_HEIRS = new String[] {
-        "Tolui", "Batu", "Ogedei", "Chagatai", "Altani"
+        "Tolui", "Ogedei", "Chagatai", "Altani", "Jochi"
     };
 
     private final JComboBox<Integer> playerCountCombo;
@@ -127,7 +129,6 @@ public class InitialSetupFrame extends JFrame {
      * Closes the setup screen and opens the main board window.
      */
     private void launchConfiguredMatch(boolean loadFromDisk) {
-        HerdeirosFacade facade = new HerdeirosFacade();
         GameStateLoader loader = new GameStateLoader();
 
         Integer selectedCount = (Integer) this.playerCountCombo.getSelectedItem();
@@ -139,6 +140,7 @@ public class InitialSetupFrame extends JFrame {
         }
 
         boolean altMode = this.alternativeKarakorumRadio.isSelected();
+        GameData facade = GameData.createData(altMode);
         facade.setupMatch(chosenHeirs, altMode);
 
         MainGameFrame mainFrame = new MainGameFrame(facade, loader);

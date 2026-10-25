@@ -494,6 +494,13 @@ class Map {
 	}
 	
 	
+	public int getCityInd(String name) {
+		for (int i = 0; i < cityArray.size(); i++) 
+			if (cityArray.get(i).getName().equals(name)) return i;
+		return -1;
+	}
+	
+	
 	public Province getProvince(int ind) {
 		if (ind < 0 || ind >= getAmountProvinces()) return null;
 		
@@ -522,5 +529,42 @@ class Map {
 			}
 		}
 		return qty;
+	}
+	
+	
+	Node getNodeById(String id) {
+		if (id == null) return null;
+		if (id.equals("CENTRAL")) return getCentralNode();
+		
+		int sep = id.lastIndexOf('_');
+		if (sep < 0) return null;
+		
+		try {
+			Region region = Region.valueOf(id.substring(0, sep));
+			int i = Integer.parseInt(id.substring(sep + 1));
+			ArrayList<Node> list = nodeArray.get(region.ordinal());
+			return (i >= 0 && i < list.size()) ? list.get(i) : null;
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+	}
+	
+	
+	String getNodeId(Node node) {
+		for (int r = 0; r < nodeArray.size(); r++) {
+			int i = nodeArray.get(r).indexOf(node);
+			if (i < 0) continue;
+			if (r == Region.values().length) return "CENTRAL";
+			return Region.values()[r].name() + "_" + i;
+		}
+		return null;
+	}
+	
+	
+	List<String> getAllNodeIds() {
+		List<String> ids = new ArrayList<>();
+		for (ArrayList<Node> list : nodeArray)
+			for (Node n : list) ids.add(getNodeId(n));
+		return ids;
 	}
 }

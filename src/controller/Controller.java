@@ -8,7 +8,6 @@ import model.ColumnColor;
 import model.GameData;
 import model.Heir;
 import model.PlayerColor;
-import model.Region;
 
 import loader.GameStateLoader;
 
@@ -32,6 +31,20 @@ public class Controller {
 	private GameData data;
 	
 	private GameStateLoader state;
+	
+	private static Controller controller = null;
+	
+	
+	private Controller() {
+		
+	}
+	
+	
+	public static Controller getController() {
+		if (controller == null) 
+			controller = new Controller();
+		return controller;
+	}
 	
 	
 	public boolean startGame(boolean alternativeKarakorum) {
@@ -85,53 +98,38 @@ public class Controller {
 	}
 	
 	
-	public boolean createMoveAction() {
-		data.newMoveAction(currentPlayer, null, 1);
-		return true;
+	public boolean createMoveAction(String nodeId) {
+		return data.MovePawn(currentPlayer, nodeId);
 	}
 	
 	
-	public boolean createYurtAction() {
-		// Mudar o node para o node do Yurt mesmo (não o atual do jogador)
-		data.newYurtAction(currentPlayer, null);
-		return true;
+	public boolean createYurtAction(String nodeId) {
+		return data.placeYurtOnNode(currentPlayer, nodeId);
 	}
 	
 	
-	public boolean createSackAction(int indCity, int indTreasure) {
-		if (indCity < 0 || indCity >= data.getAmountCity()) return false;
+	public boolean createSackAction(String cityName, int indTreasure) {
 		if (indTreasure < 0 || indTreasure > 3) return false;
 		
-		data.newSackAction(currentPlayer, null, indCity, (firstSackCity) ? 1 : 2, indTreasure);
-		return true;
+		boolean ret = data.attackCityForTreasure(currentPlayer, cityName, indTreasure, (firstSackCity) ? 1 : 2);
+		firstSackCity = false;
+		return ret;
 	}
 	
 	
-	public boolean createKhanAction(int indProvince) {		
-		if (indProvince >= data.getAmountProvinces()) return false;
-		
-		data.newKhanAction(currentPlayer, null, indProvince);
-		return true;
+	public boolean createKhanAction(String provinceId) {
+		return data.moveKhan(currentPlayer, provinceId);
 	}
 	
 	
-	public boolean createTributeAction(int indProvince) {		
-		if (indProvince < 0 || indProvince >= data.getAmountProvinces()) return false;
-		
-		data.newTributeAction(currentPlayer, null, indProvince);
-		return true;
+	public boolean createTributeAction(String nodeId, String provinceId) {
+		return data.harvestProvinceResource(currentPlayer, nodeId, provinceId);
 	}
 	
 	
-	public boolean createTradeAction(boolean isCentralNode, Region region, boolean firstTradePost) {
-		
-		data.newTradeAction(currentPlayer, isCentralNode, region, firstTradePost);
+	public boolean createTradeAction(String nodeId) {
+		data.executeTrade(currentPlayer, nodeId);
 		return true;
-	}
-	
-	
-	public boolean executeAction() {
-		return data.doAction();
 	}
 	
 	

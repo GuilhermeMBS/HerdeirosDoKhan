@@ -18,7 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
-import model.HerdeirosFacade;
+
+import model.GameData;
 
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
@@ -32,7 +33,7 @@ public class BoardPanel extends JPanel {
     private static final int CANVAS_WIDTH = 980;
     private static final int CANVAS_HEIGHT = 760;
 
-    private final HerdeirosFacade modelFacade;
+    private final GameData modelFacade;
     private Image boardBackgroundImage;
     private Image yurtSprite;
     private Image khanSprite;
@@ -50,7 +51,7 @@ public class BoardPanel extends JPanel {
      *
      * @param modelFacade Reference to the domain model facade.
      */
-    public BoardPanel(HerdeirosFacade modelFacade) {
+    public BoardPanel(GameData modelFacade) {
         this.modelFacade = modelFacade;
         this.playerPawnSprites = new HashMap<>();
         this.pawnLocations = new HashMap<>();
@@ -277,7 +278,7 @@ public class BoardPanel extends JPanel {
      */
     private void drawKhanPiece(Graphics2D g2d) {
         Point khanPt;
-        if (this.modelFacade.isKhanAtUpgradesArea()) {
+        if (this.modelFacade.isKhanAtUpgradeArea()) {
             khanPt = BoardGeometry.getUpgradesAreaCoordinate();
         } else {
             khanPt = BoardGeometry.getProvinceCoordinates(this.activeKhanProvinceId);

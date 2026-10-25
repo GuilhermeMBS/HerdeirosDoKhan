@@ -12,11 +12,10 @@ import controller.Controller;
  * @author Vinicius
  */
 class EndTurnListener implements ActionListener {
-    private final Controller controller;
+    private final Controller controller = Controller.getController();
     private final PlayerBoardPanel panel;
 
-    EndTurnListener(Controller controller, PlayerBoardPanel panel) {
-        this.controller = controller;
+    EndTurnListener(PlayerBoardPanel panel) {
         this.panel = panel;
     }
 

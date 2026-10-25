@@ -33,19 +33,87 @@ public class GameData {
 	}
 	
 	
+	public static GameData getData() { return data; }
+	
+	
 	/*
 	 * 
 	 * Map methods
 	 * 
 	 */
 	
+	// Helper functions (private)
+	
 	private Map getMap() { return Map.getMap(altKarakorum); }
+	
+	private Node nodeById(String id) { return getMap().getNodeById(id); }
+	
+	
+	private Province provinceById(String id) {
+		try {
+			return getMap().getProvince(ProvinceId.valueOf(id).ordinal());
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return null;
+		}
+	}
+
+	
+	// Methods to get information on the map
+	
+	public boolean isAlternativeKarakorum() { return altKarakorum; }
 	
 	public boolean areAllCityConquered() { return Map.getMap(altKarakorum).allCityConquered(); }
 	
 	public int getAmountProvinces() { return getMap().getAmountProvinces(); }
 	
 	public int getAmountCity() { return getMap().getAmountCity(); }
+	
+	public List<String> getAllNodeIds() { return getMap().getAllNodeIds(); }
+	
+	public boolean isKhanAtUpgradeArea() { return getMap().getKhan().isAtUpgradesArea(); }
+	
+	public int getPlayerCount() { return players == null ? 0 : players.length; }
+	
+	public String getPlayerNodeId(int playerInd) { return getMap().getNodeId(players[playerInd].getCurrentNode()); }
+	
+	
+	public List<String> getAllProvinceIds() {
+		List<String> ids = new ArrayList<>();
+		for (ProvinceId id : ProvinceId.values()) ids.add(id.name());
+		return ids;
+	}
+	
+	
+	public boolean nodeHasYurt(String nodeId) {
+		Node node = getMap().getNodeById(nodeId);
+		
+		if (node == null) return false;
+		return node.hasYurt();
+	}
+	
+	
+	public int getProvinceResourceCount(String ProvinceId) {
+		Province p = provinceById(ProvinceId);
+		return p != null ? p.resourceCount : 0;
+	}
+	
+	
+	public String getKhanProvinceId() {
+		Province current = getMap().getKhan().currentProvince;
+		if (current == null) return null;
+		
+		for (ProvinceId id : ProvinceId.values()) 
+			if (getMap().getProvince(id.ordinal()) == current) return id.name();
+		return null;
+	}
+	
+	
+	// Methods to set some values
+	
+	public void setProvinceResourceCount(String provinceId, int qty) {
+		Province p = provinceById(provinceId);
+		if (p != null) p.resourceCount = Math.max(0, Math.min(3, qty));
+	}
 	
 	
 	/*
@@ -154,10 +222,87 @@ public class GameData {
 	}
 	
 	
+	public boolean setupMatch(List<String> heirNames, boolean alt) {
+		if (players != null) return false;
+		
+		if (!createArrayPlayers(heirNames.size())) return false;
+		
+		for (int i = 0; i < heirNames.size(); i++)
+			assignPlayer(i, PlayerColor.values()[i], heirNames.get(i), (i >= 2) ? 2 : 1);
+		return true;
+	}
+	
+	
 	public PlayerColor getPlayerColor(int ind) { return players[ind].getColor(); }
 
-
 	public Heir getPlayerHeir(int ind) { return players[ind].getHeir(); }
+	
+	public int getPlayerInd(String name) {
+		for (int i = 0; i < players.length; i++) {
+			if (players[i].getName().equalsIgnoreCase(name)) return i;
+		}
+		return -1;
+	}
+	
+	
+	public boolean MovePawn(int playerInd, String nodeId) {
+		Node target = nodeById(nodeId);
+		Player p = players[playerInd];
+		if (target == null || !p.getCurrentNode().getNeighbors().contains(target)) return false;
+		
+		newMoveAction(p, target, 1);
+		return doAction();
+	}
+	
+	
+	public boolean placeYurtOnNode(int playerInd, String nodeId) {
+		Node n = nodeById(nodeId);
+		newYurtAction(playerInd, n);
+		return doAction();
+	}
+	
+	
+	public boolean harvestProvinceResource(int playerInd, String nodeId, String provinceId) {
+		Node n = nodeById(nodeId);
+		Province province = provinceById(provinceId);
+		
+		if (n == null || province == null || !n.getProvinces().contains(province)) return false;
+		
+		newTributeAction(players[playerInd], n, province);
+		return doAction();
+	}
+	
+	
+	public boolean attackCityForTreasure(int playerInd, String cityName, int treasureInd, int qtySword) {
+		int cityInd = getMap().getCityInd(cityName);
+		if (cityInd < 0) return false;
+		
+		newSackAction(playerInd, players[playerInd].getCurrentNode(), cityInd, qtySword, treasureInd);
+		return doAction();
+	}
+	
+	
+	public boolean moveKhan(int playerInd, String provinceId) {
+		Province p;
+		if ("UPGRADES".equalsIgnoreCase(provinceId)) p = null;
+		else p = provinceById(provinceId);
+		
+		newKhanAction(playerInd, players[playerInd].getCurrentNode(), p);
+		return doAction();
+	}
+	
+	
+	public boolean executeTrade(int playerInd, String nodeInd) {
+		Node n = nodeById(nodeInd);
+		if (n instanceof SingleNode) return false;
+		
+		TradingPost p;
+		if (n instanceof CentralNode) p = ((CentralNode) n).getTradingPost();
+		else p = ((DoubleNode) n).getTradingPost();
+		
+		newTradeAction(playerInd, p);
+		return doAction();
+	}
 
 
 	/*
@@ -186,47 +331,43 @@ public class GameData {
 	 * 
 	 */
 	
-	public boolean newMoveAction(int playerInd, Node nodeInd, int qty) {
-		action = new Action(players[playerInd], nodeInd, new MovementAction(qty));
+	private boolean newMoveAction(Player p, Node node, int qty) {
+		action = new Action(p, node, new MovementAction(qty));
 		return true;
 	}
 	
 	
-	public boolean newYurtAction(int playerInd, Node nodeInd) {
+	private boolean newYurtAction(int playerInd, Node nodeInd) {
 		action = new Action(players[playerInd], nodeInd, new YurtAction());
 		return true;
 	}
 	
 	
-	public boolean newKhanAction(int playerInd, Node nodeInd, int provinceInd) {
-		action = new Action(players[playerInd], nodeInd, new KhanAction(getMap().getProvince(provinceInd), getMap().getKhan()));
+	private boolean newKhanAction(int playerInd, Node nodeInd, Province province) {
+		action = new Action(players[playerInd], nodeInd, new KhanAction(province, getMap().getKhan()));
 		return true;
 	}
 	
 	
-	public boolean newSackAction(int playerInd, Node nodeInd, int cityInd, int qtySword, int indResource) {
+	private boolean newSackAction(int playerInd, Node nodeInd, int cityInd, int qtySword, int indResource) {
 		action = new Action(players[playerInd], nodeInd, new SackAction(getMap().getCity(cityInd), qtySword, indResource));
 		return true;
 	}
 	
 	
-	public boolean newTributeAction(int playerInd, Node nodeInd, int provinceInd) {
-		action = new Action(players[playerInd], nodeInd, new TributeAction(getMap().getProvince(provinceInd)));
+	private boolean newTributeAction(Player p, Node nodeInd, Province province) {
+		action = new Action(p, nodeInd, new TributeAction(province));
 		return true;
 	}
 	
 	
-	public boolean newTradeAction(int playerInd, boolean isCentralNode, Region region, boolean isFisrtPost) {
-		TradingPost post;
-		if (isCentralNode) post = ((CentralNode) getMap().getCentralNode()).getTradingPost();
-		else post = getMap().getTradingPost(region, isFisrtPost);
-		
+	private boolean newTradeAction(int playerInd, TradingPost post) {		
 		action = new Action(players[playerInd], players[playerInd].getCurrentNode(), new TradeAction(post));
 		return true;
 	}
 	
 	
-	public boolean doAction() {
+	private boolean doAction() {
 		DebugReturn ret = action.doAction();
 		
 		if (ret != DebugReturn.SUCCESS) return false;

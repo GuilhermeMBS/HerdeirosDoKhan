@@ -24,7 +24,9 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import loader.GameStateLoader;
-import model.HerdeirosFacade;
+
+import model.GameData;
+import controller.Controller;
 
 /**
  * Lateral control panel providing board actions (harvest tribute, attack city,
@@ -36,7 +38,8 @@ public class ActionSidePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    private final HerdeirosFacade modelFacade;
+    private final GameData modelFacade;
+    private Controller controller = Controller.getController();
     private final BoardPanel boardPanel;
     private final GameStateLoader stateLoader;
     private final Random randomGenerator;
@@ -59,7 +62,7 @@ public class ActionSidePanel extends JPanel {
      * @param boardPanel  Reference to the Java2D board panel.
      * @param stateLoader Reference to the game state loader.
      */
-    public ActionSidePanel(HerdeirosFacade modelFacade, BoardPanel boardPanel, GameStateLoader stateLoader) {
+    public ActionSidePanel(GameData modelFacade, BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.modelFacade = modelFacade;
         this.boardPanel = boardPanel;
         this.stateLoader = stateLoader;
@@ -204,7 +207,7 @@ public class ActionSidePanel extends JPanel {
                     statusFeedbackLabel.setText("Click a province on the map first.");
                     return;
                 }
-                boolean success = modelFacade.harvestProvinceResource(currentNode, targetProvince);
+                boolean success = controller.createTributeAction(currentNode, targetProvince);
                 if (success) {
                     statusFeedbackLabel.setText("Harvested tribute from " + targetProvince);
                     boardPanel.repaint();
@@ -218,9 +221,9 @@ public class ActionSidePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String nodeId = boardPanel.getSelectedNodeId();
-                String loot = modelFacade.attackCityForTreasure(nodeId, 0);
-                if (loot != null) {
-                    statusFeedbackLabel.setText("Plundered " + loot + " from " + nodeId);
+                boolean loot = controller.createSackAction(nodeId, 0);
+                if (loot) {
+                    statusFeedbackLabel.setText("Plundered " + " from " + nodeId);
                     boardPanel.repaint();
                 } else {
                     statusFeedbackLabel.setText("No plunderable treasure at " + nodeId);
@@ -232,7 +235,7 @@ public class ActionSidePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String nodeId = boardPanel.getSelectedNodeId();
-                boolean built = modelFacade.placeYurtOnNode(nodeId, activePlayerName);
+                boolean built = modelFacade.placeYurtOnNode(modelFacade.getPlayerInd(activePlayerName), nodeId);
                 if (built) {
                     statusFeedbackLabel.setText("Yurt built at " + nodeId + " by " + activePlayerName);
                     boardPanel.repaint();
@@ -246,7 +249,7 @@ public class ActionSidePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String provinceId = boardPanel.getSelectedProvinceId();
-                if (provinceId != null && modelFacade.moveKhan(provinceId)) {
+                if (provinceId != null && controller.createKhanAction(provinceId)) {
                     boardPanel.setActiveKhanProvinceId(provinceId);
                     statusFeedbackLabel.setText("Khan moved to " + provinceId + " (+1 cascade).");
                 } else {
@@ -258,7 +261,7 @@ public class ActionSidePanel extends JPanel {
         moveKhanUpgradesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                modelFacade.moveKhan("UPGRADES");
+            	controller.createKhanAction("UPGRADES");
                 boardPanel.repaint();
                 statusFeedbackLabel.setText("Khan moved to Upgrades Area.");
             }
@@ -283,7 +286,8 @@ public class ActionSidePanel extends JPanel {
                     offer.put("SPICE", Integer.valueOf(1));
                 }
 
-                if (modelFacade.executeTrade(nodeId, offer)) {
+                // if (modelFacade.executeTrade(nodeId, offer)) {
+                if (controller.createTradeAction(nodeId)) {
                     statusFeedbackLabel.setText("Trade completed at " + nodeId);
                 } else {
                     statusFeedbackLabel.setText("Trade rejected at " + nodeId);
