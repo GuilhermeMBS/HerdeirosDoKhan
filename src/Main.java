@@ -1,22 +1,16 @@
-import java.util.Scanner;
+// import java.util.Scanner;
+
+import javax.swing.SwingUtilities;
+
+import view.InitialSetupFrame;
 
 public class Main {
 	public static void main(String[] args) {
-		Scanner s = new Scanner(System.in);
-		double nota, soma = 0.0;
-		
-		System.out.println("Informe uma nota: ");
-		nota = s.nextDouble();
-		
-		int i = 0;
-		
-		for (; nota >= 0.0 && nota <= 10.0; i++) {
-			soma += nota;
-			System.out.println("Informe uma nota: ");
-			nota = s.nextDouble();
-		}
-		
-		s.close();
-		System.out.printf("A média da turma foi: %.1f\n", soma/i);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				new InitialSetupFrame().setVisible(true);
+			}
+		});
 	}
 }

@@ -10,7 +10,7 @@ import model.Heir;
 import model.PlayerColor;
 import model.Region;
 
-import loader.GameState;
+import loader.GameStateLoader;
 
 
 public class Controller {	
@@ -31,7 +31,7 @@ public class Controller {
 
 	private GameData data;
 	
-	private GameState state;
+	private GameStateLoader state;
 	
 	
 	public boolean startGame(boolean alternativeKarakorum) {
@@ -221,7 +221,7 @@ public class Controller {
 	 * 
 	 */
 	
-	private void setState(GameState s) {
+	private void setState(GameStateLoader s) {
 		state = s;
 	}
 	
@@ -229,10 +229,10 @@ public class Controller {
 	public void loadSavedGame(File file) throws IOException {
 		try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
 			Object o = in.readObject();
-			if (!(o instanceof GameState)) {
+			if (!(o instanceof GameStateLoader)) {
 				throw new IOException("The file does not contain a valid match");
 			}
-			setState((GameState) o);
+			setState((GameStateLoader) o);
 		} catch (ClassNotFoundException | ClassCastException e) {
 			throw new IOException("The file does not contain a valid match");
 		}
