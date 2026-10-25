@@ -40,7 +40,7 @@ public class CardsTests {
 		assertEquals(pri.get(0), p.getSecretCard());
 		
 		assertTrue(pri.get(0).setFinished(pri.get(0).m1));
-		assertTrue(p.getSecretCard().m1.hasFinished);
+		assertTrue(p.getSecretCard().m1.hasFinishedMission());
 	}
 	
 	

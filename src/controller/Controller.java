@@ -4,29 +4,15 @@ package controller;
 import java.io.*;
 
 
-import model.Heir;
-import model.Map;
-import model.Player;
+import model.GameData;
 import model.PlayerColor;
 import model.Region;
-import model.DebugReturn;
-
-import model.Action;
-import model.KhanAction;
-import model.SackAction;
-import model.MovementAction;
-import model.TradeAction;
-import model.TributeAction;
-import model.YurtAction;
 
 import loader.GameState;
 
 
-public class Controller {
-	private Map board = null;
-	
+public class Controller {	
 	private int QTY_PLAYERS = 0;
-	private Player[] players;
 	private int currentPlayer = 0;
 	
 	private boolean finalTurn = false;
@@ -38,16 +24,22 @@ public class Controller {
 	
 	private boolean firstSackCity = true;
 	
-	Action action;
+	private GameData data;
 	
 	private GameState state;
+	
+	
+	public boolean startGame(boolean alternativeKarakorum) {
+		data = GameData.createData(alternativeKarakorum);
+		return true;
+	}
 	
 	
 	public boolean setPlayerAmount(int playersQty) {
 		if (playersQty < 2 || playersQty > 5) return false;
 		
 		QTY_PLAYERS = playersQty;
-		players = new Player[QTY_PLAYERS];
+		data.createArrayPlayers(QTY_PLAYERS);
 		
 		if (QTY_PLAYERS == 2) maxVotes = 10;
 		else if (QTY_PLAYERS == 3) maxVotes = 14;
@@ -58,18 +50,11 @@ public class Controller {
 	}
 	
 	
-	public boolean setboard(boolean alternativeKarakorum) {
-		board = new Map(alternativeKarakorum);
-		return true;
-	}
-	
-	
-	public boolean setHeir(int indPlayer, PlayerColor color, String heirName) {
-		if (QTY_PLAYERS < 2 || board == null) return false;
+	public boolean setHeirPlayer(int indPlayer, PlayerColor color, String heirName) {
+		if (QTY_PLAYERS < 2 || data == null) return false;
 		
 		// First and second player get just 1 gold, the others get 2
-		players[indPlayer] = new Player(color, Heir.fromName(heirName), board.getCentralNode(), (indPlayer > 2) ? 2 : 1);
-		return true;
+		return data.assignPlayer(indPlayer, color, heirName, (indPlayer > 2) ? 2 : 1);
 	}
 	
 	
@@ -86,7 +71,7 @@ public class Controller {
 	
 	
 	private boolean endGameConditionsMet() {
-		return board.allCityConquered() || totalVotes >= maxVotes;
+		return data.areAllCityConquered() || totalVotes >= maxVotes;
 	}
 	
 	
@@ -95,73 +80,53 @@ public class Controller {
 	}
 	
 	
-	private boolean setActionParameters() {
-		action.setNode(players[currentPlayer].getCurrentNode());
-		action.setPlayer(players[currentPlayer]);
-		return true;
-	}
-	
-	
 	public boolean createMoveAction() {
-		if (!setActionParameters()) return false;
-		
-		action.setAction(new MovementAction(1));
+		data.newMoveAction(currentPlayer, null, 1);
 		return true;
 	}
 	
 	
 	public boolean createYurtAction() {
 		// Mudar o node para o node do Yurt mesmo (não o atual do jogador)
-		if (!setActionParameters()) return false;
-		
-		action.setAction(new YurtAction());
+		data.newYurtAction(currentPlayer, null);
 		return true;
 	}
 	
 	
 	public boolean createSackAction(int indCity, int indTreasure) {
-		// Mudar o node para o node do Yurt mesmo (não o atual do jogador)
-		if (!setActionParameters()) return false;
-		
-		if (indCity < 0 || indCity >= board.getAmountCity()) return false;
+		if (indCity < 0 || indCity >= data.getAmountCity()) return false;
 		if (indTreasure < 0 || indTreasure > 3) return false;
 		
-		action.setAction(new SackAction(board.getCity(indCity), (firstSackCity) ? 1 : 2, indTreasure));
+		data.newSackAction(currentPlayer, null, indCity, (firstSackCity) ? 1 : 2, indTreasure);
 		return true;
 	}
 	
 	
-	public boolean createKhanAction(int indProvince) {
-		if (!setActionParameters()) return false;
+	public boolean createKhanAction(int indProvince) {		
+		if (indProvince >= data.getAmountProvinces()) return false;
 		
-		if (indProvince >= board.getAmountProvinces()) return false;
-		
-		
-		action.setAction(new KhanAction((indProvince < 0) ? null : board.getProvince(indProvince), board.getKhan()));
+		data.newKhanAction(currentPlayer, null, indProvince);
 		return true;
 	}
 	
 	
-	public boolean createTributeAction(int indProvince) {
-		if (!setActionParameters()) return false;
+	public boolean createTributeAction(int indProvince) {		
+		if (indProvince < 0 || indProvince >= data.getAmountProvinces()) return false;
 		
-		if (indProvince < 0 || indProvince >= board.getAmountProvinces()) return false;
-		
-		action.setAction(new TributeAction(board.getProvince(indProvince)));
+		data.newTributeAction(currentPlayer, null, indProvince);
 		return true;
 	}
 	
 	
-	public boolean createTradeAction(Region region, boolean firstTradePost) {
-		if (!setActionParameters()) return false;
+	public boolean createTradeAction(boolean isCentralNode, Region region, boolean firstTradePost) {
 		
-		action.setAction(new TradeAction(board.getTradingPost(region, firstTradePost)));
+		data.newTradeAction(currentPlayer, isCentralNode, region, firstTradePost);
 		return true;
 	}
 	
 	
-	public DebugReturn executeAction() {
-		return action.doAction();
+	public boolean executeAction() {
+		return data.doAction();
 	}
 	
 	
@@ -201,7 +166,7 @@ public class Controller {
 	public int getTotalPlayers() { return QTY_PLAYERS; }
 	
 	
-	public PlayerColor getCurrentPlayerColor() { return players[currentPlayer].getColor(); }
+	public PlayerColor getCurrentPlayerColor() { return data.getPlayerColor(currentPlayer); }
 	
 	
 	public boolean getGameHasEndend() { return ended; }

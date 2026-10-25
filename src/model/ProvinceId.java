@@ -4,7 +4,7 @@ package model;
  * <p>The order in here is starting at the left top corner
  * and following clockwise order for all the provinces.</p>
  */
-enum ProvinceId {
+public enum ProvinceId {
 	RUSSIA_YURT1,
 	RUSSIA_SWORD1,
 	RUSSIA_YURT2,

@@ -14,9 +14,9 @@ package model;
  * @version 1.0
  */
 class Mission {
-	int target;
-	MissionType type;
-	boolean hasFinished;
+	private int target;
+	private MissionType type;
+	private boolean hasFinished;
 	
 	public Mission(int qtd, MissionType type) {
 		target = qtd;
@@ -45,5 +45,15 @@ class Mission {
 	 */
 	public boolean hasFinishedMission() {
 		return hasFinished == true;
+	}
+	
+	
+	public MissionType getMissionType() {
+		return type;
+	}
+	
+	
+	public int getTargetAmount() {
+		return target;
 	}
 }

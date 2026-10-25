@@ -73,6 +73,24 @@ class PlayerBoard {
         }
         return smallest;
     }
+    
+    boolean hasCompletedSquare() {
+    	ColumnColor[] colors = ColumnColor.COLORED;
+    	
+    	for (int i = 0; i < colors.length - 1; i++) {
+    		int c1 = columns.get(colors[i]).getUpgradeCount();
+    		int c2 = columns.get(colors[i+1]).getUpgradeCount();
+    		
+    		if ((c1 > 1 && c2 > 1)) return true;
+    	}
+    	
+    	int c1 = columns.get(colors[colors.length - 1]).getUpgradeCount();
+    	int c2 = columns.get(ColumnColor.WHITE).getUpgradeCount();
+    	
+    	if (c1 > 1 && c2 > 1) return true;
+    	
+    	return false;
+    }
 
     /** Is there a complete row that has not given its free upgrade yet? */
     boolean hasFreeUpgradePending() {

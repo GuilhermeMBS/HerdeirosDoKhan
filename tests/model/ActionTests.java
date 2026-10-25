@@ -17,7 +17,7 @@ public class ActionTests {
 	
 	
 	private void createMovementAction() {
-		action = new Action(p, node, new MovementAction());
+		action = new Action(p, node, new MovementAction(1));
 	}
 	
 	private void createYurtAction() {

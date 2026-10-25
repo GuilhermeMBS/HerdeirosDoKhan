@@ -37,7 +37,7 @@ enum CityPosition {
  * @author joaop
  * @version 1.5
  */
-public class Map {
+class Map {
 	private ArrayList<City> cityArray = new ArrayList<City>();
 	
 	// The order for the nodes will be clockwise, starting from the top (for each city)
@@ -62,18 +62,28 @@ public class Map {
 	private final int trade1 = city3 + 3;
 	private final int trade2 = trade1 + 1;
 	
+	// Singleton (just have 1 map per game)
+	private static Map map = null;
+	
 	
 	/**
 	 * When creating an instance of this variable,
 	 * it creates all the city and nodes for the map
 	 */
-	public Map(boolean alternativeKarakorum) {
+	private Map(boolean alternativeKarakorum) {
 		createCities();
 		createProvinces();
 		initializeNodes(alternativeKarakorum);
 		initializeConnections();
 		connectNodeProvinces();
 		khan = new Khan();
+	}
+	
+	
+	public static Map getMap(boolean altKarakorum) {
+		if (map == null)
+			map = new Map(altKarakorum);
+		return map;
 	}
 	
 	
@@ -500,5 +510,17 @@ public class Map {
 		int post = (firstTradePost) ? trade1 : trade2;
 		
 		return ((DoubleNode) nodeArray.get(region.ordinal()).get(post)).getTradingPost();
+	}
+	
+	
+	public EnumMap<Region, Integer> getYurtsPerRegion(Player p) {
+		EnumMap<Region, Integer> qty = new EnumMap<>(Region.class);
+		for (Region region : Region.values()) {
+			qty.put(region, 0);
+			for (Node n : nodeArray.get(region.ordinal())) {
+				if (n.hasYurtOf(p)) qty.merge(region, 1, Integer::sum);
+			}
+		}
+		return qty;
 	}
 }

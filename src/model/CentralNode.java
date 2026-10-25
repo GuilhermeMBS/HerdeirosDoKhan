@@ -72,4 +72,7 @@ class CentralNode extends Node {
         }
         return false;
     }
+    
+    
+    TradingPost getTradingPost() { return tradingPost; }
 }

@@ -42,7 +42,7 @@ class OpenCounselor extends Card {
 	 * @param qtd the amount necessary to complete the mission
 	 * @param type type of mission to be done
 	 */
-	public OpenCounselor(int qtd, OpenMissionType type) {
+	private OpenCounselor(int qtd, OpenMissionType type) {
 		m1 = new Mission(qtd, type);
 		m2 = m3 = null;
 		p = null;
@@ -135,5 +135,15 @@ class OpenCounselor extends Card {
 	
 	private boolean hasBeenCompleted() {
 		return p != null;
+	}
+	
+	
+	public OpenMissionType getMissionType() {
+		return (OpenMissionType) m1.getMissionType();
+	}
+	
+	
+	public int getMissionTarget() {
+		return m1.getTargetAmount();
 	}
 }

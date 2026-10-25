@@ -43,6 +43,7 @@ public class Player {
     private final Map<TributeType, Integer> virtualTributes = new HashMap<>();
     private final Map<TreasureType, Integer> treasures = new HashMap<>();
     private int yurtsLeft = INITIAL_YURTS;
+    private int amountYurts = 0;
     private int votes = 0;
     private int conqueredCities = 0;
     private int bonuses = 0;
@@ -344,7 +345,11 @@ public class Player {
     // --------------------------------------------------------------- yurts
 
     int getYurtsLeft() { return yurtsLeft; }
+    
+    
+    public int getAmountYurts() { return amountYurts;}
 
+    
     /**
      * Pays for building a yurt: 1 yurt tribute and 1 yurt piece from the stock.
      * @return {@code false} (and nothing changes) if one of them is missing
@@ -357,6 +362,7 @@ public class Player {
             return false;
         }
         yurtsLeft--;
+        amountYurts++;
         return true;
     }
 

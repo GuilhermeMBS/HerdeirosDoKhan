@@ -8,16 +8,10 @@ package model;
  */
 public class MovementAction implements GameAction {
 
-	public MovementAction() {
+	private MovementAction() {
 	}
 
 
-	/**
-	 * Kept so the code that still calls {@code new MovementAction(1)} keeps working.
-	 * The number is not used anymore: the horses spent are counted
-	 * from the way to the clicked node.
-	 * @param qty ignored
-	 */
 	public MovementAction(int qty) {
 		this();
 	}
