@@ -4,7 +4,9 @@ package controller;
 import java.io.*;
 
 
+import model.ColumnColor;
 import model.GameData;
+import model.Heir;
 import model.PlayerColor;
 import model.Region;
 
@@ -23,7 +25,10 @@ public class Controller {
 	private int maxVotes;
 	
 	private boolean firstSackCity = true;
-	
+
+	// Column chosen on the player board in this turn (null = not chosen yet)
+	private ColumnColor chosenColumn = null;
+
 	private GameData data;
 	
 	private GameState state;
@@ -140,7 +145,9 @@ public class Controller {
 		if (ended) return false;
 		
 		if (endGameConditionsMet() && !endRoundToFinalTurn) endRoundToFinalTurn = true;
-		
+
+		data.endTurn(currentPlayer);
+		chosenColumn = null;
 		nextPlayer();
 		
 		// You must finish the round, and then when the first player gets
@@ -167,6 +174,39 @@ public class Controller {
 	
 	
 	public PlayerColor getCurrentPlayerColor() { return data.getPlayerColor(currentPlayer); }
+
+
+	/*
+	 *
+	 * Methods used by the player board screen (view.PlayerBoardPanel)
+	 *
+	 */
+
+	/**
+	 * Starts the turn of the current player with the column clicked on the player board.
+	 * Only one column can be chosen per turn.
+	 * @return {@code false} (and nothing changes) if a column was already chosen
+	 * in this turn, the column is occupied or the pawn does not exist
+	 */
+	public boolean startTurn(ColumnColor column, int pawnIndex) {
+		if (chosenColumn != null) return false;
+		if (!data.startTurn(currentPlayer, column, pawnIndex)) return false;
+
+		chosenColumn = column;
+		return true;
+	}
+
+
+	public ColumnColor getChosenColumn() { return chosenColumn; }
+
+
+	public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(currentPlayer, column); }
+
+
+	public Heir getCurrentHeir() { return data.getPlayerHeir(currentPlayer); }
+
+
+	public int getMovementsLeft() { return data.getMovementsLeft(currentPlayer); }
 	
 	
 	public boolean getGameHasEndend() { return ended; }

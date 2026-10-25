@@ -109,8 +109,11 @@ public class Player {
     String getName() { return name; }
 
     public PlayerColor getColor() { return color; }
-    Heir getHeir() { return heir; }
+    public Heir getHeir() { return heir; }
     PlayerBoard getBoard() { return board; }
+
+    /** The column has no activation token, so it can be chosen this turn. */
+    public boolean canActivate(ColumnColor column) { return board.canActivate(column); }
 
     PrivateCounselor getSecretCard() { return secretCard; }
     void setSecretCard(PrivateCounselor card) { this.secretCard = card; }

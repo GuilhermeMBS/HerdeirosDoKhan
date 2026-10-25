@@ -40,7 +40,7 @@ public enum Heir {
     }
 
     /** The heir's name as printed on the card, e.g. "Tolui". */
-    String getDisplayName() {
+    public String getDisplayName() {
         String n = name();
         return n.charAt(0) + n.substring(1).toLowerCase();
     }

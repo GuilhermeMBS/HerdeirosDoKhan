@@ -155,7 +155,30 @@ public class GameData {
 	
 	
 	public PlayerColor getPlayerColor(int ind) { return players[ind].getColor(); }
-	
+
+
+	public Heir getPlayerHeir(int ind) { return players[ind].getHeir(); }
+
+
+	/*
+	 *
+	 * Turn methods (used by the player board screen)
+	 *
+	 */
+
+	public boolean startTurn(int playerInd, ColumnColor column, int pawnIndex) {
+		return players[playerInd].startTurn(column, pawnIndex);
+	}
+
+
+	public void endTurn(int playerInd) { players[playerInd].endTurn(); }
+
+
+	public boolean isColumnFree(int playerInd, ColumnColor column) { return players[playerInd].canActivate(column); }
+
+
+	public int getMovementsLeft(int playerInd) { return players[playerInd].getMovementsLeft(); }
+
 	
 	/*
 	 * 
