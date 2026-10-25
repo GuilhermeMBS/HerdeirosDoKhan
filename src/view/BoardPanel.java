@@ -71,7 +71,7 @@ public class BoardPanel extends JPanel {
      * during local testing, generates fallback BufferedImages so drawImage() always works.
      */
     private void loadGameAssets() {
-        this.boardBackgroundImage = loadOrCreatePlaceholder("assets/board.png", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
+        this.boardBackgroundImage = loadOrCreatePlaceholder("img/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
         this.yurtSprite = loadOrCreatePlaceholder("assets/yurt.png", 26, 26, new Color(245, 245, 245));
         this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 34, 34, new Color(40, 40, 40));
         this.tributeSprite = loadOrCreatePlaceholder("assets/tribute.png", 20, 20, new Color(218, 165, 32));
