@@ -6,13 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Maps logical board identifiers from model.Map to 2D pixel coordinates
- * calibrated for the 980x760 board image (img/tabuleiro.jpg).
+ * Maps logical board identifiers from model.Map to exact 2D pixel coordinates
+ * on the 980x760 board image (img/tabuleiro.jpg).
  */
 public final class BoardGeometry {
 
-    public static final int NODE_HIT_RADIUS = 18;
-    public static final int PROVINCE_HIT_RADIUS = 22;
+    public static final int NODE_HIT_RADIUS = 22;
+    public static final int PROVINCE_HIT_RADIUS = 24;
 
     private static final Map<String, Point> NODE_COORDINATES = new LinkedHashMap<>();
     private static final Map<String, Point> PROVINCE_COORDINATES = new LinkedHashMap<>();
@@ -23,52 +23,52 @@ public final class BoardGeometry {
         NODE_COORDINATES.put("CENTRAL", new Point(490, 380));
 
         // RUSSIA: Sarai (0..2), Moscou (3..5), Kiev (6..8), Trade Posts (9, 10)
-        NODE_COORDINATES.put("RUSSIA_0", new Point(517, 73));
-        NODE_COORDINATES.put("RUSSIA_1", new Point(653, 151));
-        NODE_COORDINATES.put("RUSSIA_2", new Point(512, 151));
+        NODE_COORDINATES.put("RUSSIA_0", new Point(523, 61));
+        NODE_COORDINATES.put("RUSSIA_1", new Point(645, 162));
+        NODE_COORDINATES.put("RUSSIA_2", new Point(521, 167));
 
-        NODE_COORDINATES.put("RUSSIA_3", new Point(384, 139));
-        NODE_COORDINATES.put("RUSSIA_4", new Point(356, 316));
-        NODE_COORDINATES.put("RUSSIA_5", new Point(275, 199));
+        NODE_COORDINATES.put("RUSSIA_3", new Point(400, 110));
+        NODE_COORDINATES.put("RUSSIA_4", new Point(361, 247));
+        NODE_COORDINATES.put("RUSSIA_5", new Point(278, 167));
 
-        NODE_COORDINATES.put("RUSSIA_6", new Point(190, 55));
-        NODE_COORDINATES.put("RUSSIA_7", new Point(76, 195));
-        NODE_COORDINATES.put("RUSSIA_8", new Point(148, 275));
+        NODE_COORDINATES.put("RUSSIA_6", new Point(189, 56));
+        NODE_COORDINATES.put("RUSSIA_7", new Point(189, 185));
+        NODE_COORDINATES.put("RUSSIA_8", new Point(61, 141));
 
-        NODE_COORDINATES.put("RUSSIA_9", new Point(315, 35));
-        NODE_COORDINATES.put("RUSSIA_10", new Point(751, 162));
+        NODE_COORDINATES.put("RUSSIA_9", new Point(308, 35));
+        NODE_COORDINATES.put("RUSSIA_10", new Point(757, 158));
 
         // CHINA: Pequim (0..2), Kaesong (3..5), Cantao (6..8), Trade Posts (9, 10)
-        NODE_COORDINATES.put("CHINA_0", new Point(701, 386));
-        NODE_COORDINATES.put("CHINA_1", new Point(805, 503));
-        NODE_COORDINATES.put("CHINA_2", new Point(624, 542));
+        NODE_COORDINATES.put("CHINA_0", new Point(699, 371));
+        NODE_COORDINATES.put("CHINA_1", new Point(792, 473));
+        NODE_COORDINATES.put("CHINA_2", new Point(624, 517));
 
-        NODE_COORDINATES.put("CHINA_3", new Point(775, 244));
-        NODE_COORDINATES.put("CHINA_4", new Point(919, 212));
-        NODE_COORDINATES.put("CHINA_5", new Point(858, 373));
+        NODE_COORDINATES.put("CHINA_3", new Point(797, 225));
+        NODE_COORDINATES.put("CHINA_4", new Point(930, 198));
+        NODE_COORDINATES.put("CHINA_5", new Point(862, 344));
 
-        NODE_COORDINATES.put("CHINA_6", new Point(879, 578));
-        NODE_COORDINATES.put("CHINA_7", new Point(919, 680));
-        NODE_COORDINATES.put("CHINA_8", new Point(738, 666));
+        NODE_COORDINATES.put("CHINA_6", new Point(875, 557));
+        NODE_COORDINATES.put("CHINA_7", new Point(915, 656));
+        NODE_COORDINATES.put("CHINA_8", new Point(738, 650));
 
-        NODE_COORDINATES.put("CHINA_9", new Point(866, 471));
-        NODE_COORDINATES.put("CHINA_10", new Point(596, 656));
+        NODE_COORDINATES.put("CHINA_9", new Point(866, 450));
+        NODE_COORDINATES.put("CHINA_10", new Point(592, 636));
 
         // PERSIA: Samarcanda (0..2), Cabul (3..5), Bagda (6..8), Trade Posts (9, 10)
-        NODE_COORDINATES.put("PERSIA_0", new Point(275, 351));
-        NODE_COORDINATES.put("PERSIA_1", new Point(336, 469));
-        NODE_COORDINATES.put("PERSIA_2", new Point(185, 445));
+        NODE_COORDINATES.put("PERSIA_0", new Point(278, 335));
+        NODE_COORDINATES.put("PERSIA_1", new Point(335, 450));
+        NODE_COORDINATES.put("PERSIA_2", new Point(185, 433));
 
-        NODE_COORDINATES.put("PERSIA_3", new Point(423, 536));
-        NODE_COORDINATES.put("PERSIA_4", new Point(491, 624));
-        NODE_COORDINATES.put("PERSIA_5", new Point(356, 672));
+        NODE_COORDINATES.put("PERSIA_3", new Point(424, 517));
+        NODE_COORDINATES.put("PERSIA_4", new Point(490, 610));
+        NODE_COORDINATES.put("PERSIA_5", new Point(357, 654));
 
-        NODE_COORDINATES.put("PERSIA_6", new Point(140, 471));
-        NODE_COORDINATES.put("PERSIA_7", new Point(214, 562));
-        NODE_COORDINATES.put("PERSIA_8", new Point(55, 569));
+        NODE_COORDINATES.put("PERSIA_6", new Point(141, 460));
+        NODE_COORDINATES.put("PERSIA_7", new Point(211, 553));
+        NODE_COORDINATES.put("PERSIA_8", new Point(56, 561));
 
-        NODE_COORDINATES.put("PERSIA_9", new Point(140, 316));
-        NODE_COORDINATES.put("PERSIA_10", new Point(257, 565));
+        NODE_COORDINATES.put("PERSIA_9", new Point(138, 300));
+        NODE_COORDINATES.put("PERSIA_10", new Point(255, 557));
 
         // 12 Provinces matching model.ProvinceId
         PROVINCE_COORDINATES.put("RUSSIA_YURT1", new Point(210, 235));
@@ -91,21 +91,29 @@ public final class BoardGeometry {
     }
 
     public static String findNodeAt(int mouseX, int mouseY) {
+        String closestId = null;
+        double closestDist = NODE_HIT_RADIUS;
         for (Map.Entry<String, Point> entry : NODE_COORDINATES.entrySet()) {
-            if (entry.getValue().distance(mouseX, mouseY) <= NODE_HIT_RADIUS) {
-                return entry.getKey();
+            double dist = entry.getValue().distance(mouseX, mouseY);
+            if (dist <= closestDist) {
+                closestDist = dist;
+                closestId = entry.getKey();
             }
         }
-        return null;
+        return closestId;
     }
 
     public static String findProvinceAt(int mouseX, int mouseY) {
+        String closestId = null;
+        double closestDist = PROVINCE_HIT_RADIUS;
         for (Map.Entry<String, Point> entry : PROVINCE_COORDINATES.entrySet()) {
-            if (entry.getValue().distance(mouseX, mouseY) <= PROVINCE_HIT_RADIUS) {
-                return entry.getKey();
+            double dist = entry.getValue().distance(mouseX, mouseY);
+            if (dist <= closestDist) {
+                closestDist = dist;
+                closestId = entry.getKey();
             }
         }
-        return null;
+        return closestId;
     }
 
     public static Point getNodeCoordinates(String nodeId) {

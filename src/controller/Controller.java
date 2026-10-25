@@ -10,7 +10,6 @@ import model.PlayerColor;
  * Coordinates match setup, turn lifecycle, and player actions between View and Model.
  */
 public class Controller {
-    private int qtyPlayers = 0;
     private int currentPlayer = 0;
 
     private boolean finalTurn = false;
@@ -22,12 +21,10 @@ public class Controller {
 
     private boolean firstSackCity = true;
     private ColumnColor chosenColumn = null;
-    private GameData data;
 
     private static Controller controller = null;
 
     private Controller() {
-        this.data = GameData.getData();
     }
 
     public static Controller getController() {
@@ -37,8 +34,12 @@ public class Controller {
         return controller;
     }
 
+    private GameData data() {
+        return GameData.getData();
+    }
+
     public boolean startGame(boolean alternativeKarakorum) {
-        this.data = GameData.createData(alternativeKarakorum);
+        GameData.createData(alternativeKarakorum);
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -51,43 +52,42 @@ public class Controller {
 
     public boolean setupMatch(List<String> chosenHeirs, boolean alternativeKarakorum) {
         startGame(alternativeKarakorum);
-        if (!setPlayerAmount(chosenHeirs.size())) {
-            return false;
-        }
-        return this.data.setupMatch(chosenHeirs, alternativeKarakorum);
+        updateMaxVotes(chosenHeirs.size());
+        return data().setupMatch(chosenHeirs, alternativeKarakorum);
+    }
+
+    private void updateMaxVotes(int playersQty) {
+        if (playersQty == 2) this.maxVotes = 10;
+        else if (playersQty == 3) this.maxVotes = 14;
+        else if (playersQty == 4) this.maxVotes = 16;
+        else this.maxVotes = 17;
     }
 
     public boolean setPlayerAmount(int playersQty) {
         if (playersQty < 2 || playersQty > 5) {
             return false;
         }
-        this.qtyPlayers = playersQty;
-        this.data.createArrayPlayers(this.qtyPlayers);
-
-        if (this.qtyPlayers == 2) this.maxVotes = 10;
-        else if (this.qtyPlayers == 3) this.maxVotes = 14;
-        else if (this.qtyPlayers == 4) this.maxVotes = 16;
-        else this.maxVotes = 17;
-
-        return true;
+        updateMaxVotes(playersQty);
+        return data().createArrayPlayers(playersQty);
     }
 
     public boolean setHeirPlayer(int indPlayer, PlayerColor color, String heirName) {
-        if (this.qtyPlayers < 2 || this.data == null) {
+        if (getTotalPlayers() < 2) {
             return false;
         }
-        return this.data.assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
+        return data().assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
     }
 
     private void nextPlayer() {
-        if (this.qtyPlayers > 0) {
-            this.currentPlayer = (this.currentPlayer + 1) % this.qtyPlayers;
+        int total = getTotalPlayers();
+        if (total > 0) {
+            this.currentPlayer = (this.currentPlayer + 1) % total;
         }
         this.firstSackCity = true;
     }
 
     private boolean endGameConditionsMet() {
-        return this.data.areAllCityConquered() || this.totalVotes >= this.maxVotes;
+        return data().areAllCityConquered() || this.totalVotes >= this.maxVotes;
     }
 
     private void calculatePoints() {
@@ -95,11 +95,11 @@ public class Controller {
     }
 
     public boolean createMoveAction(String nodeId) {
-        return this.data.MovePawn(this.currentPlayer, nodeId);
+        return data().MovePawn(this.currentPlayer, nodeId);
     }
 
     public boolean createYurtAction(String nodeId) {
-        return this.data.placeYurtOnNode(this.currentPlayer, nodeId);
+        return data().placeYurtOnNode(this.currentPlayer, nodeId);
     }
 
     public boolean createSackAction(String cityOrNodeId, int indTreasure) {
@@ -107,7 +107,7 @@ public class Controller {
             return false;
         }
         int swordCost = this.firstSackCity ? 1 : 2;
-        boolean success = this.data.attackCityForTreasure(this.currentPlayer, cityOrNodeId, indTreasure, swordCost);
+        boolean success = data().attackCityForTreasure(this.currentPlayer, cityOrNodeId, indTreasure, swordCost);
         if (success) {
             this.firstSackCity = false;
         }
@@ -115,15 +115,15 @@ public class Controller {
     }
 
     public boolean createKhanAction(String provinceId) {
-        return this.data.moveKhan(this.currentPlayer, provinceId);
+        return data().moveKhan(this.currentPlayer, provinceId);
     }
 
     public boolean createTributeAction(String nodeId, String provinceId) {
-        return this.data.harvestProvinceResource(this.currentPlayer, nodeId, provinceId);
+        return data().harvestProvinceResource(this.currentPlayer, nodeId, provinceId);
     }
 
     public boolean createTradeAction(String nodeId) {
-        boolean traded = this.data.executeTrade(this.currentPlayer, nodeId);
+        boolean traded = data().executeTrade(this.currentPlayer, nodeId);
         if (traded) {
             this.totalVotes++;
         }
@@ -131,7 +131,8 @@ public class Controller {
     }
 
     public boolean endTurn() {
-        if (this.ended || this.qtyPlayers == 0) {
+        int total = getTotalPlayers();
+        if (this.ended || total == 0) {
             return false;
         }
 
@@ -139,9 +140,10 @@ public class Controller {
             this.endRoundToFinalTurn = true;
         }
 
-        this.data.endTurn(this.currentPlayer);
+        data().endTurn(this.currentPlayer);
         this.chosenColumn = null;
         nextPlayer();
+        data().setMovementsLeft(this.currentPlayer, 2);
 
         if (this.endRoundToFinalTurn) {
             if (!this.finalTurn && this.currentPlayer == 0) {
@@ -159,7 +161,7 @@ public class Controller {
         if (this.chosenColumn != null) {
             return false;
         }
-        if (!this.data.startTurn(this.currentPlayer, column, pawnIndex)) {
+        if (!data().startTurn(this.currentPlayer, column, pawnIndex)) {
             return false;
         }
         this.chosenColumn = column;
@@ -167,19 +169,19 @@ public class Controller {
     }
 
     public void setTesterMovements(int steps) {
-        this.data.setMovementsLeft(this.currentPlayer, steps);
+        data().setMovementsLeft(this.currentPlayer, steps);
     }
 
     public int getCurrentPlayerIndex() { return this.currentPlayer; }
-    public String getCurrentPlayerName() { return this.data.getPlayerName(this.currentPlayer); }
+    public String getCurrentPlayerName() { return data().getPlayerName(this.currentPlayer); }
     public int getTotalVotes() { return this.totalVotes; }
-    public int getTotalPlayers() { return this.qtyPlayers; }
-    public PlayerColor getCurrentPlayerColor() { return this.data.getPlayerColor(this.currentPlayer); }
+    public int getTotalPlayers() { return data().getPlayerCount(); }
+    public PlayerColor getCurrentPlayerColor() { return data().getPlayerColor(this.currentPlayer); }
     public ColumnColor getChosenColumn() { return this.chosenColumn; }
-    public boolean isColumnFree(ColumnColor column) { return this.data.isColumnFree(this.currentPlayer, column); }
-    public Heir getCurrentHeir() { return this.data.getPlayerHeir(this.currentPlayer); }
-    public int getMovementsLeft() { return this.data.getMovementsLeft(this.currentPlayer); }
+    public boolean isColumnFree(ColumnColor column) { return data().isColumnFree(this.currentPlayer, column); }
+    public Heir getCurrentHeir() { return data().getPlayerHeir(this.currentPlayer); }
+    public int getMovementsLeft() { return data().getMovementsLeft(this.currentPlayer); }
     public boolean getGameHasEnded() { return this.ended; }
     public boolean getLastRound() { return this.finalTurn; }
-    public GameData getGameData() { return this.data; }
+    public GameData getGameData() { return data(); }
 }

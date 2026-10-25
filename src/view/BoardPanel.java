@@ -15,7 +15,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
@@ -32,7 +34,6 @@ public class BoardPanel extends JPanel {
     public static final int CANVAS_WIDTH = 980;
     public static final int CANVAS_HEIGHT = 760;
 
-    private final GameData modelFacade;
     private final Controller controller;
     private Runnable onBoardStateChanged;
 
@@ -46,7 +47,6 @@ public class BoardPanel extends JPanel {
     private String selectedProvinceId;
 
     public BoardPanel(GameData modelFacade) {
-        this.modelFacade = modelFacade;
         this.controller = Controller.getController();
         this.playerPawnSprites = new HashMap<>();
         this.selectedNodeId = "CENTRAL";
@@ -59,13 +59,14 @@ public class BoardPanel extends JPanel {
         registerMouseClickHandler();
     }
 
+    private GameData facade() {
+        return GameData.getData();
+    }
+
     public void setOnBoardStateChanged(Runnable callback) {
         this.onBoardStateChanged = callback;
     }
 
-    /**
-     * Searches for an image across working directories, parent folders, src/ folders, and classpath.
-     */
     static BufferedImage readProjectImage(String relativePath) {
         String[] candidatePrefixes = new String[] {
             "",
@@ -177,8 +178,8 @@ public class BoardPanel extends JPanel {
         String clickedNode = BoardGeometry.findNodeAt(mouseX, mouseY);
         if (clickedNode != null) {
             this.selectedNodeId = clickedNode;
-            boolean moved = this.controller.createMoveAction(clickedNode);
-            if (moved && this.onBoardStateChanged != null) {
+            this.controller.createMoveAction(clickedNode);
+            if (this.onBoardStateChanged != null) {
                 this.onBoardStateChanged.run();
             }
             repaint();
@@ -188,6 +189,9 @@ public class BoardPanel extends JPanel {
         String clickedProvince = BoardGeometry.findProvinceAt(mouseX, mouseY);
         if (clickedProvince != null) {
             this.selectedProvinceId = clickedProvince;
+            if (this.onBoardStateChanged != null) {
+                this.onBoardStateChanged.run();
+            }
             repaint();
         }
     }
@@ -206,7 +210,7 @@ public class BoardPanel extends JPanel {
         double scaleX = (double) getWidth() / CANVAS_WIDTH;
         double scaleY = (double) getHeight() / CANVAS_HEIGHT;
 
-        drawSelectionHighlights(g2d, scaleX, scaleY);
+        drawNodeAndProvinceGuides(g2d, scaleX, scaleY);
         drawProvinceTributes(g2d, scaleX, scaleY);
         drawConstructedYurts(g2d, scaleX, scaleY);
         drawKhanPiece(g2d, scaleX, scaleY);
@@ -215,15 +219,29 @@ public class BoardPanel extends JPanel {
         g2d.dispose();
     }
 
-    private void drawSelectionHighlights(Graphics2D g2d, double scaleX, double scaleY) {
-        if (this.selectedNodeId != null) {
-            Point pt = BoardGeometry.getNodeCoordinates(this.selectedNodeId);
-            if (pt != null) {
-                int sx = (int) Math.round(pt.x * scaleX);
-                int sy = (int) Math.round(pt.y * scaleY);
-                int r = BoardGeometry.NODE_HIT_RADIUS;
-                g2d.setColor(new Color(255, 215, 0, 220));
+    private void drawNodeAndProvinceGuides(Graphics2D g2d, double scaleX, double scaleY) {
+        Set<String> reachable = new HashSet<>(
+            facade().getReachableNodeIds(this.controller.getCurrentPlayerIndex())
+        );
+
+        for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
+            String nodeId = entry.getKey();
+            Point pt = entry.getValue();
+            int sx = (int) Math.round(pt.x * scaleX);
+            int sy = (int) Math.round(pt.y * scaleY);
+            int r = 16;
+
+            if (nodeId.equals(this.selectedNodeId)) {
+                g2d.setColor(new Color(255, 215, 0, 230));
                 g2d.setStroke(new BasicStroke(3f));
+                g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
+            } else if (reachable.contains(nodeId)) {
+                g2d.setColor(new Color(40, 220, 90, 210));
+                g2d.setStroke(new BasicStroke(2.5f));
+                g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
+            } else {
+                g2d.setColor(new Color(255, 255, 255, 110));
+                g2d.setStroke(new BasicStroke(1.2f));
                 g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
             }
         }
@@ -233,7 +251,7 @@ public class BoardPanel extends JPanel {
             if (pt != null) {
                 int sx = (int) Math.round(pt.x * scaleX);
                 int sy = (int) Math.round(pt.y * scaleY);
-                int r = BoardGeometry.PROVINCE_HIT_RADIUS;
+                int r = 20;
                 g2d.setColor(new Color(50, 205, 50, 220));
                 g2d.setStroke(new BasicStroke(2.5f));
                 g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
@@ -245,7 +263,7 @@ public class BoardPanel extends JPanel {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllProvinceCoordinates().entrySet()) {
             String provId = entry.getKey();
             Point center = entry.getValue();
-            int count = this.modelFacade.getProvinceResourceCount(provId);
+            int count = facade().getProvinceResourceCount(provId);
             int sx = (int) Math.round(center.x * scaleX);
             int sy = (int) Math.round(center.y * scaleY);
 
@@ -260,7 +278,7 @@ public class BoardPanel extends JPanel {
     private void drawConstructedYurts(Graphics2D g2d, double scaleX, double scaleY) {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();
-            if (this.modelFacade.nodeHasYurt(nodeId)) {
+            if (facade().nodeHasYurt(nodeId)) {
                 Point pt = entry.getValue();
                 int sx = (int) Math.round(pt.x * scaleX);
                 int sy = (int) Math.round(pt.y * scaleY);
@@ -271,10 +289,10 @@ public class BoardPanel extends JPanel {
 
     private void drawKhanPiece(Graphics2D g2d, double scaleX, double scaleY) {
         Point khanPt = null;
-        if (this.modelFacade.isKhanAtUpgradeArea()) {
+        if (facade().isKhanAtUpgradeArea()) {
             khanPt = BoardGeometry.getUpgradesAreaCoordinate();
         } else {
-            String khanProv = this.modelFacade.getKhanProvinceId();
+            String khanProv = facade().getKhanProvinceId();
             if (khanProv != null) {
                 khanPt = BoardGeometry.getProvinceCoordinates(khanProv);
             }
@@ -289,7 +307,7 @@ public class BoardPanel extends JPanel {
     private void drawPlayerPawns(Graphics2D g2d, double scaleX, double scaleY) {
         int totalPlayers = Math.max(2, this.controller.getTotalPlayers());
         for (int playerIdx = 0; playerIdx < totalPlayers; playerIdx++) {
-            String nodeId = this.modelFacade.getPlayerNodeId(playerIdx);
+            String nodeId = facade().getPlayerNodeId(playerIdx);
             Point nodeCenter = BoardGeometry.getNodeCoordinates(nodeId);
             Image pawnImg = this.playerPawnSprites.get(playerIdx);
 
@@ -306,11 +324,11 @@ public class BoardPanel extends JPanel {
     public String getSelectedProvinceId() { return this.selectedProvinceId; }
 
     public String getPawnLocation(int playerIndex) {
-        return this.modelFacade.getPlayerNodeId(playerIndex);
+        return facade().getPlayerNodeId(playerIndex);
     }
 
     public void setPawnLocation(int playerIndex, String nodeId) {
-        this.modelFacade.setPlayerNodeId(playerIndex, nodeId);
+        facade().setPlayerNodeId(playerIndex, nodeId);
         repaint();
     }
 }

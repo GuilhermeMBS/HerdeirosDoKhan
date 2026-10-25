@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 
@@ -20,8 +21,17 @@ public class GameData {
         Map.resetMap(altKarakorum);
     }
 
+    /**
+     * Ensures a single shared GameData instance across Controller and View.
+     */
     public static GameData createData(boolean alt) {
-        data = new GameData(alt);
+        if (data == null) {
+            data = new GameData(alt);
+        } else {
+            altKarakorum = alt;
+            Map.resetMap(altKarakorum);
+            data.players = null;
+        }
         return data;
     }
 
@@ -76,6 +86,24 @@ public class GameData {
             target.enterNode();
             players[playerInd].moveTo(target);
         }
+    }
+
+    /**
+     * Returns the list of node IDs that the specified player can currently reach.
+     */
+    public List<String> getReachableNodeIds(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return Collections.emptyList();
+        }
+        Player p = players[playerInd];
+        List<String> reachable = new ArrayList<>();
+        for (String nodeId : getAllNodeIds()) {
+            Node target = nodeById(nodeId);
+            if (target != null && p.findPath(target) != null) {
+                reachable.add(nodeId);
+            }
+        }
+        return reachable;
     }
 
     public List<String> getAllProvinceIds() {
@@ -189,10 +217,12 @@ public class GameData {
     }
 
     public boolean assignPlayer(int ind, PlayerColor color, String heirName, int amountCoins) {
-        if (players == null || ind < 0 || ind >= players.length || players[ind] != null) {
+        if (players == null || ind < 0 || ind >= players.length) {
             return false;
         }
-        players[ind] = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
+        Player p = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
+        p.setMovementsLeft(2);
+        players[ind] = p;
         return true;
     }
 
