@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import controller.Controller;
-import model.GameData;
+//import model.GameData;
 
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
@@ -46,7 +46,7 @@ public class BoardPanel extends JPanel {
     private String selectedNodeId;
     private String selectedProvinceId;
 
-    public BoardPanel(GameData modelFacade) {
+    public BoardPanel() {
         this.controller = Controller.getController();
         this.playerPawnSprites = new HashMap<>();
         this.selectedNodeId = "CENTRAL";
@@ -59,9 +59,9 @@ public class BoardPanel extends JPanel {
         registerMouseClickHandler();
     }
 
-    private GameData facade() {
-        return GameData.getData();
-    }
+//    private GameData facade() {
+//        return GameData.getData();
+//    }
 
     public void setOnBoardStateChanged(Runnable callback) {
         this.onBoardStateChanged = callback;
@@ -221,7 +221,7 @@ public class BoardPanel extends JPanel {
 
     private void drawNodeAndProvinceGuides(Graphics2D g2d, double scaleX, double scaleY) {
         Set<String> reachable = new HashSet<>(
-            facade().getReachableNodeIds(this.controller.getCurrentPlayerIndex())
+            controller.getReachableNodeIds(this.controller.getCurrentPlayerIndex())
         );
 
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
@@ -263,7 +263,7 @@ public class BoardPanel extends JPanel {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllProvinceCoordinates().entrySet()) {
             String provId = entry.getKey();
             Point center = entry.getValue();
-            int count = facade().getProvinceResourceCount(provId);
+            int count = controller.getProvinceResourceCount(provId);
             int sx = (int) Math.round(center.x * scaleX);
             int sy = (int) Math.round(center.y * scaleY);
 
@@ -278,7 +278,7 @@ public class BoardPanel extends JPanel {
     private void drawConstructedYurts(Graphics2D g2d, double scaleX, double scaleY) {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();
-            if (facade().nodeHasYurt(nodeId)) {
+            if (controller.nodeHasYurt(nodeId)) {
                 Point pt = entry.getValue();
                 int sx = (int) Math.round(pt.x * scaleX);
                 int sy = (int) Math.round(pt.y * scaleY);
@@ -289,10 +289,10 @@ public class BoardPanel extends JPanel {
 
     private void drawKhanPiece(Graphics2D g2d, double scaleX, double scaleY) {
         Point khanPt = null;
-        if (facade().isKhanAtUpgradeArea()) {
+        if (controller.isKhanAtUpgradeArea()) {
             khanPt = BoardGeometry.getUpgradesAreaCoordinate();
         } else {
-            String khanProv = facade().getKhanProvinceId();
+            String khanProv = controller.getKhanProvinceId();
             if (khanProv != null) {
                 khanPt = BoardGeometry.getProvinceCoordinates(khanProv);
             }
@@ -307,7 +307,7 @@ public class BoardPanel extends JPanel {
     private void drawPlayerPawns(Graphics2D g2d, double scaleX, double scaleY) {
         int totalPlayers = Math.max(2, this.controller.getTotalPlayers());
         for (int playerIdx = 0; playerIdx < totalPlayers; playerIdx++) {
-            String nodeId = facade().getPlayerNodeId(playerIdx);
+            String nodeId = controller.getPlayerNodeId(playerIdx);
             Point nodeCenter = BoardGeometry.getNodeCoordinates(nodeId);
             Image pawnImg = this.playerPawnSprites.get(playerIdx);
 
@@ -324,11 +324,11 @@ public class BoardPanel extends JPanel {
     public String getSelectedProvinceId() { return this.selectedProvinceId; }
 
     public String getPawnLocation(int playerIndex) {
-        return facade().getPlayerNodeId(playerIndex);
+        return controller.getPlayerNodeId(playerIndex);
     }
 
     public void setPawnLocation(int playerIndex, String nodeId) {
-        facade().setPlayerNodeId(playerIndex, nodeId);
+        controller.setPlayerNodeId(playerIndex, nodeId);
         repaint();
     }
 }

@@ -21,7 +21,6 @@ import javax.swing.JPanel;
 
 import controller.Controller;
 import loader.GameStateLoader;
-import model.GameData;
 import model.PlayerColor;
 
 /**
@@ -32,7 +31,6 @@ public class ActionSidePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    private final GameData modelFacade;
     private final Controller controller;
     private final BoardPanel boardPanel;
     private final PlayerBoardPanel playerBoardPanel;
@@ -49,12 +47,10 @@ public class ActionSidePanel extends JPanel {
     private int dieTwoValue;
 
     public ActionSidePanel(
-        GameData modelFacade,
         BoardPanel boardPanel,
         PlayerBoardPanel playerBoardPanel,
         GameStateLoader stateLoader
     ) {
-        this.modelFacade = modelFacade;
         this.controller = Controller.getController();
         this.boardPanel = boardPanel;
         this.playerBoardPanel = playerBoardPanel;
@@ -200,13 +196,12 @@ public class ActionSidePanel extends JPanel {
         harvestButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String currentNode = modelFacade.getPlayerNodeId(controller.getCurrentPlayerIndex());
                 String targetProvince = boardPanel.getSelectedProvinceId();
                 if (targetProvince == null) {
                     statusFeedbackLabel.setText("Click a province on the map first.");
                     return;
                 }
-                if (controller.createTributeAction(currentNode, targetProvince)) {
+                if (controller.createTributeAction(targetProvince)) {
                     statusFeedbackLabel.setText("Harvested tribute from " + targetProvince);
                     refreshDisplay();
                 } else {
@@ -293,7 +288,6 @@ public class ActionSidePanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 boolean saved = stateLoader.saveMatchState(
                     "savegame.properties",
-                    modelFacade,
                     boardPanel,
                     controller.getCurrentPlayerName()
                 );

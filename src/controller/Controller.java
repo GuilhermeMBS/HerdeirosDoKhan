@@ -1,9 +1,9 @@
 package controller;
 
 import java.util.List;
+
 import model.ColumnColor;
 import model.GameData;
-import model.Heir;
 import model.PlayerColor;
 
 /**
@@ -23,6 +23,7 @@ public class Controller {
     private ColumnColor chosenColumn = null;
 
     private static Controller controller = null;
+    private GameData data = null;
 
     private Controller() {
     }
@@ -34,12 +35,8 @@ public class Controller {
         return controller;
     }
 
-    private GameData data() {
-        return GameData.getData();
-    }
-
-    public boolean startGame(boolean alternativeKarakorum) {
-        GameData.createData(alternativeKarakorum);
+    private boolean startGame(boolean alternativeKarakorum) {
+        data = GameData.createData(alternativeKarakorum);
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -53,7 +50,7 @@ public class Controller {
     public boolean setupMatch(List<String> chosenHeirs, boolean alternativeKarakorum) {
         startGame(alternativeKarakorum);
         updateMaxVotes(chosenHeirs.size());
-        return data().setupMatch(chosenHeirs, alternativeKarakorum);
+        return data.setupMatch(chosenHeirs, alternativeKarakorum);
     }
 
     private void updateMaxVotes(int playersQty) {
@@ -68,14 +65,14 @@ public class Controller {
             return false;
         }
         updateMaxVotes(playersQty);
-        return data().createArrayPlayers(playersQty);
+        return data.createArrayPlayers(playersQty);
     }
 
     public boolean setHeirPlayer(int indPlayer, PlayerColor color, String heirName) {
         if (getTotalPlayers() < 2) {
             return false;
         }
-        return data().assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
+        return data.assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
     }
 
     private void nextPlayer() {
@@ -87,7 +84,7 @@ public class Controller {
     }
 
     private boolean endGameConditionsMet() {
-        return data().areAllCityConquered() || this.totalVotes >= this.maxVotes;
+        return data.areAllCityConquered() || this.totalVotes >= this.maxVotes;
     }
 
     private void calculatePoints() {
@@ -95,11 +92,11 @@ public class Controller {
     }
 
     public boolean createMoveAction(String nodeId) {
-        return data().MovePawn(this.currentPlayer, nodeId);
+        return data.MovePawn(this.currentPlayer, nodeId);
     }
 
     public boolean createYurtAction(String nodeId) {
-        return data().placeYurtOnNode(this.currentPlayer, nodeId);
+        return data.placeYurtOnNode(this.currentPlayer, nodeId);
     }
 
     public boolean createSackAction(String cityOrNodeId, int indTreasure) {
@@ -107,7 +104,7 @@ public class Controller {
             return false;
         }
         int swordCost = this.firstSackCity ? 1 : 2;
-        boolean success = data().attackCityForTreasure(this.currentPlayer, cityOrNodeId, indTreasure, swordCost);
+        boolean success = data.attackCityForTreasure(this.currentPlayer, cityOrNodeId, indTreasure, swordCost);
         if (success) {
             this.firstSackCity = false;
         }
@@ -115,15 +112,15 @@ public class Controller {
     }
 
     public boolean createKhanAction(String provinceId) {
-        return data().moveKhan(this.currentPlayer, provinceId);
+        return data.moveKhan(this.currentPlayer, provinceId);
     }
 
-    public boolean createTributeAction(String nodeId, String provinceId) {
-        return data().harvestProvinceResource(this.currentPlayer, nodeId, provinceId);
+    public boolean createTributeAction(String provinceId) {
+        return data.harvestProvinceResource(this.currentPlayer, data.getPlayerNodeId(currentPlayer), provinceId);
     }
 
     public boolean createTradeAction(String nodeId) {
-        boolean traded = data().executeTrade(this.currentPlayer, nodeId);
+        boolean traded = data.executeTrade(this.currentPlayer, nodeId);
         if (traded) {
             this.totalVotes++;
         }
@@ -140,10 +137,10 @@ public class Controller {
             this.endRoundToFinalTurn = true;
         }
 
-        data().endTurn(this.currentPlayer);
+        data.endTurn(this.currentPlayer);
         this.chosenColumn = null;
         nextPlayer();
-        data().setMovementsLeft(this.currentPlayer, 2);
+        data.setMovementsLeft(this.currentPlayer, 2);
 
         if (this.endRoundToFinalTurn) {
             if (!this.finalTurn && this.currentPlayer == 0) {
@@ -161,7 +158,7 @@ public class Controller {
         if (this.chosenColumn != null) {
             return false;
         }
-        if (!data().startTurn(this.currentPlayer, column, pawnIndex)) {
+        if (!data.startTurn(this.currentPlayer, column, pawnIndex)) {
             return false;
         }
         this.chosenColumn = column;
@@ -169,19 +166,47 @@ public class Controller {
     }
 
     public void setTesterMovements(int steps) {
-        data().setMovementsLeft(this.currentPlayer, steps);
+        data.setMovementsLeft(this.currentPlayer, steps);
+    }
+    
+    
+    public List<String> getReachableNodeIds(int playerInd) { return data.getReachableNodeIds(playerInd); }
+    
+    
+    public int getProvinceResourceCount(String provinceId) {
+    	return data.getProvinceResourceCount(provinceId);
+    }
+    
+    
+    public boolean nodeHasYurt(String nodeId) {
+    	return data.nodeHasYurt(nodeId);
+    }
+    
+    
+    public String getKhanProvinceId() {
+    	return data.getKhanProvinceId();
+    }
+    
+    
+    public String getPlayerNodeId(int ind) {
+    	return data.getPlayerNodeId(ind);
+    }
+    
+    
+    public void setPlayerNodeId(int playerInd, String nodeId) {
+    	data.setPlayerNodeId(playerInd, nodeId);
     }
 
     public int getCurrentPlayerIndex() { return this.currentPlayer; }
-    public String getCurrentPlayerName() { return data().getPlayerName(this.currentPlayer); }
+    public String getCurrentPlayerName() { return data.getPlayerName(this.currentPlayer); }
     public int getTotalVotes() { return this.totalVotes; }
-    public int getTotalPlayers() { return data().getPlayerCount(); }
-    public PlayerColor getCurrentPlayerColor() { return data().getPlayerColor(this.currentPlayer); }
+    public int getTotalPlayers() { return data.getPlayerCount(); }
+    public PlayerColor getCurrentPlayerColor() { return data.getPlayerColor(this.currentPlayer); }
     public ColumnColor getChosenColumn() { return this.chosenColumn; }
-    public boolean isColumnFree(ColumnColor column) { return data().isColumnFree(this.currentPlayer, column); }
-    public Heir getCurrentHeir() { return data().getPlayerHeir(this.currentPlayer); }
-    public int getMovementsLeft() { return data().getMovementsLeft(this.currentPlayer); }
+    public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(this.currentPlayer, column); }
+    public String getCurrentHeirName() { return data.getPlayerHeirName(this.currentPlayer); }
+    public int getMovementsLeft() { return data.getMovementsLeft(this.currentPlayer); }
     public boolean getGameHasEnded() { return this.ended; }
     public boolean getLastRound() { return this.finalTurn; }
-    public GameData getGameData() { return data(); }
+    public boolean isKhanAtUpgradeArea() { return data.isKhanAtUpgradeArea(); }
 }

@@ -37,7 +37,7 @@ public class GameData {
 
     public static GameData getData() {
         if (data == null) {
-            data = new GameData(false);
+            data = new GameData(false); // Creates a default Karakorum
         }
         return data;
     }
@@ -251,11 +251,11 @@ public class GameData {
         return players[ind].getColor();
     }
 
-    public Heir getPlayerHeir(int ind) {
+    public String getPlayerHeirName(int ind) {
         if (players == null || ind < 0 || ind >= players.length || players[ind] == null) {
-            return Heir.TOLUI;
+            return Heir.TOLUI.getDisplayName();
         }
-        return players[ind].getHeir();
+        return players[ind].getHeir().getDisplayName();
     }
 
     public String getPlayerName(int ind) {

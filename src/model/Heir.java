@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author Vinicius
  */
-public enum Heir {
+enum Heir {
     ALTANI(ColumnColor.RED, ColumnColor.GREEN, ColumnColor.YELLOW, 2),
     JOCHI(ColumnColor.GREEN, ColumnColor.YELLOW, ColumnColor.RED, 1),
     CHAGATAI(ColumnColor.RED, ColumnColor.YELLOW, ColumnColor.GREEN, 1),

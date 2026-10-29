@@ -17,7 +17,7 @@ import javax.swing.SwingUtilities;
 
 import controller.Controller;
 import loader.GameStateLoader;
-import model.GameData;
+//import model.GameData;
 
 /**
  * Main application window preserving the full 980x760 board aspect ratio
@@ -35,7 +35,7 @@ public class MainGameFrame extends JFrame {
     private final ActionSidePanel actionSidePanel;
     private final JDialog playerSheetDialog;
 
-    public MainGameFrame(GameData modelFacade, GameStateLoader stateLoader) {
+    public MainGameFrame(GameStateLoader stateLoader) {
         super("Heirs of the Khan - Board View");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -45,12 +45,13 @@ public class MainGameFrame extends JFrame {
         Controller controller = Controller.getController();
         if (controller.getTotalPlayers() == 0) {
             controller.setupMatch(Arrays.asList("Tolui", "Altani", "Ogedei"), false);
-            modelFacade = controller.getGameData();
+//            modelFacade = controller.getGameData();
         }
 
-        this.boardPanel = new BoardPanel(modelFacade);
+//        this.boardPanel = new BoardPanel(modelFacade);
+        this.boardPanel = new BoardPanel();
         this.playerBoardPanel = new PlayerBoardPanel(controller);
-        this.actionSidePanel = new ActionSidePanel(modelFacade, this.boardPanel, this.playerBoardPanel, stateLoader);
+        this.actionSidePanel = new ActionSidePanel(this.boardPanel, this.playerBoardPanel, stateLoader);
 
         this.boardPanel.setOnBoardStateChanged(new Runnable() {
             @Override
@@ -103,7 +104,7 @@ public class MainGameFrame extends JFrame {
                 Controller controller = Controller.getController();
                 controller.setupMatch(Arrays.asList("Tolui", "Altani", "Ogedei"), false);
                 GameStateLoader loader = new GameStateLoader();
-                MainGameFrame frame = new MainGameFrame(controller.getGameData(), loader);
+                MainGameFrame frame = new MainGameFrame(loader);
                 frame.setVisible(true);
             }
         });

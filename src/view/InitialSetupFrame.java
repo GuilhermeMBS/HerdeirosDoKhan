@@ -18,7 +18,6 @@ import javax.swing.JRadioButton;
 
 import controller.Controller;
 import loader.GameStateLoader;
-import model.GameData;
 
 /**
  * Initial configuration window allowing players to start a new match or load a saved state.
@@ -128,11 +127,11 @@ public class InitialSetupFrame extends JFrame {
         boolean altMode = this.alternativeKarakorumRadio.isSelected();
         Controller controller = Controller.getController();
         controller.setupMatch(chosenHeirs, altMode);
-        GameData facade = controller.getGameData();
+//        GameData facade = controller.getGameData();
 
-        MainGameFrame mainFrame = new MainGameFrame(facade, loader);
+        MainGameFrame mainFrame = new MainGameFrame(loader);
         if (loadFromDisk) {
-            loader.loadMatchState("savegame.properties", facade, mainFrame.getBoardPanel());
+            loader.loadMatchState("savegame.properties", mainFrame.getBoardPanel());
         }
 
         mainFrame.setVisible(true);

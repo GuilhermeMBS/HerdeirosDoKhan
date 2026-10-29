@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 
 import controller.Controller;
 import model.ColumnColor;
-import model.Heir;
 import model.PlayerColor;
 
 /**
@@ -29,13 +28,13 @@ public class PlayerBoardPanel extends JPanel {
     static final int BOARD_HEIGHT = 190;
     static final int HEADER = 26;
 
-    private static final HashMap<Heir, String> FILES = new HashMap<>();
+    private static final HashMap<String, String> FILES = new HashMap<>();
     static {
-        FILES.put(Heir.ALTANI, "img/cartelas/cartela1.jpg");
-        FILES.put(Heir.JOCHI, "img/cartelas/cartela2.jpg");
-        FILES.put(Heir.CHAGATAI, "img/cartelas/cartela3.jpg");
-        FILES.put(Heir.TOLUI, "img/cartelas/cartela4.jpg");
-        FILES.put(Heir.OGEDEI, "img/cartelas/cartela5.jpg");
+        FILES.put("Altani", "img/cartelas/cartela1.jpg");
+        FILES.put("Jochi", "img/cartelas/cartela2.jpg");
+        FILES.put("Chagatai", "img/cartelas/cartela3.jpg");
+        FILES.put("Tolui", "img/cartelas/cartela4.jpg");
+        FILES.put("Ogedei", "img/cartelas/cartela5.jpg");
     }
 
     private static final HashMap<ColumnColor, Rectangle2D.Double> COLUMNS = new HashMap<>();
@@ -56,7 +55,7 @@ public class PlayerBoardPanel extends JPanel {
     }
 
     private final Controller controller;
-    private final HashMap<Heir, Image> boardImages = new HashMap<>();
+    private final HashMap<String, Image> boardImages = new HashMap<>();
 
     public PlayerBoardPanel(Controller controller) {
         this.controller = controller;
@@ -94,7 +93,7 @@ public class PlayerBoardPanel extends JPanel {
 
         drawHeader(g2, playerColor, color);
 
-        Image board = getBoardImage(controller.getCurrentHeir());
+        Image board = getBoardImage(controller.getCurrentHeirName());
         if (board != null) {
             g2.drawImage(board, 0, HEADER, null);
         }
@@ -118,7 +117,7 @@ public class PlayerBoardPanel extends JPanel {
         g2.setColor(color);
         g2.fillRect(0, 0, BOARD_WIDTH, HEADER);
 
-        String text = "Vez de " + controller.getCurrentHeir().getDisplayName();
+        String text = "Vez de " + controller.getCurrentHeirName();
         if (controller.getChosenColumn() == null) {
             text += " - escolha uma coluna";
         } else {
@@ -140,11 +139,11 @@ public class PlayerBoardPanel extends JPanel {
         g2.drawOval(x, y, size, size);
     }
 
-    private Image getBoardImage(Heir heir) {
-        if (!boardImages.containsKey(heir)) {
-            boardImages.put(heir, loadBoardImage(FILES.get(heir)));
+    private Image getBoardImage(String heirName) {
+        if (!boardImages.containsKey(heirName)) {
+            boardImages.put(heirName, loadBoardImage(FILES.get(heirName)));
         }
-        return boardImages.get(heir);
+        return boardImages.get(heirName);
     }
 
     private Image loadBoardImage(String file) {
