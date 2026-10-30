@@ -3,6 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -136,6 +137,10 @@ public class GameData {
         }
         return null;
     }
+    
+    public HashMap<String, int[]> getNodeCoordinates() { return getMap().getNodeCoordinates(); }
+    
+    public HashMap<String, int[]> getProvinceCoordinates() { return getMap().getProvinceCoordinates(); }
 
     public void setProvinceResourceCount(String provinceId, int qty) {
         Province p = provinceById(provinceId);

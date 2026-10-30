@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.List;
+import java.util.HashMap;
 
 import model.ColumnColor;
 import model.GameData;
@@ -209,4 +210,6 @@ public class Controller {
     public boolean getGameHasEnded() { return this.ended; }
     public boolean getLastRound() { return this.finalTurn; }
     public boolean isKhanAtUpgradeArea() { return data.isKhanAtUpgradeArea(); }
+    public HashMap<String, int[]> getNodeCoordinates() { return data.getNodeCoordinates(); }
+    public HashMap<String, int[]> getProvinceCoordinates() { return data.getProvinceCoordinates(); }
 }

@@ -166,6 +166,10 @@ public class BoardPanel extends JPanel {
             public void mousePressed(MouseEvent event) {
                 int logicalX = (int) Math.round((double) event.getX() * CANVAS_WIDTH / Math.max(1, getWidth()));
                 int logicalY = (int) Math.round((double) event.getY() * CANVAS_HEIGHT / Math.max(1, getHeight()));
+                
+                // Print clicked coordinates
+                System.out.println("Clicked at: (" + logicalX + ", " + logicalY + ")");
+                
                 handleBoardClick(logicalX, logicalY);
             }
         });
