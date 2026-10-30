@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import controller.Controller;
-//import model.GameData;
+
 
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
@@ -59,9 +59,6 @@ public class BoardPanel extends JPanel {
         registerMouseClickHandler();
     }
 
-//    private GameData facade() {
-//        return GameData.getData();
-//    }
 
     public void setOnBoardStateChanged(Runnable callback) {
         this.onBoardStateChanged = callback;
