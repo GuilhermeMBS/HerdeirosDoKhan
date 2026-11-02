@@ -21,19 +21,23 @@ import javax.swing.JPanel;
 
 import controller.Controller;
 import loader.GameStateLoader;
+import model.GameData;
+import model.ObservadoIF;
+import model.ObservadorIF;
 import model.PlayerColor;
 
 /**
  * Lateral control panel preserving the exact layout of Iteration 2
- * while integrating the PlayerBoardPanel and Controller.
+ * while integrating the Controller.
+ * It observes the match: when the turn or the horses left change,
+ * the Model notifies it and the colored turn indicator is redrawn.
  */
-public class ActionSidePanel extends JPanel {
+public class ActionSidePanel extends JPanel implements ObservadorIF {
 
     private static final long serialVersionUID = 1L;
 
     private final Controller controller;
     private final BoardPanel boardPanel;
-    private final PlayerBoardPanel playerBoardPanel;
     private final GameStateLoader stateLoader;
     private final Random randomGenerator;
 
@@ -46,14 +50,12 @@ public class ActionSidePanel extends JPanel {
     private int dieOneValue;
     private int dieTwoValue;
 
-    public ActionSidePanel(
-        BoardPanel boardPanel,
-        PlayerBoardPanel playerBoardPanel,
-        GameStateLoader stateLoader
-    ) {
+    // Read from the Model every time it notifies a change
+    private int movementsLeft;
+
+    public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
         this.boardPanel = boardPanel;
-        this.playerBoardPanel = playerBoardPanel;
         this.stateLoader = stateLoader;
         this.randomGenerator = new Random();
         this.dieOneValue = 1;
@@ -135,14 +137,16 @@ public class ActionSidePanel extends JPanel {
             endTurnButton,
             saveGameButton
         );
+
+        this.movementsLeft = controller.getMovementsLeft();
+        this.controller.registra(this);
     }
 
-    public void refreshDisplay() {
+    /** The state of the match changed: read the horses left and redraw the indicator. */
+    @Override
+    public void notify(ObservadoIF o) {
+        this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
         this.diceCanvas.repaint();
-        if (this.playerBoardPanel != null) {
-            this.playerBoardPanel.repaint();
-        }
-        this.boardPanel.repaint();
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -174,7 +178,6 @@ public class ActionSidePanel extends JPanel {
                 dieTwoCombo.setSelectedItem(Integer.valueOf(dieTwoValue));
                 int steps = dieOneValue + dieTwoValue;
                 controller.setTesterMovements(steps);
-                refreshDisplay();
                 statusFeedbackLabel.setText("Rolled: " + steps + " steps.");
             }
         });
@@ -188,7 +191,6 @@ public class ActionSidePanel extends JPanel {
                 dieTwoValue = d2 != null ? d2.intValue() : 1;
                 int steps = dieOneValue + dieTwoValue;
                 controller.setTesterMovements(steps);
-                refreshDisplay();
                 statusFeedbackLabel.setText("Tester Dice set: " + steps + " steps.");
             }
         });
@@ -203,7 +205,6 @@ public class ActionSidePanel extends JPanel {
                 }
                 if (controller.createTributeAction(targetProvince)) {
                     statusFeedbackLabel.setText("Harvested tribute from " + targetProvince);
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("Cannot harvest from " + targetProvince);
                 }
@@ -216,7 +217,6 @@ public class ActionSidePanel extends JPanel {
                 String nodeId = boardPanel.getSelectedNodeId();
                 if (controller.createSackAction(nodeId, 0)) {
                     statusFeedbackLabel.setText("Plundered treasure from " + nodeId);
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("No plunderable treasure at " + nodeId);
                 }
@@ -229,7 +229,6 @@ public class ActionSidePanel extends JPanel {
                 String nodeId = boardPanel.getSelectedNodeId();
                 if (controller.createYurtAction(nodeId)) {
                     statusFeedbackLabel.setText("Yurt built at " + nodeId);
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("Yurt construction rejected at " + nodeId);
                 }
@@ -242,7 +241,6 @@ public class ActionSidePanel extends JPanel {
                 String provinceId = boardPanel.getSelectedProvinceId();
                 if (provinceId != null && controller.createKhanAction(provinceId)) {
                     statusFeedbackLabel.setText("Khan moved to " + provinceId);
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("Select a valid province for the Khan.");
                 }
@@ -254,7 +252,6 @@ public class ActionSidePanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (controller.createKhanAction("UPGRADES")) {
                     statusFeedbackLabel.setText("Khan moved to Upgrades Area.");
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("Khan move to Upgrades rejected.");
                 }
@@ -267,7 +264,6 @@ public class ActionSidePanel extends JPanel {
                 String nodeId = boardPanel.getSelectedNodeId();
                 if (controller.createTradeAction(nodeId)) {
                     statusFeedbackLabel.setText("Trade completed at " + nodeId);
-                    refreshDisplay();
                 } else {
                     statusFeedbackLabel.setText("Trade rejected at " + nodeId);
                 }
@@ -278,7 +274,6 @@ public class ActionSidePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 controller.endTurn();
-                refreshDisplay();
                 statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentPlayerName());
             }
         });
@@ -339,7 +334,7 @@ public class ActionSidePanel extends JPanel {
             g2d.setColor(pColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
             g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
             g2d.drawString(
-                "Current Turn: " + controller.getCurrentPlayerName() + " (Steps: " + controller.getMovementsLeft() + ")",
+                "Current Turn: " + controller.getCurrentPlayerName() + " (Steps: " + movementsLeft + ")",
                 14,
                 22
             );

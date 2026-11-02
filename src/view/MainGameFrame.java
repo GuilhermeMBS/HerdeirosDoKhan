@@ -48,14 +48,9 @@ public class MainGameFrame extends JFrame {
 
         this.boardPanel = new BoardPanel();        
         this.playerBoardPanel = new PlayerBoardPanel(controller);
-        this.actionSidePanel = new ActionSidePanel(this.boardPanel, this.playerBoardPanel, stateLoader);
-
-        this.boardPanel.setOnBoardStateChanged(new Runnable() {
-            @Override
-            public void run() {
-                actionSidePanel.refreshDisplay();
-            }
-        });
+        // The panels register themselves as observers of the match (Observer pattern),
+        // so there is no need to tell one another when something changes
+        this.actionSidePanel = new ActionSidePanel(this.boardPanel, stateLoader);
 
         add(this.boardPanel, BorderLayout.CENTER);
         add(this.actionSidePanel, BorderLayout.EAST);

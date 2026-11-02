@@ -5,15 +5,29 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Singleton and Facade providing external access to the Model package.
+ * It is also the observed object of the Observer pattern: every time the
+ * state of the match changes, the screens registered as observers are notified.
  */
-public class GameData {
+public class GameData implements ObservadoIF {
+    /** Codes for {@link #get(int)}: index of the player whose turn it is. */
+    public static final int CURRENT_PLAYER = 0;
+    /** Codes for {@link #get(int)}: horses left to the player whose turn it is. */
+    public static final int MOVEMENTS_LEFT = 1;
+    /** Codes for {@link #get(int)}: number of players in the match. */
+    public static final int PLAYER_COUNT = 2;
+
     private static boolean altKarakorum = false;
     private Player[] players = null;
     private static ArrayList<OpenCounselor> openCounselorCards = null;
     private Action action = null;
+    private int currentPlayer = 0;
+
+    /** Screens that are notified when the state of the match changes. */
+    private final List<ObservadorIF> observers = new ArrayList<>();
 
     private static GameData data = null;
 
@@ -41,6 +55,50 @@ public class GameData {
             data = new GameData(false); // Creates a default Karakorum
         }
         return data;
+    }
+
+    /*
+     *
+     * Observer methods (ObservadoIF)
+     *
+     */
+
+    @Override
+    public void add(ObservadorIF o) {
+        observers.add(o);
+    }
+
+    @Override
+    public void remove(ObservadorIF o) {
+        observers.remove(o);
+    }
+
+    @Override
+    public int get(int i) {
+        switch (i) {
+            case CURRENT_PLAYER:
+                return currentPlayer;
+            case MOVEMENTS_LEFT:
+                return getMovementsLeft(currentPlayer);
+            case PLAYER_COUNT:
+                return getPlayerCount();
+            default:
+                return -1;
+        }
+    }
+
+    /** Notifies every observer that the state of the match changed. */
+    private void atualiza() {
+        ListIterator<ObservadorIF> li = observers.listIterator();
+        while (li.hasNext()) {
+            li.next().notify(this);
+        }
+    }
+
+    /** The Controller tells whose turn it is now; the screens are notified. */
+    public void setCurrentPlayer(int playerInd) {
+        currentPlayer = playerInd;
+        atualiza();
     }
 
     private Map getMap() {
@@ -86,6 +144,7 @@ public class GameData {
             players[playerInd].getCurrentNode().leaveNode();
             target.enterNode();
             players[playerInd].moveTo(target);
+            atualiza();
         }
     }
 
@@ -146,6 +205,7 @@ public class GameData {
         Province p = provinceById(provinceId);
         if (p != null) {
             p.resourceCount = Math.max(0, Math.min(3, qty));
+            atualiza();
         }
     }
 
@@ -246,6 +306,8 @@ public class GameData {
         for (int i = 0; i < 3 && i < getMap().getAmountCity(); i++) {
             getMap().getCity(i).activateSacking();
         }
+        currentPlayer = 0;
+        atualiza();
         return true;
     }
 
@@ -371,7 +433,11 @@ public class GameData {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
-        return players[playerInd].startTurn(column, pawnIndex);
+        if (!players[playerInd].startTurn(column, pawnIndex)) {
+            return false;
+        }
+        atualiza();
+        return true;
     }
 
     public void endTurn(int playerInd) {
@@ -397,6 +463,7 @@ public class GameData {
     public void setMovementsLeft(int playerInd, int steps) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             players[playerInd].setMovementsLeft(steps);
+            atualiza();
         }
     }
 
@@ -427,7 +494,15 @@ public class GameData {
         action = new Action(players[playerInd], refNode, new TradeAction(post));
     }
 
+    /**
+     * Runs the prepared action. Only a successful action changes the match,
+     * so only then the screens are notified (an invalid move changes nothing).
+     */
     private boolean doAction() {
-        return action != null && action.doAction() == DebugReturn.SUCCESS;
+        if (action == null || action.doAction() != DebugReturn.SUCCESS) {
+            return false;
+        }
+        atualiza();
+        return true;
     }
 }

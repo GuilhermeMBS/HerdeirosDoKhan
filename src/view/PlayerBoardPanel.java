@@ -9,19 +9,29 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import controller.Controller;
 import model.ColumnColor;
+import model.GameData;
+import model.ObservadoIF;
+import model.ObservadorIF;
 import model.PlayerColor;
 
 /**
  * Shows the player board (cartela) of the active player using Graphics2D.drawImage().
+ * It observes the match: when a column is chosen it is redrawn, and when the
+ * turn passes to another player its window is shown, so the new player can
+ * choose a column.
+ *
+ * @author Vinicius
  */
-public class PlayerBoardPanel extends JPanel {
+public class PlayerBoardPanel extends JPanel implements ObservadorIF {
     private static final long serialVersionUID = 1L;
 
     static final int BOARD_WIDTH = 350;
@@ -57,10 +67,37 @@ public class PlayerBoardPanel extends JPanel {
     private final Controller controller;
     private final HashMap<String, Image> boardImages = new HashMap<>();
 
+    // Read from the Model every time it notifies a change
+    private int currentPlayer;
+    private int movementsLeft;
+
     public PlayerBoardPanel(Controller controller) {
         this.controller = controller;
         setPreferredSize(new Dimension(BOARD_WIDTH, HEADER + BOARD_HEIGHT));
         addMouseListener(new ColumnClickListener(this, controller));
+
+        this.currentPlayer = controller.getCurrentPlayerIndex();
+        this.movementsLeft = controller.getMovementsLeft();
+        controller.registra(this);
+    }
+
+    /**
+     * The state of the match changed. If the turn passed to another player,
+     * the window of the player board is shown; in any case the board is redrawn.
+     */
+    @Override
+    public void notify(ObservadoIF o) {
+        int player = o.get(GameData.CURRENT_PLAYER);
+        this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
+
+        if (player != this.currentPlayer) {
+            this.currentPlayer = player;
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window != null && !window.isVisible()) {
+                window.setVisible(true);
+            }
+        }
+        repaint();
     }
 
     ColumnColor columnAt(int x, int y) {
@@ -121,7 +158,7 @@ public class PlayerBoardPanel extends JPanel {
         if (controller.getChosenColumn() == null) {
             text += " - escolha uma coluna";
         } else {
-            text += " - cavalos: " + controller.getMovementsLeft();
+            text += " - cavalos: " + movementsLeft;
         }
         g2.setColor(playerColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
         g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
