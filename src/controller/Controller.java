@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import model.ColumnColor;
 import model.GameData;
+import model.ObservadorIF;
 import model.PlayerColor;
 
 /**
@@ -39,6 +40,15 @@ public class Controller {
             controller = new Controller();
         }
         return controller;
+    }
+
+    /**
+     * Registers a screen as an observer of the match (Observer pattern):
+     * the Controller passes the request on to the Model's facade, which will
+     * notify the screen every time the state of the match changes.
+     */
+    public void registra(ObservadorIF o) {
+        GameData.getData().add(o);
     }
 
     private boolean startGame(boolean alternativeKarakorum) {
@@ -92,6 +102,7 @@ public class Controller {
             this.currentPlayer = (this.currentPlayer + 1) % total;
         }
         this.firstSackCity = true;
+        data.setCurrentPlayer(this.currentPlayer);
     }
 
     private boolean endGameConditionsMet() {

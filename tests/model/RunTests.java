@@ -13,5 +13,6 @@ import org.junit.runners.*;
 	PlayerBoardTests.class,
 	PlayerTests.class,
 	CardsTests.class,
+	ObserverTests.class,
 })
 public class RunTests {}

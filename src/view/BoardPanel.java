@@ -27,20 +27,23 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import controller.Controller;
+import model.ObservadoIF;
+import model.ObservadorIF;
 
 
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
  * constructed yurts, province tributes, and Genghis Khan via Graphics2D.drawImage().
+ * It observes the match: when a pawn moves (or anything else on the board changes),
+ * the Model notifies it and the board is redrawn.
  */
-public class BoardPanel extends JPanel {
+public class BoardPanel extends JPanel implements ObservadorIF {
 
     private static final long serialVersionUID = 1L;
     public static final int CANVAS_WIDTH = 980;
     public static final int CANVAS_HEIGHT = 760;
 
     private final Controller controller;
-    private Runnable onBoardStateChanged;
 
     private Image boardBackgroundImage;
     
@@ -75,11 +78,13 @@ public class BoardPanel extends JPanel {
 
         loadGameAssets();
         registerMouseClickHandler();
+        this.controller.registra(this);
     }
 
-
-    public void setOnBoardStateChanged(Runnable callback) {
-        this.onBoardStateChanged = callback;
+    /** The state of the match changed (e.g. a pawn moved): redraw the board. */
+    @Override
+    public void notify(ObservadoIF o) {
+        repaint();
     }
 
     static BufferedImage readProjectImage(String relativePath) {
@@ -237,21 +242,16 @@ public class BoardPanel extends JPanel {
         String clickedNode = BoardGeometry.findNodeAt(mouseX, mouseY);
         if (clickedNode != null) {
             this.selectedNodeId = clickedNode;
+            // If the move is valid, the Model notifies this panel (see notify)
             this.controller.createMoveAction(clickedNode);
-            if (this.onBoardStateChanged != null) {
-                this.onBoardStateChanged.run();
-            }
-            repaint();
+            repaint(); // only for the selection ring, which is not part of the Model
             return;
         }
 
         String clickedProvince = BoardGeometry.findProvinceAt(mouseX, mouseY);
         if (clickedProvince != null) {
             this.selectedProvinceId = clickedProvince;
-            if (this.onBoardStateChanged != null) {
-                this.onBoardStateChanged.run();
-            }
-            repaint();
+            repaint(); // only for the selection ring, which is not part of the Model
         }
     }
 

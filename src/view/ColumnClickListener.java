@@ -32,9 +32,9 @@ class ColumnClickListener extends MouseAdapter {
         if (column == null) {
             return;
         }
-        // Pawn 0 for now; choosing Altani's 2nd pawn will be done on the map
-        if (controller.startTurn(column, 0)) {
-            panel.repaint();
-        }
+        // Pawn 0 for now; choosing Altani's 2nd pawn will be done on the map.
+        // If the column can be chosen, the Model notifies the panel (Observer),
+        // which redraws itself; otherwise nothing happens.
+        controller.startTurn(column, 0);
     }
 }
