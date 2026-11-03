@@ -91,7 +91,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         systemPanel.add(saveGameButton);
         add(systemPanel);
 
-        this.statusFeedbackLabel = new JLabel("Click a column on the sheet or roll dice to move.");
+        this.statusFeedbackLabel = new JLabel("Click a column on the sheet to move.");
         this.statusFeedbackLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         this.statusFeedbackLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         add(this.statusFeedbackLabel);
@@ -101,8 +101,6 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             attackCityButton,
             buildYurtButton,
             moveKhanButton,
-//            moveKhanProvinceButton,
-//            moveKhanUpgradesButton,
             executeTradeButton,
             endTurnButton,
             saveGameButton
@@ -116,7 +114,6 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     @Override
     public void notify(ObservadoIF o) {
         this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
-        this.diceCanvas.repaint();
     }
 
     private Color resolveColor(PlayerColor playerColor) {
