@@ -11,14 +11,19 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
+
 import javax.imageio.ImageIO;
+
 import javax.swing.JPanel;
 
 import controller.Controller;
@@ -38,9 +43,22 @@ public class BoardPanel extends JPanel {
     private Runnable onBoardStateChanged;
 
     private Image boardBackgroundImage;
+    
     private Image yurtSprite;
     private Image khanSprite;
-    private Image tributeSprite;
+    
+    private Image yurtTributeSprite;
+    private Image swordTributeSprite;
+    private Image coinTributeSprite;
+    
+    private final int TRIBUTE_SIZE = 40;
+    
+    private final String IMAGE_PATH_START = "assets/cartoes/cartoes2/";
+    private HashMap<String, Image> citiesImages = new HashMap<>();
+    private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
+    private final int CITY_SIZE = 70;
+    private final int CITY_OFFSET = CITY_SIZE / 2;
+    
     private final Map<Integer, Image> playerPawnSprites;
 
     private String selectedNodeId;
@@ -127,16 +145,56 @@ public class BoardPanel extends JPanel {
     }
 
     private void loadGameAssets() {
-        this.boardBackgroundImage = loadOrCreatePlaceholder("img/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
+        this.boardBackgroundImage = loadOrCreatePlaceholder("assets/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
         this.yurtSprite = loadOrCreatePlaceholder("assets/yurt.png", 26, 26, new Color(245, 245, 245));
         this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(40, 40, 40));
-        this.tributeSprite = loadOrCreatePlaceholder("assets/tribute.png", 18, 18, new Color(218, 165, 32));
+        this.yurtTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-1.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        this.coinTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-3.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        this.swordTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-2.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
 
         this.playerPawnSprites.put(0, loadOrCreatePlaceholder("assets/pawn_blue.png", 28, 28, new Color(30, 90, 200)));
         this.playerPawnSprites.put(1, loadOrCreatePlaceholder("assets/pawn_red.png", 28, 28, new Color(200, 40, 40)));
         this.playerPawnSprites.put(2, loadOrCreatePlaceholder("assets/pawn_green.png", 28, 28, new Color(30, 140, 60)));
         this.playerPawnSprites.put(3, loadOrCreatePlaceholder("assets/pawn_yellow.png", 28, 28, new Color(230, 190, 30)));
         this.playerPawnSprites.put(4, loadOrCreatePlaceholder("assets/pawn_black.png", 28, 28, new Color(40, 40, 40)));
+        
+        this.CITIES_COORDINATE = controller.getCitiesCoordinates();
+        for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
+        	String name = entry.getKey();
+        	
+        	int num;
+        	switch(name) {
+        	case "Bagdá":
+        		num = 2;
+        		break;
+        	case "Cabul":
+        		num = 3;
+        		break;
+        	case "Kiev":
+        		num = 4;
+        		break;
+        	case "Moscou":
+        		num = 5;
+        		break;
+        	case "Sarai":
+        		num = 6;
+        		break;
+        	case "Cantão":
+        		num = 7;
+        		break;
+        	case "Kaesong":
+        		num = 8;
+        		break;
+        	case "Pequim":
+        		num = 9;
+        		break;
+        	default:
+        		num = 1;
+        	}
+        	String path = this.IMAGE_PATH_START + "cartoes2-" + num + ".jpg";
+        	Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
+        	this.citiesImages.put(name, img); 
+        }
     }
 
     private Image loadOrCreatePlaceholder(String path, int width, int height, Color fallbackColor) {
@@ -213,6 +271,7 @@ public class BoardPanel extends JPanel {
 
         drawNodeAndProvinceGuides(g2d, scaleX, scaleY);
         drawProvinceTributes(g2d, scaleX, scaleY);
+        drawCitiesForSack(g2d, scaleX, scaleY);
         drawConstructedYurts(g2d, scaleX, scaleY);
         drawKhanPiece(g2d, scaleX, scaleY);
         drawPlayerPawns(g2d, scaleX, scaleY);
@@ -271,11 +330,26 @@ public class BoardPanel extends JPanel {
             for (int i = 0; i < count; i++) {
                 int offsetX = sx - 18 + (i * 12);
                 int offsetY = sy - 9;
-                g2d.drawImage(this.tributeSprite, offsetX, offsetY, 18, 18, this);
+                Image tmp = this.swordTributeSprite;
+                if (provId.contains("COIN")) tmp = this.coinTributeSprite;
+                else if (provId.contains("YURT")) tmp = this.yurtTributeSprite;
+                g2d.drawImage(tmp, offsetX, offsetY, TRIBUTE_SIZE, TRIBUTE_SIZE, this);
             }
         }
     }
 
+    private void drawCitiesForSack(Graphics2D g2d, double scaleX, double scaleY) {
+    	List<String> cities = controller.getCitiesToSack();
+        
+    	for (String name : cities) {
+    		int[] pos = this.CITIES_COORDINATE.get(name);
+        	int sx = (int) Math.round(pos[0] * scaleX) - this.CITY_OFFSET;
+            int sy = (int) Math.round(pos[1] * scaleY) - this.CITY_OFFSET;
+            
+    		g2d.drawImage(this.citiesImages.get(name), sx, sy, this.CITY_SIZE, this.CITY_SIZE, this);
+    	}
+    }
+    
     private void drawConstructedYurts(Graphics2D g2d, double scaleX, double scaleY) {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();

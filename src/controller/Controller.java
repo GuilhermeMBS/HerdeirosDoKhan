@@ -1,6 +1,8 @@
 package controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 import java.util.HashMap;
 
 import model.ColumnColor;
@@ -22,6 +24,9 @@ public class Controller {
 
     private boolean firstSackCity = true;
     private ColumnColor chosenColumn = null;
+    
+    private List<String> cityNames;
+    private List<String> availableCitiesToSack = new ArrayList<>();
 
     private static Controller controller = null;
     private GameData data = null;
@@ -38,6 +43,11 @@ public class Controller {
 
     private boolean startGame(boolean alternativeKarakorum) {
         data = GameData.createData(alternativeKarakorum);
+        
+        this.cityNames = data.getCityNames();
+        Collections.shuffle(cityNames); // Randomize the order
+        for (int i = 0; i < 4; i++) this.availableCitiesToSack.add(this.cityNames.remove(0));
+        
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -129,6 +139,8 @@ public class Controller {
     }
 
     public boolean endTurn() {
+//    	if (!data.usedAllActions(currentPlayer)) return false;
+    	
         int total = getTotalPlayers();
         if (this.ended || total == 0) {
             return false;
@@ -141,7 +153,6 @@ public class Controller {
         data.endTurn(this.currentPlayer);
         this.chosenColumn = null;
         nextPlayer();
-        data.setMovementsLeft(this.currentPlayer, 2);
 
         if (this.endRoundToFinalTurn) {
             if (!this.finalTurn && this.currentPlayer == 0) {
@@ -165,38 +176,15 @@ public class Controller {
         this.chosenColumn = column;
         return true;
     }
-
-    public void setTesterMovements(int steps) {
-        data.setMovementsLeft(this.currentPlayer, steps);
-    }
     
     
     public List<String> getReachableNodeIds(int playerInd) { return data.getReachableNodeIds(playerInd); }
-    
-    
-    public int getProvinceResourceCount(String provinceId) {
-    	return data.getProvinceResourceCount(provinceId);
-    }
-    
-    
-    public boolean nodeHasYurt(String nodeId) {
-    	return data.nodeHasYurt(nodeId);
-    }
-    
-    
-    public String getKhanProvinceId() {
-    	return data.getKhanProvinceId();
-    }
-    
-    
-    public String getPlayerNodeId(int ind) {
-    	return data.getPlayerNodeId(ind);
-    }
-    
-    
-    public void setPlayerNodeId(int playerInd, String nodeId) {
-    	data.setPlayerNodeId(playerInd, nodeId);
-    }
+    public int getProvinceResourceCount(String provinceId) { return data.getProvinceResourceCount(provinceId); }
+    public boolean nodeHasYurt(String nodeId) { return data.nodeHasYurt(nodeId); }
+    public String getKhanProvinceId() { return data.getKhanProvinceId(); }
+    public List<String> getKhanProvincesIds() { return data.getKhanProvincesIds(); }
+    public String getPlayerNodeId(int ind) { return data.getPlayerNodeId(ind); }
+    public void setPlayerNodeId(int playerInd, String nodeId) { data.setPlayerNodeId(playerInd, nodeId); }
 
     public int getCurrentPlayerIndex() { return this.currentPlayer; }
     public String getCurrentPlayerName() { return data.getPlayerName(this.currentPlayer); }
@@ -212,4 +200,7 @@ public class Controller {
     public boolean isKhanAtUpgradeArea() { return data.isKhanAtUpgradeArea(); }
     public HashMap<String, int[]> getNodeCoordinates() { return data.getNodeCoordinates(); }
     public HashMap<String, int[]> getProvinceCoordinates() { return data.getProvinceCoordinates(); }
+    public HashMap<String, int[]> getCitiesCoordinates() { return data.getCitiesCoordinates(); }
+    public List<String> getCitiesToSack() { return this.availableCitiesToSack; }
+    public List<String> getCitiesNames() { return data.getCityNames(); }
 }

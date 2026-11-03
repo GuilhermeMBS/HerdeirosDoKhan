@@ -114,6 +114,16 @@ public class GameData {
         }
         return ids;
     }
+    
+    public List<String> getKhanProvincesIds() {
+    	List<String> ret = new ArrayList<String>();
+    	ret.add(ProvinceId.RUSSIA_YURT1.toString());
+    	ret.add(ProvinceId.RUSSIA_COIN1.toString());
+    	ret.add(ProvinceId.CHINA_YURT1.toString());
+    	ret.add(ProvinceId.PERSIA_COIN1.toString());
+    	
+    	return ret;
+    }
 
     public boolean nodeHasYurt(String nodeId) {
         Node node = nodeById(nodeId);
@@ -139,8 +149,17 @@ public class GameData {
     }
     
     public HashMap<String, int[]> getNodeCoordinates() { return getMap().getNodeCoordinates(); }
-    
     public HashMap<String, int[]> getProvinceCoordinates() { return getMap().getProvinceCoordinates(); }
+    public HashMap<String, int[]> getCitiesCoordinates() { return getMap().getCitiesCoordinates(); }
+    
+    public List<String> getCityNames() {
+    	HashMap<String, int[]> map = this.getCitiesCoordinates();
+    	List<String> ret = new ArrayList<>();
+    	for (EnumMap.Entry<String, int[]> entry : map.entrySet()) {
+    		ret.add(entry.getKey());
+    	}
+    	return ret;
+    }
 
     public void setProvinceResourceCount(String provinceId, int qty) {
         Province p = provinceById(provinceId);
@@ -226,7 +245,6 @@ public class GameData {
             return false;
         }
         Player p = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
-        p.setMovementsLeft(2);
         players[ind] = p;
         return true;
     }
@@ -393,12 +411,16 @@ public class GameData {
         }
         return players[playerInd].getMovementsLeft();
     }
-
-    public void setMovementsLeft(int playerInd, int steps) {
-        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
-            players[playerInd].setMovementsLeft(steps);
-        }
+    
+    public boolean usedAllActions(int playerInd) {
+    	return (getMovementsLeft(playerInd) == 0) && !(players[playerInd].mustUseKhan()) && (players[playerInd].getHandsLeft() == 0);
     }
+
+//    public void setMovementsLeft(int playerInd, int steps) {
+//        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+//            players[playerInd].setMovementsLeft(steps);
+//        }
+//    }
 
     private void newMoveAction(Player p, Node node, int qty) {
         action = new Action(p, node, new MovementAction(qty));

@@ -6,18 +6,18 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.util.Random;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import java.util.List;
 
 import controller.Controller;
 import loader.GameStateLoader;
@@ -28,23 +28,16 @@ import model.PlayerColor;
  * while integrating the PlayerBoardPanel and Controller.
  */
 public class ActionSidePanel extends JPanel {
-
     private static final long serialVersionUID = 1L;
 
     private final Controller controller;
     private final BoardPanel boardPanel;
     private final PlayerBoardPanel playerBoardPanel;
     private final GameStateLoader stateLoader;
-    private final Random randomGenerator;
 
-    private final JComboBox<Integer> dieOneCombo;
-    private final JComboBox<Integer> dieTwoCombo;
     private final JComboBox<String> treasureTradeCombo;
     private final JLabel statusFeedbackLabel;
-    private final DiceDisplayCanvas diceCanvas;
-
-    private int dieOneValue;
-    private int dieTwoValue;
+//    private final DiceDisplayCanvas diceCanvas;
 
     public ActionSidePanel(
         BoardPanel boardPanel,
@@ -55,34 +48,10 @@ public class ActionSidePanel extends JPanel {
         this.boardPanel = boardPanel;
         this.playerBoardPanel = playerBoardPanel;
         this.stateLoader = stateLoader;
-        this.randomGenerator = new Random();
-        this.dieOneValue = 1;
-        this.dieTwoValue = 1;
 
         setPreferredSize(new Dimension(360, 760));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-
-        this.diceCanvas = new DiceDisplayCanvas();
-        add(this.diceCanvas);
-
-        JPanel diceControlPanel = new JPanel(new GridLayout(3, 2, 4, 4));
-        diceControlPanel.setBorder(BorderFactory.createTitledBorder("Movement / Dice Controls"));
-
-        Integer[] diceFaces = new Integer[] { 1, 2, 3, 4, 5, 6 };
-        this.dieOneCombo = new JComboBox<>(diceFaces);
-        this.dieTwoCombo = new JComboBox<>(diceFaces);
-
-        JButton rollRandomButton = new JButton("Roll Dice");
-        JButton setTesterDiceButton = new JButton("Choose Dice");
-
-        diceControlPanel.add(new JLabel("Die 1 (Test):"));
-        diceControlPanel.add(this.dieOneCombo);
-        diceControlPanel.add(new JLabel("Die 2 (Test):"));
-        diceControlPanel.add(this.dieTwoCombo);
-        diceControlPanel.add(rollRandomButton);
-        diceControlPanel.add(setTesterDiceButton);
-        add(diceControlPanel);
 
         JPanel actionsPanel = new JPanel(new GridLayout(7, 1, 4, 4));
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Board Node & Province Actions"));
@@ -90,9 +59,10 @@ public class ActionSidePanel extends JPanel {
         JButton harvestButton = new JButton("Harvest Province Tribute");
         JButton attackCityButton = new JButton("Attack City (Plunder Treasure)");
         JButton buildYurtButton = new JButton("Build Yurt on Current Node");
-        JButton moveKhanProvinceButton = new JButton("Move Khan to Selected Province");
-        JButton moveKhanUpgradesButton = new JButton("Move Khan to Upgrades Area");
-
+//        JButton moveKhanProvinceButton = new JButton("Move Khan to Selected Province");
+//        JButton moveKhanUpgradesButton = new JButton("Move Khan to Upgrades Area");
+        JButton moveKhanButton = new JButton("Move Khan");
+        
         this.treasureTradeCombo = new JComboBox<>(new String[] {
             "FUR + SILK (Counselor)",
             "FUR + IRON + ANIMAL (Karakorum Default)",
@@ -103,8 +73,9 @@ public class ActionSidePanel extends JPanel {
         actionsPanel.add(harvestButton);
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
-        actionsPanel.add(moveKhanProvinceButton);
-        actionsPanel.add(moveKhanUpgradesButton);
+        actionsPanel.add(moveKhanButton);
+//        actionsPanel.add(moveKhanProvinceButton);
+//        actionsPanel.add(moveKhanUpgradesButton);
         actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
         add(actionsPanel);
@@ -124,13 +95,12 @@ public class ActionSidePanel extends JPanel {
         add(this.statusFeedbackLabel);
 
         bindActionListeners(
-            rollRandomButton,
-            setTesterDiceButton,
             harvestButton,
             attackCityButton,
             buildYurtButton,
-            moveKhanProvinceButton,
-            moveKhanUpgradesButton,
+            moveKhanButton,
+//            moveKhanProvinceButton,
+//            moveKhanUpgradesButton,
             executeTradeButton,
             endTurnButton,
             saveGameButton
@@ -138,7 +108,6 @@ public class ActionSidePanel extends JPanel {
     }
 
     public void refreshDisplay() {
-        this.diceCanvas.repaint();
         if (this.playerBoardPanel != null) {
             this.playerBoardPanel.repaint();
         }
@@ -154,45 +123,16 @@ public class ActionSidePanel extends JPanel {
     }
 
     private void bindActionListeners(
-        JButton rollRandomButton,
-        JButton setTesterDiceButton,
         JButton harvestButton,
         JButton attackCityButton,
         JButton buildYurtButton,
-        JButton moveKhanProvinceButton,
-        JButton moveKhanUpgradesButton,
+        JButton moveKhanButton,
+//        JButton moveKhanProvinceButton,
+//        JButton moveKhanUpgradesButton,
         JButton executeTradeButton,
         JButton endTurnButton,
         JButton saveGameButton
     ) {
-        rollRandomButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dieOneValue = randomGenerator.nextInt(6) + 1;
-                dieTwoValue = randomGenerator.nextInt(6) + 1;
-                dieOneCombo.setSelectedItem(Integer.valueOf(dieOneValue));
-                dieTwoCombo.setSelectedItem(Integer.valueOf(dieTwoValue));
-                int steps = dieOneValue + dieTwoValue;
-                controller.setTesterMovements(steps);
-                refreshDisplay();
-                statusFeedbackLabel.setText("Rolled: " + steps + " steps.");
-            }
-        });
-
-        setTesterDiceButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Integer d1 = (Integer) dieOneCombo.getSelectedItem();
-                Integer d2 = (Integer) dieTwoCombo.getSelectedItem();
-                dieOneValue = d1 != null ? d1.intValue() : 1;
-                dieTwoValue = d2 != null ? d2.intValue() : 1;
-                int steps = dieOneValue + dieTwoValue;
-                controller.setTesterMovements(steps);
-                refreshDisplay();
-                statusFeedbackLabel.setText("Tester Dice set: " + steps + " steps.");
-            }
-        });
-
         harvestButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -235,31 +175,41 @@ public class ActionSidePanel extends JPanel {
                 }
             }
         });
-
-        moveKhanProvinceButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String provinceId = boardPanel.getSelectedProvinceId();
-                if (provinceId != null && controller.createKhanAction(provinceId)) {
-                    statusFeedbackLabel.setText("Khan moved to " + provinceId);
-                    refreshDisplay();
-                } else {
-                    statusFeedbackLabel.setText("Select a valid province for the Khan.");
-                }
-            }
+        
+        moveKhanButton.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		List<String> provinces = controller.getKhanProvincesIds();
+        		
+        		KhanFrame khanFrame = new KhanFrame(provinces);
+        		khanFrame.setVisible(true);
+        	}
         });
 
-        moveKhanUpgradesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (controller.createKhanAction("UPGRADES")) {
-                    statusFeedbackLabel.setText("Khan moved to Upgrades Area.");
-                    refreshDisplay();
-                } else {
-                    statusFeedbackLabel.setText("Khan move to Upgrades rejected.");
-                }
-            }
-        });
+//        moveKhanProvinceButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                String provinceId = boardPanel.getSelectedProvinceId();
+//                if (provinceId != null && controller.createKhanAction(provinceId)) {
+//                    statusFeedbackLabel.setText("Khan moved to " + provinceId);
+//                    refreshDisplay();
+//                } else {
+//                    statusFeedbackLabel.setText("Select a valid province for the Khan.");
+//                }
+//            }
+//        });
+//
+//        moveKhanUpgradesButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                if (controller.createKhanAction("UPGRADES")) {
+//                    statusFeedbackLabel.setText("Khan moved to Upgrades Area.");
+//                    refreshDisplay();
+//                } else {
+//                    statusFeedbackLabel.setText("Khan move to Upgrades rejected.");
+//                }
+//            }
+//        });
 
         executeTradeButton.addActionListener(new ActionListener() {
             @Override
@@ -296,36 +246,6 @@ public class ActionSidePanel extends JPanel {
         });
     }
 
-    private final class DiceDisplayCanvas extends JPanel {
-        private static final long serialVersionUID = 1L;
-        private final Image[] diceSprites = new Image[7];
-
-        DiceDisplayCanvas() {
-            setPreferredSize(new Dimension(320, 100));
-            setMinimumSize(new Dimension(300, 95));
-            for (int face = 1; face <= 6; face++) {
-                this.diceSprites[face] = loadDieFaceImage(face);
-            }
-        }
-
-        private Image loadDieFaceImage(int face) {
-            BufferedImage loaded = BoardPanel.readProjectImage("assets/die_" + face + ".png");
-            if (loaded != null) {
-                return loaded;
-            }
-            BufferedImage img = new BufferedImage(58, 58, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = img.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(Color.WHITE);
-            g2.fillRoundRect(2, 2, 54, 54, 12, 12);
-            g2.setColor(Color.BLACK);
-            g2.drawRoundRect(2, 2, 54, 54, 12, 12);
-            g2.setFont(new Font("SansSerif", Font.BOLD, 22));
-            g2.drawString(String.valueOf(face), 22, 37);
-            g2.dispose();
-            return img;
-        }
-
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -343,9 +263,5 @@ public class ActionSidePanel extends JPanel {
                 14,
                 22
             );
-
-            g2d.drawImage(this.diceSprites[dieOneValue], 70, 30, 58, 58, this);
-            g2d.drawImage(this.diceSprites[dieTwoValue], 160, 30, 58, 58, this);
-        }
     }
 }

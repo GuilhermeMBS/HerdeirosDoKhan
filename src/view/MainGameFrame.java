@@ -47,7 +47,7 @@ public class MainGameFrame extends JFrame {
         }
 
         this.boardPanel = new BoardPanel();        
-        this.playerBoardPanel = new PlayerBoardPanel(controller);
+        this.playerBoardPanel = new PlayerBoardPanel();
         this.actionSidePanel = new ActionSidePanel(this.boardPanel, this.playerBoardPanel, stateLoader);
 
         this.boardPanel.setOnBoardStateChanged(new Runnable() {

@@ -19,7 +19,7 @@ public final class BoardGeometry {
 
     private static final Map<String, Point> NODE_COORDINATES = new LinkedHashMap<>();
     private static final Map<String, Point> PROVINCE_COORDINATES = new LinkedHashMap<>();
-    private static final Point UPGRADES_AREA_COORDINATE = new Point(260, 705);
+    private static final Point UPGRADES_AREA_COORDINATE = new Point(34, 710);
 
     static {
     	HashMap<String, int[]> nodeCoordinates = Controller.getController().getNodeCoordinates();

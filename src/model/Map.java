@@ -25,11 +25,13 @@ enum CityPosition {
 class Map {
     private final ArrayList<City> cityArray = new ArrayList<>();
     private final ArrayList<ArrayList<Node>> nodeArray = new ArrayList<>();
-    private final EnumMap<Region, String[]> cityNames = new EnumMap<>(Region.class);
+//    private final EnumMap<Region, String[]> cityNames = new EnumMap<>(Region.class);
     private final EnumMap<ProvinceId, Province> provinces = new EnumMap<>(ProvinceId.class);
     final EnumMap<TributeType, ProvinceId[]> provinceType = new EnumMap<>(TributeType.class);
 
     private final Khan khan;
+    
+    private EnumMap<Region, EnumMap<CityPosition, String>> cities = new EnumMap<>(Region.class);
 
     private final int top = NodePosition.TOP.ordinal();
     private final int right = NodePosition.RIGHT.ordinal();
@@ -44,6 +46,7 @@ class Map {
     
     private HashMap<String, int[]> coordinates = new HashMap<>();
     private HashMap<String, int[]> provinceCoordinates = new HashMap<>();
+    private HashMap<String, int[]> cityCoordinates = new HashMap<>();
 
     private static Map map = null;
 
@@ -71,17 +74,53 @@ class Map {
     }
 
     private void createCities() {
-        cityNames.put(Region.CHINA, new String[] { "Pequim", "Kaesong", "Cantão" });
-        cityNames.put(Region.RUSSIA, new String[] { "Sarai", "Moscou", "Kiev" });
-        cityNames.put(Region.PERSIA, new String[] { "Samarcanda", "Cabul", "Bagdá" });
+    	EnumMap<CityPosition, String> map1 = new EnumMap<>(CityPosition.class);
+    	map1.put(CityPosition.CITY1, "Pequim");
+    	map1.put(CityPosition.CITY2, "Kaesong");
+    	map1.put(CityPosition.CITY3, "Cantão");
+    	cities.put(Region.CHINA, map1);
+
+    	EnumMap<CityPosition, String> map2 = new EnumMap<>(CityPosition.class);
+    	map2.put(CityPosition.CITY1, "Sarai");
+    	map2.put(CityPosition.CITY2, "Moscou");
+    	map2.put(CityPosition.CITY3, "Kiev");
+    	cities.put(Region.RUSSIA, map2);
+    	
+    	EnumMap<CityPosition, String> map3 = new EnumMap<>(CityPosition.class);
+    	map3.put(CityPosition.CITY1, "Sarai");
+    	map3.put(CityPosition.CITY2, "Moscou");
+    	map3.put(CityPosition.CITY3, "Kiev");
+    	cities.put(Region.PERSIA, map3);
+    	
+//        cityNames.put(Region.CHINA, new String[] { "Pequim", "Kaesong", "Cantão" });
+//        cityNames.put(Region.RUSSIA, new String[] { "Sarai", "Moscou", "Kiev" });
+//        cityNames.put(Region.PERSIA, new String[] { "Samarcanda", "Cabul", "Bagdá" });
 
         cityArray.clear();
         for (Region region : Region.values()) {
-            String[] names = cityNames.get(region);
-            for (int i = 0; i < 3; i++) {
-                cityArray.add(new City(names[i]));
-            }
+        	for (CityPosition cityPos : CityPosition.values()) {
+        		cityArray.add(new City(cities.get(region).get(cityPos) ) );
+        	}
+//            String[] names = cityNames.get(region);
+//            for (int i = 0; i < 3; i++) {
+//                cityArray.add(new City(names[i]));
+//            }
         }
+        
+        // Russia cities coordinates
+        cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY3), new int[] {103, 101});
+        cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY2), new int[] {360, 166});
+        cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY1), new int[] {584, 109});
+        
+        // China cities coordinates
+        cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY3), new int[] {831, 576});
+        cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY2), new int[] {867, 219});
+        cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY1), new int[] {700, 389});
+    
+        // Persia cities coordinates
+        cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY3), new int[] {84, 446});
+        cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY2), new int[] {429, 539});
+        cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY1), new int[] {271, 363});
     }
 
     private void createProvinces() {
@@ -104,6 +143,16 @@ class Map {
             }
         }
     }
+    
+    private String[] getCityNamesByRegion(Region region) {
+    	EnumMap<CityPosition, String> names = this.cities.get(region);
+    	String[] ret = new String[3];
+    	int i = 0;
+    	for (CityPosition pos : CityPosition.values()) {
+    		ret[i++] = names.get(pos);
+    	}
+    	return ret;
+    }
 
     private City findCityByName(String name) {
         for (City c : cityArray) {
@@ -118,7 +167,8 @@ class Map {
         nodeArray.clear();
         for (Region region : Region.values()) {
             ArrayList<Node> regionNodes = new ArrayList<>();
-            String[] names = cityNames.get(region);
+            
+            String[] names = getCityNamesByRegion(region);// cityNames.get(region);
 
             for (int i = 0; i < 3; i++) {
                 City sharedCity = findCityByName(names[i]);
@@ -692,8 +742,8 @@ class Map {
         }
         return ids;
     }
-    
-    
+ 
     HashMap<String, int[]> getNodeCoordinates() { return coordinates; }    
     HashMap<String, int[]> getProvinceCoordinates() { return provinceCoordinates; }
+    HashMap<String, int[]> getCitiesCoordinates() { return cityCoordinates; }
 }

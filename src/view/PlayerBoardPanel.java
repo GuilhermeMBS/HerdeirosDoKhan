@@ -57,8 +57,8 @@ public class PlayerBoardPanel extends JPanel {
     private final Controller controller;
     private final HashMap<String, Image> boardImages = new HashMap<>();
 
-    public PlayerBoardPanel(Controller controller) {
-        this.controller = controller;
+    public PlayerBoardPanel() {
+        this.controller = Controller.getController();
         setPreferredSize(new Dimension(BOARD_WIDTH, HEADER + BOARD_HEIGHT));
         addMouseListener(new ColumnClickListener(this, controller));
     }
