@@ -34,8 +34,8 @@ import model.PlayerColor;
 public class PlayerBoardPanel extends JPanel implements ObservadorIF {
     private static final long serialVersionUID = 1L;
 
-    static final int BOARD_WIDTH = 350;
-    static final int BOARD_HEIGHT = 190;
+    static final int BOARD_WIDTH = 500;
+    static final int BOARD_HEIGHT = 300;
     static final int HEADER = 26;
 
     private static final HashMap<String, String> FILES = new HashMap<>();

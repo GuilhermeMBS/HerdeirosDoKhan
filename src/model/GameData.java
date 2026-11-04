@@ -234,6 +234,9 @@ public class GameData implements ObservadoIF {
         }
         return true;
     }
+    
+    public List<String> getOpenCounselorsId() { return OpenCounselor.getAllOpenCounselorsIds(); }
+    public List<String> getGameOpenCounselorIds() { return OpenCounselor.getOpenCounselorsIdGame(); }
 
     private static boolean verifyOpenCounselorCondition(OpenCounselor o, Player p) {
         int target = o.getMissionTarget();

@@ -214,4 +214,6 @@ public class Controller {
     public HashMap<String, int[]> getCitiesCoordinates() { return data.getCitiesCoordinates(); }
     public List<String> getCitiesToSack() { return this.availableCitiesToSack; }
     public List<String> getCitiesNames() { return data.getCityNames(); }
+    public List<String> getOpenCounselorsIds() { return data.getOpenCounselorsId(); }
+    public List<String> getGameOpenCounselorsIds() { return data.getGameOpenCounselorIds(); }
 }

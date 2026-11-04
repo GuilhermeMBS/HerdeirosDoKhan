@@ -1,5 +1,8 @@
 package view;
 
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -53,23 +56,20 @@ class KhanFrame extends JFrame {
         JButton confirmButton = new JButton("Confirm");
         JButton cancelButton = new JButton("Cancel");
         
-        confirmButton.addActionListener(e -> {
-        	String destination = getSelectedDestination();
-        	
-        	if (destination == null) {
-        		JOptionPane.showMessageDialog(
-        				this,
-        				"Please select a valid destination"
-        		);
-        		return;
-        	}
-        	
-        	if (controller.createKhanAction(destination)) {
-        		dispose();
-        	} else {
-        		JOptionPane.showMessageDialog(this,
-        				"Khan movement rejected. Please choose another destination"
-        		);
+        confirmButton.addActionListener( new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		String dest = getSelectedDestination();
+        		if (dest == null) {
+        			JOptionPane.showMessageDialog(KhanFrame.this, "Please select a valid destination");
+        			return;
+        		}
+        		
+        		if (controller.createKhanAction(dest)) {
+        			dispose();
+        		} else {
+        			JOptionPane.showMessageDialog(KhanFrame.this, "Khan movement rejected. Please chose another destination");
+        		}
         	}
         });
         

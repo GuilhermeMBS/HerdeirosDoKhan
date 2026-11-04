@@ -64,6 +64,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 //        JButton moveKhanProvinceButton = new JButton("Move Khan to Selected Province");
 //        JButton moveKhanUpgradesButton = new JButton("Move Khan to Upgrades Area");
         JButton moveKhanButton = new JButton("Move Khan");
+        JButton OpenCounselorButton = new JButton("See Open Counselors");
         
         this.treasureTradeCombo = new JComboBox<>(new String[] {
             "FUR + SILK (Counselor)",
@@ -76,6 +77,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
         actionsPanel.add(moveKhanButton);
+        actionsPanel.add(OpenCounselorButton);
 //        actionsPanel.add(moveKhanProvinceButton);
 //        actionsPanel.add(moveKhanUpgradesButton);
         actionsPanel.add(this.treasureTradeCombo);
@@ -101,6 +103,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             attackCityButton,
             buildYurtButton,
             moveKhanButton,
+            OpenCounselorButton,
             executeTradeButton,
             endTurnButton,
             saveGameButton
@@ -129,6 +132,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton,
         JButton buildYurtButton,
         JButton moveKhanButton,
+        JButton openCounselorButton,
         JButton executeTradeButton,
         JButton endTurnButton,
         JButton saveGameButton
@@ -180,6 +184,14 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         		
         		KhanFrame khanFrame = new KhanFrame(provinces);
         		khanFrame.setVisible(true);
+        	}
+        });
+        
+        openCounselorButton.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		OpenCounselorFrame counselors = new OpenCounselorFrame();
+        		counselors.setVisible(true);
         	}
         });
 

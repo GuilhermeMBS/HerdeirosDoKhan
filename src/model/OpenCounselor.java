@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 enum OpenMissionType implements MissionType {
     YURT,
@@ -57,6 +58,8 @@ class OpenCounselor extends Card {
     }
 
     private static void createFourCards() {
+    	if (cardsInGame != null) return;
+    	
         if (cards.size() < 4) {
             resetDeck();
         }
@@ -97,5 +100,22 @@ class OpenCounselor extends Card {
 
     int getMissionTarget() {
         return this.m1.getTargetAmount();
+    }
+    
+    static List<String> getAllOpenCounselorsIds() {
+    	List<String> ret = new ArrayList<String>();
+    	for (OpenCounselor open : cards) {
+    		ret.add(open.getMissionType().toString() + "_" + open.getMissionTarget());
+    	}
+    	return ret;
+    }
+    
+    static List<String> getOpenCounselorsIdGame() {
+    	List<String> ret = new ArrayList<>();
+    	if (cardsInGame == null) OpenCounselor.createFourCards();
+    	for (OpenCounselor open : cardsInGame) {
+    		ret.add(open.getMissionType().toString() + "_" + open.getMissionTarget());
+    	}
+    	return ret;
     }
 }
