@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -24,11 +25,11 @@ import model.GameData;
 import model.ObservadoIF;
 import model.ObservadorIF;
 import model.PlayerColor;
+import model.TreasureType;
 
 /**
- * Lateral control panel integrating the Controller and observing the match state.
- * When the active player or the remaining movement points change, the Model
- * notifies this panel and the turn header is immediately redrawn.
+ * Lateral control panel integrating the Controller, observing match state changes,
+ * and rendering the active player's full inventory of tributes, treasures, and actions.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -38,8 +39,10 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final BoardPanel boardPanel;
     private final GameStateLoader stateLoader;
 
+    private final JComboBox<String> cityTreasureSlotCombo;
     private final JComboBox<String> treasureTradeCombo;
     private final JLabel statusFeedbackLabel;
+    private final InventoryDisplayPanel inventoryPanel;
 
     private int movementsLeft;
 
@@ -50,14 +53,20 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
         setPreferredSize(new Dimension(360, 760));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        setBorder(BorderFactory.createEmptyBorder(30, 8, 6, 8));
 
-        JPanel actionsPanel = new JPanel(new GridLayout(7, 1, 4, 4));
+        JPanel actionsPanel = new JPanel(new GridLayout(8, 1, 4, 4));
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Board Node & Province Actions"));
 
         JButton harvestButton = new JButton("Harvest Province Tribute");
-        JButton attackCityButton = new JButton("Attack City (Plunder Treasure)");
-        JButton buildYurtButton = new JButton("Build Yurt on Current Node");
+        this.cityTreasureSlotCombo = new JComboBox<>(new String[] {
+            "Plunder Slot 1 (Top-Left)",
+            "Plunder Slot 2 (Top-Right)",
+            "Plunder Slot 3 (Bottom-Left)",
+            "Plunder Slot 4 (Bottom-Right)"
+        });
+        JButton attackCityButton = new JButton("Attack City (Plunder Selected Slot)");
+        JButton buildYurtButton = new JButton("Build Yurt on Visited Node");
         JButton moveKhanButton = new JButton("Move Khan");
         JButton openCounselorButton = new JButton("See Open Counselors");
 
@@ -69,6 +78,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton executeTradeButton = new JButton("Execute Trade at Post");
 
         actionsPanel.add(harvestButton);
+        actionsPanel.add(this.cityTreasureSlotCombo);
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
         actionsPanel.add(moveKhanButton);
@@ -76,6 +86,13 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
         add(actionsPanel);
+
+        add(Box.createVerticalStrut(4));
+
+        this.inventoryPanel = new InventoryDisplayPanel();
+        add(this.inventoryPanel);
+
+        add(Box.createVerticalStrut(4));
 
         JPanel systemPanel = new JPanel(new GridLayout(2, 1, 4, 4));
         systemPanel.setBorder(BorderFactory.createTitledBorder("Turn & Match State"));
@@ -109,6 +126,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     @Override
     public void notify(ObservadoIF o) {
         this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
+        this.inventoryPanel.repaint();
         repaint();
     }
 
@@ -150,10 +168,11 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String nodeId = boardPanel.getSelectedNodeId();
-                if (controller.createSackAction(nodeId, 0)) {
-                    statusFeedbackLabel.setText("Plundered treasure from " + nodeId);
+                int slotIndex = Math.max(0, cityTreasureSlotCombo.getSelectedIndex());
+                if (controller.createSackAction(nodeId, slotIndex)) {
+                    statusFeedbackLabel.setText("Plundered treasure (slot " + (slotIndex + 1) + ") at " + nodeId);
                 } else {
-                    statusFeedbackLabel.setText("No plunderable treasure at " + nodeId);
+                    statusFeedbackLabel.setText("Cannot plunder slot " + (slotIndex + 1) + " at " + nodeId);
                 }
             }
         });
@@ -237,5 +256,79 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             14,
             22
         );
+    }
+
+    /**
+     * Custom Java2D panel displaying the active player's tributes, virtual tributes,
+     * action hands, yurts in stock, votes, and plundered city treasures.
+     */
+    private final class InventoryDisplayPanel extends JPanel {
+
+        private static final long serialVersionUID = 1L;
+
+        private InventoryDisplayPanel() {
+            setPreferredSize(new Dimension(340, 175));
+            setBackground(new Color(245, 240, 230));
+            setBorder(BorderFactory.createTitledBorder("Active Player Resources & Inventory"));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(new Color(35, 30, 25));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+            int xLeft = 14;
+            int xRight = 180;
+            int y = 34;
+            int rowStep = 21;
+
+            int hands = controller.getHandsLeft();
+            boolean khanPending = controller.isKhanPending();
+            int votes = controller.getCurrentPlayerVotes();
+            int yurtsStock = controller.getCurrentPlayerYurtsLeft();
+
+            g2.drawString("Hands Left: " + hands, xLeft, y);
+            g2.drawString("Khan Action: " + (khanPending ? "READY" : "None"), xRight, y);
+            y += rowStep;
+
+            g2.drawString("Political Votes: " + votes, xLeft, y);
+            g2.drawString("Yurts in Stock: " + yurtsStock, xRight, y);
+            y += rowStep + 4;
+
+            int coins = controller.getCurrentPlayerCoins();
+            int vCoins = controller.getCurrentPlayerVirtualCoins();
+            int swords = controller.getCurrentPlayerSwords();
+            int vSwords = controller.getCurrentPlayerVirtualSwords();
+            int yurts = controller.getCurrentPlayerYurtTributes();
+            int vYurts = controller.getCurrentPlayerVirtualYurts();
+
+            g2.setColor(new Color(145, 95, 10));
+            g2.drawString("Coins: " + coins + (vCoins > 0 ? " (+" + vCoins + " virt)" : ""), xLeft, y);
+            g2.setColor(new Color(165, 35, 35));
+            g2.drawString("Swords: " + swords + (vSwords > 0 ? " (+" + vSwords + " virt)" : ""), xRight, y);
+            y += rowStep;
+
+            g2.setColor(new Color(40, 110, 60));
+            g2.drawString("Yurt Tributes: " + yurts + (vYurts > 0 ? " (+" + vYurts + " virt)" : ""), xLeft, y);
+            y += rowStep + 4;
+
+            g2.setColor(new Color(50, 40, 90));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
+            String treasuresLine1 = "Treasures -> FUR: " + controller.getCurrentPlayerTreasure(TreasureType.FUR)
+                + " | SILK: " + controller.getCurrentPlayerTreasure(TreasureType.SILK)
+                + " | IRON: " + controller.getCurrentPlayerTreasure(TreasureType.IRON);
+            String treasuresLine2 = "ANIMAL: " + controller.getCurrentPlayerTreasure(TreasureType.ANIMAL)
+                + " | SPICE: " + controller.getCurrentPlayerTreasure(TreasureType.SPICE);
+
+            g2.drawString(treasuresLine1, xLeft, y);
+            y += rowStep - 2;
+            g2.drawString(treasuresLine2, xLeft, y);
+
+            g2.dispose();
+        }
     }
 }

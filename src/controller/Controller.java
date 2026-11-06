@@ -1,7 +1,5 @@
 package controller;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -9,6 +7,8 @@ import model.ColumnColor;
 import model.GameData;
 import model.ObservadorIF;
 import model.PlayerColor;
+import model.TreasureType;
+import model.TributeType;
 
 /**
  * Coordinates match setup, turn lifecycle, and player actions between View and Model.
@@ -25,9 +25,6 @@ public class Controller {
 
     private boolean firstSackCity = true;
     private ColumnColor chosenColumn = null;
-
-    private List<String> cityNames;
-    private final List<String> availableCitiesToSack = new ArrayList<>();
 
     private static Controller controller = null;
     private GameData data = null;
@@ -48,14 +45,6 @@ public class Controller {
 
     private boolean startGame(boolean alternativeKarakorum) {
         data = GameData.createData(alternativeKarakorum);
-
-        this.availableCitiesToSack.clear();
-        this.cityNames = data.getCityNames();
-        Collections.shuffle(this.cityNames);
-        for (int i = 0; i < 4 && !this.cityNames.isEmpty(); i++) {
-            this.availableCitiesToSack.add(this.cityNames.remove(0));
-        }
-
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -210,6 +199,19 @@ public class Controller {
     public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(this.currentPlayer, column); }
     public String getCurrentHeirName() { return data.getPlayerHeirName(this.currentPlayer); }
     public int getMovementsLeft() { return data.getMovementsLeft(this.currentPlayer); }
+    public int getHandsLeft() { return data.getHandsLeft(this.currentPlayer); }
+    public boolean isKhanPending() { return data.isKhanPending(this.currentPlayer); }
+
+    public int getCurrentPlayerCoins() { return data.getPlayerTribute(this.currentPlayer, TributeType.COIN); }
+    public int getCurrentPlayerVirtualCoins() { return data.getPlayerVirtualTribute(this.currentPlayer, TributeType.COIN); }
+    public int getCurrentPlayerSwords() { return data.getPlayerTribute(this.currentPlayer, TributeType.SWORD); }
+    public int getCurrentPlayerVirtualSwords() { return data.getPlayerVirtualTribute(this.currentPlayer, TributeType.SWORD); }
+    public int getCurrentPlayerYurtTributes() { return data.getPlayerTribute(this.currentPlayer, TributeType.YURT); }
+    public int getCurrentPlayerVirtualYurts() { return data.getPlayerVirtualTribute(this.currentPlayer, TributeType.YURT); }
+    public int getCurrentPlayerYurtsLeft() { return data.getPlayerYurtsLeft(this.currentPlayer); }
+    public int getCurrentPlayerVotes() { return data.getPlayerVotes(this.currentPlayer); }
+    public int getCurrentPlayerTreasure(TreasureType type) { return data.getPlayerTreasure(this.currentPlayer, type); }
+
     public boolean getGameHasEnded() { return this.ended; }
     public boolean getLastRound() { return this.finalTurn; }
     public boolean isKhanAtUpgradeArea() { return data.isKhanAtUpgradeArea(); }
@@ -217,7 +219,9 @@ public class Controller {
     public HashMap<String, int[]> getProvinceCoordinates() { return data.getProvinceCoordinates(); }
     public HashMap<String, int[]> getKhanCoordinates() { return data.getKhanCoordinates(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return data.getCitiesCoordinates(); }
-    public List<String> getCitiesToSack() { return this.availableCitiesToSack; }
+    public List<String> getCitiesToSack() { return data.getCitiesToSack(); }
+    public List<String> getCityTreasures(String cityName) { return data.getCityTreasures(cityName); }
+    public String getCityNameForNode(String nodeId) { return data.getCityNameForNode(nodeId); }
     public List<String> getCitiesNames() { return data.getCityNames(); }
     public List<String> getOpenCounselorsIds() { return data.getOpenCounselorsId(); }
     public List<String> getGameOpenCounselorsIds() { return data.getGameOpenCounselorIds(); }

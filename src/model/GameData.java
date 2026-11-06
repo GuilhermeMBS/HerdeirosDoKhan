@@ -13,11 +13,8 @@ import java.util.ListIterator;
  * registered views whenever the match state changes.
  */
 public class GameData implements ObservadoIF {
-    /** Codes for {@link #get(int)}: index of the player whose turn it is. */
     public static final int CURRENT_PLAYER = 0;
-    /** Codes for {@link #get(int)}: horses left to the player whose turn it is. */
     public static final int MOVEMENTS_LEFT = 1;
-    /** Codes for {@link #get(int)}: number of players in the match. */
     public static final int PLAYER_COUNT = 2;
 
     private static boolean altKarakorum = false;
@@ -25,6 +22,9 @@ public class GameData implements ObservadoIF {
     private static ArrayList<OpenCounselor> openCounselorCards = null;
     private Action action = null;
     private int currentPlayer = 0;
+
+    private final List<String> remainingCityDeck = new ArrayList<>();
+    private final List<String> activeSackCities = new ArrayList<>();
 
     private final List<ObservadorIF> observers = new ArrayList<>();
 
@@ -42,6 +42,8 @@ public class GameData implements ObservadoIF {
             altKarakorum = alt;
             Map.resetMap(altKarakorum);
             data.players = null;
+            data.remainingCityDeck.clear();
+            data.activeSackCities.clear();
         }
         return data;
     }
@@ -142,9 +144,6 @@ public class GameData implements ObservadoIF {
         }
     }
 
-    /**
-     * Returns the ordered list of node IDs visited by the specified player during the current turn.
-     */
     public List<String> getTurnPathNodeIds(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return Collections.emptyList();
@@ -159,9 +158,6 @@ public class GameData implements ObservadoIF {
         return pathIds;
     }
 
-    /**
-     * Restores the turn path of the specified player from a list of node IDs.
-     */
     public void setTurnPathNodeIds(int playerInd, List<String> nodeIds) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return;
@@ -234,9 +230,6 @@ public class GameData implements ObservadoIF {
         return null;
     }
 
-    /**
-     * Restores the Khan piece state from a saved match without triggering cascading tributes.
-     */
     public void restoreKhanState(boolean atUpgrades, String provinceId) {
         Province target = atUpgrades ? null : provinceById(provinceId);
         getMap().getKhan().restoreLocation(atUpgrades, target);
@@ -255,6 +248,56 @@ public class GameData implements ObservadoIF {
             ret.add(entry.getKey());
         }
         return ret;
+    }
+
+    /**
+     * Returns the list of cities currently active for sacking on the board.
+     */
+    public List<String> getCitiesToSack() {
+        return Collections.unmodifiableList(this.activeSackCities);
+    }
+
+    /**
+     * Returns the remaining plunderable treasure names for a given city.
+     */
+    public List<String> getCityTreasures(String cityName) {
+        int cityInd = getMap().getCityInd(cityName);
+        if (cityInd < 0) {
+            return Collections.emptyList();
+        }
+        City city = getMap().getCity(cityInd);
+        if (city == null || !city.canBeSacked()) {
+            return Collections.emptyList();
+        }
+        List<String> list = new ArrayList<>();
+        for (TreasureType t : city.getResources()) {
+            list.add(t.name());
+        }
+        return list;
+    }
+
+    /**
+     * Resolves the city name associated with a SingleNode ID, or null if not a city node.
+     */
+    public String getCityNameForNode(String nodeId) {
+        Node n = nodeById(nodeId);
+        if (n instanceof SingleNode) {
+            return ((SingleNode) n).getCityName();
+        }
+        return null;
+    }
+
+    private void revealNextCityIfAvailable() {
+        while (this.activeSackCities.size() < 4 && !this.remainingCityDeck.isEmpty()) {
+            String nextCityName = this.remainingCityDeck.remove(0);
+            int ind = getMap().getCityInd(nextCityName);
+            if (ind >= 0) {
+                City city = getMap().getCity(ind);
+                if (city != null && city.activateSacking()) {
+                    this.activeSackCities.add(nextCityName);
+                }
+            }
+        }
     }
 
     public void setProvinceResourceCount(String provinceId, int qty) {
@@ -362,9 +405,13 @@ public class GameData implements ObservadoIF {
         for (int i = 0; i < heirNames.size(); i++) {
             assignPlayer(i, PlayerColor.values()[i], heirNames.get(i), (i >= 2) ? 2 : 1);
         }
-        for (int i = 0; i < 3 && i < getMap().getAmountCity(); i++) {
-            getMap().getCity(i).activateSacking();
-        }
+
+        this.remainingCityDeck.clear();
+        this.activeSackCities.clear();
+        this.remainingCityDeck.addAll(getCityNames());
+        Collections.shuffle(this.remainingCityDeck);
+        revealNextCityIfAvailable();
+
         currentPlayer = 0;
         atualiza();
         return true;
@@ -403,6 +450,41 @@ public class GameData implements ObservadoIF {
         return -1;
     }
 
+    public int getPlayerTribute(int playerInd, TributeType type) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return 0;
+        }
+        return players[playerInd].getTributeAmount(type);
+    }
+
+    public int getPlayerVirtualTribute(int playerInd, TributeType type) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return 0;
+        }
+        return players[playerInd].getVirtualTributeAmount(type);
+    }
+
+    public int getPlayerTreasure(int playerInd, TreasureType type) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return 0;
+        }
+        return players[playerInd].getTreasureAmount(type);
+    }
+
+    public int getPlayerYurtsLeft(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getYurtsLeft();
+    }
+
+    public int getPlayerVotes(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getVotes();
+    }
+
     public boolean MovePawn(int playerInd, String nodeId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -428,10 +510,6 @@ public class GameData implements ObservadoIF {
         return doAction();
     }
 
-    /**
-     * Harvests a tribute from the given province if the specified node OR any node
-     * visited in the player's current turn path borders that province.
-     */
     public boolean harvestProvinceResource(int playerInd, String nodeId, String provinceId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -494,8 +572,16 @@ public class GameData implements ObservadoIF {
         if (cityInd < 0) {
             return false;
         }
+
+        City targetCity = getMap().getCity(cityInd);
         newSackAction(playerInd, actionNode, cityInd, qtySword, treasureInd);
-        return doAction();
+        boolean success = doAction();
+        if (success && targetCity != null && !targetCity.canBeSacked()) {
+            this.activeSackCities.remove(targetCity.getName());
+            revealNextCityIfAvailable();
+            atualiza();
+        }
+        return success;
     }
 
     public boolean moveKhan(int playerInd, String provinceId) {

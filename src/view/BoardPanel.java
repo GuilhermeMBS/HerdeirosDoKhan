@@ -3,6 +3,7 @@ package view;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -27,10 +28,12 @@ import javax.swing.JPanel;
 import controller.Controller;
 import model.ObservadoIF;
 import model.ObservadorIF;
+import model.TreasureType;
 
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
- * turn path highlights, constructed yurts, province tributes, and Genghis Khan.
+ * turn path highlights, constructed yurts, province tributes, active cities with
+ * their plunderable treasures, and Genghis Khan.
  */
 public class BoardPanel extends JPanel implements ObservadorIF {
 
@@ -49,9 +52,11 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private Image coinTributeSprite;
 
     private final int TRIBUTE_SIZE = 40;
+    private final int TREASURE_SIZE = 24;
 
     private final String IMAGE_PATH_START = "assets/cities/";
     private final HashMap<String, Image> citiesImages = new HashMap<>();
+    private final HashMap<String, Image> treasureSprites = new HashMap<>();
     private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
     private final int CITY_SIZE = 70;
     private final int CITY_OFFSET = CITY_SIZE / 2;
@@ -169,6 +174,44 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
             this.citiesImages.put(name, img);
         }
+
+        for (TreasureType type : TreasureType.values()) {
+            String key = type.name();
+            BufferedImage img = readProjectImage("assets/treasureType/" + key + ".jpg");
+            if (img == null) {
+                img = readProjectImage("assets/treasures/" + key + ".png");
+            }
+            if (img != null) {
+                this.treasureSprites.put(key, img);
+            } else {
+                this.treasureSprites.put(key, createTreasureBadge(key));
+            }
+        }
+    }
+
+    private Image createTreasureBadge(String treasureName) {
+        BufferedImage badge = new BufferedImage(TREASURE_SIZE, TREASURE_SIZE, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = badge.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        Color fill = new Color(140, 90, 45);
+        if ("SILK".equals(treasureName)) fill = new Color(155, 50, 165);
+        else if ("IRON".equals(treasureName)) fill = new Color(95, 105, 115);
+        else if ("SPICE".equals(treasureName)) fill = new Color(210, 95, 30);
+        else if ("ANIMAL".equals(treasureName)) fill = new Color(50, 140, 70);
+
+        g2.setColor(fill);
+        g2.fillRoundRect(1, 1, TREASURE_SIZE - 2, TREASURE_SIZE - 2, 6, 6);
+        g2.setColor(new Color(255, 235, 180));
+        g2.setStroke(new BasicStroke(1.5f));
+        g2.drawRoundRect(1, 1, TREASURE_SIZE - 2, TREASURE_SIZE - 2, 6, 6);
+
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("SansSerif", Font.BOLD, 9));
+        String shortLabel = treasureName.substring(0, Math.min(3, treasureName.length()));
+        g2.drawString(shortLabel, 3, 15);
+        g2.dispose();
+        return badge;
     }
 
     private Image loadOrCreatePlaceholder(String path, int width, int height, Color fallbackColor) {
@@ -208,7 +251,6 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         if (clickedNode != null) {
             this.selectedNodeId = clickedNode;
             List<String> visitedInTurn = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
-            // Only attempt movement if the clicked node is not already in the active turn path
             if (!visitedInTurn.contains(clickedNode)) {
                 this.controller.createMoveAction(clickedNode);
             }
@@ -253,7 +295,6 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         List<String> turnPath = controller.getTurnPathNodeIds(currentPlayer);
         Set<String> visitedSet = new HashSet<>(turnPath);
 
-        // Draw dashed line connecting the sequence of visited nodes in turnPath
         if (turnPath.size() > 1) {
             Stroke previousStroke = g2d.getStroke();
             g2d.setColor(new Color(0, 195, 255, 200));
@@ -332,13 +373,33 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
     private void drawCitiesForSack(Graphics2D g2d, double scaleX, double scaleY) {
         List<String> cities = controller.getCitiesToSack();
+        int[][] cornerOffsets = new int[][] {
+            {-CITY_OFFSET - 4, -CITY_OFFSET - 4},
+            {CITY_OFFSET - TREASURE_SIZE + 4, -CITY_OFFSET - 4},
+            {-CITY_OFFSET - 4, CITY_OFFSET - TREASURE_SIZE + 4},
+            {CITY_OFFSET - TREASURE_SIZE + 4, CITY_OFFSET - TREASURE_SIZE + 4}
+        };
 
         for (String name : cities) {
             int[] pos = this.CITIES_COORDINATE.get(name);
             if (pos != null) {
-                int sx = (int) Math.round(pos[0] * scaleX) - this.CITY_OFFSET;
-                int sy = (int) Math.round(pos[1] * scaleY) - this.CITY_OFFSET;
+                int centerX = (int) Math.round(pos[0] * scaleX);
+                int centerY = (int) Math.round(pos[1] * scaleY);
+                int sx = centerX - this.CITY_OFFSET;
+                int sy = centerY - this.CITY_OFFSET;
+
                 g2d.drawImage(this.citiesImages.get(name), sx, sy, this.CITY_SIZE, this.CITY_SIZE, this);
+
+                List<String> treasures = controller.getCityTreasures(name);
+                for (int i = 0; i < treasures.size() && i < cornerOffsets.length; i++) {
+                    String tName = treasures.get(i);
+                    Image tImg = this.treasureSprites.get(tName);
+                    if (tImg != null) {
+                        int tx = centerX + cornerOffsets[i][0];
+                        int ty = centerY + cornerOffsets[i][1];
+                        g2d.drawImage(tImg, tx, ty, TREASURE_SIZE, TREASURE_SIZE, this);
+                    }
+                }
             }
         }
     }
