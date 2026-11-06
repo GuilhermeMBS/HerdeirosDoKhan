@@ -1,13 +1,12 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * One action column of the player board: the base actions printed
  * at the bottom plus up to 4 upgrades.
- *
- * @author Vinicius
  */
 class Column {
     static final int MAX_UPGRADES = 4;
@@ -32,11 +31,10 @@ class Column {
 
     int getUpgradeCount() { return upgrades.size(); }
 
-    /**
-     * Checks whether the upgrade fits in this column.
-     * @return {@code true} if there is space and the color matches
-     * (the white column accepts any color)
-     */
+    List<Upgrade> getUpgrades() {
+        return Collections.unmodifiableList(upgrades);
+    }
+
     boolean canReceive(Upgrade upgrade) {
         if (upgrades.size() >= MAX_UPGRADES) {
             return false;
@@ -53,10 +51,6 @@ class Column {
         return true;
     }
 
-    /**
-     * How many times the icon is available when this column is activated.
-     * Upgrades bought in the current turn do not count yet.
-     */
     int count(Icon icon) {
         int total = 0;
         for (Icon i : baseActions) {

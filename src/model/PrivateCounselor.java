@@ -60,7 +60,7 @@ class PrivateCounselor extends Card {
         cards.add(new PrivateCounselor(
             new Mission(3, PrivateMissionType.CITY_YURT),
             new Mission(6, PrivateMissionType.CITY_YURT),
-            new Mission(8, PrivateMissionType.CITY_YURT), "Cidadão"
+            new Mission(8, PrivateMissionType.CITY_YURT), "Cidadao"
         ));
         cards.add(new PrivateCounselor(
             new Mission(2, PrivateMissionType.POWERUPS_HORSE_HAND),
@@ -101,12 +101,43 @@ class PrivateCounselor extends Card {
         return tmp;
     }
 
+    static PrivateCounselor drawOneCard() {
+        if (cards.isEmpty()) {
+            resetDeck();
+        }
+        return cards.remove(0);
+    }
+
     boolean setFinished(Mission m) {
         if (m != null && !m.hasFinishedMission()) {
             m.setFinished();
             return true;
         }
         return false;
+    }
+
+    void updateProgress(int currentProgress) {
+        if (m1 != null && currentProgress >= m1.getTargetAmount()) {
+            m1.setFinished();
+        }
+        if (m2 != null && currentProgress >= m2.getTargetAmount()) {
+            m2.setFinished();
+        }
+        if (m3 != null && currentProgress >= m3.getTargetAmount()) {
+            m3.setFinished();
+        }
+    }
+
+    PrivateMissionType getMissionType() {
+        return (PrivateMissionType) m1.getMissionType();
+    }
+
+    int[] getTierTargets() {
+        return new int[] {
+            m1.getTargetAmount(),
+            m2.getTargetAmount(),
+            m3.getTargetAmount()
+        };
     }
 
     @Override

@@ -1,11 +1,15 @@
 package model;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * Singleton and Facade providing external access to the Model package.
@@ -250,16 +254,10 @@ public class GameData implements ObservadoIF {
         return ret;
     }
 
-    /**
-     * Returns the list of cities currently active for sacking on the board.
-     */
     public List<String> getCitiesToSack() {
         return Collections.unmodifiableList(this.activeSackCities);
     }
 
-    /**
-     * Returns the remaining plunderable treasure names for a given city.
-     */
     public List<String> getCityTreasures(String cityName) {
         int cityInd = getMap().getCityInd(cityName);
         if (cityInd < 0) {
@@ -276,9 +274,6 @@ public class GameData implements ObservadoIF {
         return list;
     }
 
-    /**
-     * Resolves the city name associated with a SingleNode ID, or null if not a city node.
-     */
     public String getCityNameForNode(String nodeId) {
         Node n = nodeById(nodeId);
         if (n instanceof SingleNode) {
@@ -316,7 +311,19 @@ public class GameData implements ObservadoIF {
     }
 
     public List<String> getOpenCounselorsId() { return OpenCounselor.getAllOpenCounselorsIds(); }
-    public List<String> getGameOpenCounselorIds() { return OpenCounselor.getOpenCounselorsIdGame(); }
+    public List<String> getGameOpenCounselorIds() {
+        createOpenCounselors();
+        return OpenCounselor.getOpenCounselorsIdGame();
+    }
+
+    public String getOpenCounselorOwnerName(int cardInd) {
+        createOpenCounselors();
+        if (openCounselorCards == null || cardInd < 0 || cardInd >= openCounselorCards.size()) {
+            return null;
+        }
+        Player owner = openCounselorCards.get(cardInd).getCompletedBy();
+        return owner != null ? owner.getName() : null;
+    }
 
     private static boolean verifyOpenCounselorCondition(OpenCounselor o, Player p) {
         int target = o.getMissionTarget();
@@ -357,10 +364,11 @@ public class GameData implements ObservadoIF {
     }
 
     public boolean setOpenCounselorDone(int ind, int playerInd) {
+        createOpenCounselors();
         if (openCounselorCards == null || ind < 0 || ind >= openCounselorCards.size()) {
             return false;
         }
-        if (players == null || playerInd < 0 || playerInd >= players.length) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
         OpenCounselor card = openCounselorCards.get(ind);
@@ -376,6 +384,234 @@ public class GameData implements ObservadoIF {
         return false;
     }
 
+    private void checkAutoOpenCounselors(int playerInd) {
+        createOpenCounselors();
+        if (openCounselorCards == null || players == null || playerInd < 0 || playerInd >= players.length) {
+            return;
+        }
+        Player p = players[playerInd];
+        if (p == null) {
+            return;
+        }
+        for (int i = 0; i < openCounselorCards.size(); i++) {
+            OpenCounselor card = openCounselorCards.get(i);
+            if (!card.hasBeenCompleted() && verifyOpenCounselorCondition(card, p)) {
+                if (card.playerHasCompleted(p)) {
+                    p.addVotes(1);
+                }
+            }
+        }
+        evaluatePrivateCounselorProgress(p);
+    }
+
+    private int computePrivateMissionMetric(Player p, PrivateMissionType type) {
+        if (p == null || type == null) {
+            return 0;
+        }
+        List<Upgrade> upgrades = p.getBoard().getAllUpgrades();
+        switch (type) {
+            case POWERUPS_QTD:
+                return p.getBoard().getTotalUpgradeCount();
+            case POWERUPS_SAME: {
+                EnumMap<Icon, Integer> counts = new EnumMap<>(Icon.class);
+                int maxSame = 0;
+                for (Upgrade u : upgrades) {
+                    int next = counts.getOrDefault(u.getIcon(), 0) + 1;
+                    counts.put(u.getIcon(), next);
+                    maxSame = Math.max(maxSame, next);
+                }
+                return maxSame;
+            }
+            case POWERUPS_DIFF: {
+                Set<String> distinct = new HashSet<>();
+                for (Upgrade u : upgrades) {
+                    distinct.add(u.getIcon().name() + "_" + u.getColor().name());
+                }
+                return distinct.size();
+            }
+            case POWERUPS_HORSE_HAND: {
+                int count = 0;
+                for (Upgrade u : upgrades) {
+                    if (u.getIcon() == Icon.HORSE || u.getIcon() == Icon.HAND) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+            case POWERUPS_YURT: {
+                int count = 0;
+                for (Upgrade u : upgrades) {
+                    if (u.getIcon() == Icon.VIRTUAL_YURT) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+            case CITY_YURT: {
+                Set<String> citiesWithYurt = new HashSet<>();
+                for (String nodeId : getAllNodeIds()) {
+                    Node n = nodeById(nodeId);
+                    if (n instanceof SingleNode && n.hasYurtOf(p)) {
+                        citiesWithYurt.add(((SingleNode) n).getCityName());
+                    }
+                }
+                return citiesWithYurt.size();
+            }
+            case CITY_2YURT: {
+                java.util.Map<String, Integer> cityYurtCount = new HashMap<>();
+                for (String nodeId : getAllNodeIds()) {
+                    Node n = nodeById(nodeId);
+                    if (n instanceof SingleNode && n.hasYurtOf(p)) {
+                        String cName = ((SingleNode) n).getCityName();
+                        cityYurtCount.put(cName, cityYurtCount.getOrDefault(cName, 0) + 1);
+                    }
+                }
+                int citiesWithAtLeastTwo = 0;
+                for (int c : cityYurtCount.values()) {
+                    if (c >= 2) {
+                        citiesWithAtLeastTwo++;
+                    }
+                }
+                return citiesWithAtLeastTwo;
+            }
+            case YURT_TRADINGPOST: {
+                int postYurts = 0;
+                for (String nodeId : getAllNodeIds()) {
+                    Node n = nodeById(nodeId);
+                    if ((n instanceof DoubleNode || n instanceof CentralNode) && n.hasYurtOf(p)) {
+                        postYurts++;
+                    }
+                }
+                return postYurts;
+            }
+            case YURT_KHAN: {
+                Set<Province> khanProvinces = new HashSet<>();
+                for (String provId : getKhanProvincesIds()) {
+                    Province kp = provinceById(provId);
+                    if (kp != null) {
+                        khanProvinces.add(kp);
+                    }
+                }
+                Set<Province> coveredKhanProvs = new HashSet<>();
+                for (String nodeId : getAllNodeIds()) {
+                    Node n = nodeById(nodeId);
+                    if (n != null && n.hasYurtOf(p)) {
+                        for (Province np : n.getProvinces()) {
+                            if (khanProvinces.contains(np)) {
+                                coveredKhanProvs.add(np);
+                            }
+                        }
+                    }
+                }
+                return coveredKhanProvs.size();
+            }
+            case YURTINSEQUENCE: {
+                Set<Node> ownedNodes = new HashSet<>();
+                for (String nodeId : getAllNodeIds()) {
+                    Node n = nodeById(nodeId);
+                    if (n != null && n.hasYurtOf(p)) {
+                        ownedNodes.add(n);
+                    }
+                }
+                int maxChain = 0;
+                Set<Node> visited = new HashSet<>();
+                for (Node start : ownedNodes) {
+                    if (visited.contains(start)) {
+                        continue;
+                    }
+                    int compSize = 0;
+                    Queue<Node> q = new ArrayDeque<>();
+                    q.add(start);
+                    visited.add(start);
+                    while (!q.isEmpty()) {
+                        Node cur = q.poll();
+                        compSize++;
+                        for (Node nb : cur.getNeighbors()) {
+                            if (ownedNodes.contains(nb) && !visited.contains(nb)) {
+                                visited.add(nb);
+                                q.add(nb);
+                            }
+                        }
+                    }
+                    maxChain = Math.max(maxChain, compSize);
+                }
+                return maxChain;
+            }
+            default:
+                return 0;
+        }
+    }
+
+    private void evaluatePrivateCounselorProgress(Player p) {
+        if (p == null || p.getSecretCard() == null) {
+            return;
+        }
+        PrivateCounselor secret = p.getSecretCard();
+        int progress = computePrivateMissionMetric(p, secret.getMissionType());
+        secret.updateProgress(progress);
+    }
+
+    public String getPlayerPrivateCounselorName(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return "None";
+        }
+        PrivateCounselor card = players[playerInd].getSecretCard();
+        return card != null ? card.getName() : "None";
+    }
+
+    public String getPlayerPrivateCounselorSummary(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return "";
+        }
+        Player p = players[playerInd];
+        PrivateCounselor card = p.getSecretCard();
+        if (card == null) {
+            return "No Private Counselor";
+        }
+        evaluatePrivateCounselorProgress(p);
+        int progress = computePrivateMissionMetric(p, card.getMissionType());
+        int[] targets = card.getTierTargets();
+        return card.getName() + " (" + card.getMissionType().name() + ") - Progress: " + progress
+            + " [Tiers: " + targets[0] + " / " + targets[1] + " / " + targets[2] + "]"
+            + " (+" + card.gainPoints() + " pts)";
+    }
+
+    /**
+     * Computes the complete score breakdown for a given player:
+     * base votes (trades + open counselors) + first-trade bonuses + conquered cities + private counselor points.
+     */
+    public int calculatePlayerTotalScore(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        Player p = players[playerInd];
+        evaluatePrivateCounselorProgress(p);
+        int privatePts = p.getSecretCard() != null ? p.getSecretCard().gainPoints() : 0;
+        return p.getVotes() + p.getBonuses() + p.getConqueredCities() + privatePts;
+    }
+
+    public List<String> getScoreboardSummary() {
+        if (players == null) {
+            return Collections.emptyList();
+        }
+        List<String> lines = new ArrayList<>();
+        for (int i = 0; i < players.length; i++) {
+            Player p = players[i];
+            if (p != null) {
+                evaluatePrivateCounselorProgress(p);
+                int privPts = p.getSecretCard() != null ? p.getSecretCard().gainPoints() : 0;
+                int total = calculatePlayerTotalScore(i);
+                lines.add(
+                    p.getName() + ": " + total + " pts (Votes: " + p.getVotes()
+                    + ", Cities: " + p.getConqueredCities()
+                    + ", Bonus: " + p.getBonuses()
+                    + ", Secret: +" + privPts + ")"
+                );
+            }
+        }
+        return lines;
+    }
+
     public boolean createArrayPlayers(int qtyPlayers) {
         if (qtyPlayers < 2 || qtyPlayers > 5) {
             return false;
@@ -389,6 +625,7 @@ public class GameData implements ObservadoIF {
             return false;
         }
         Player p = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
+        p.setSecretCard(PrivateCounselor.drawOneCard());
         players[ind] = p;
         return true;
     }
@@ -396,6 +633,9 @@ public class GameData implements ObservadoIF {
     public boolean setupMatch(List<String> heirNames, boolean alt) {
         altKarakorum = alt;
         Resource.resetResources();
+        OpenCounselor.resetDeck();
+        PrivateCounselor.resetDeck();
+        openCounselorCards = OpenCounselor.giveCardsInGame();
         Map.resetMap(altKarakorum);
         players = null;
 
@@ -507,7 +747,12 @@ public class GameData implements ObservadoIF {
             return false;
         }
         newYurtAction(playerInd, n);
-        return doAction();
+        boolean success = doAction();
+        if (success) {
+            checkAutoOpenCounselors(playerInd);
+            atualiza();
+        }
+        return success;
     }
 
     public boolean harvestProvinceResource(int playerInd, String nodeId, String provinceId) {
@@ -537,7 +782,12 @@ public class GameData implements ObservadoIF {
             return false;
         }
         newTributeAction(p, validNode, province);
-        return doAction();
+        boolean success = doAction();
+        if (success) {
+            checkAutoOpenCounselors(playerInd);
+            atualiza();
+        }
+        return success;
     }
 
     public boolean attackCityForTreasure(int playerInd, String nodeOrCityName, int treasureInd, int qtySword) {
@@ -576,9 +826,12 @@ public class GameData implements ObservadoIF {
         City targetCity = getMap().getCity(cityInd);
         newSackAction(playerInd, actionNode, cityInd, qtySword, treasureInd);
         boolean success = doAction();
-        if (success && targetCity != null && !targetCity.canBeSacked()) {
-            this.activeSackCities.remove(targetCity.getName());
-            revealNextCityIfAvailable();
+        if (success) {
+            if (targetCity != null && !targetCity.canBeSacked()) {
+                this.activeSackCities.remove(targetCity.getName());
+                revealNextCityIfAvailable();
+            }
+            checkAutoOpenCounselors(playerInd);
             atualiza();
         }
         return success;
@@ -621,7 +874,12 @@ public class GameData implements ObservadoIF {
             ? ((CentralNode) n).getTradingPost()
             : ((DoubleNode) n).getTradingPost();
         newTradeAction(playerInd, post);
-        return doAction();
+        boolean success = doAction();
+        if (success) {
+            checkAutoOpenCounselors(playerInd);
+            atualiza();
+        }
+        return success;
     }
 
     public boolean startTurn(int playerInd, ColumnColor column, int pawnIndex) {
@@ -637,6 +895,7 @@ public class GameData implements ObservadoIF {
 
     public void endTurn(int playerInd) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+            checkAutoOpenCounselors(playerInd);
             players[playerInd].endTurn();
         }
     }

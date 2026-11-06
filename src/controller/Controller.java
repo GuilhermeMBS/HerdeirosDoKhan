@@ -11,7 +11,8 @@ import model.TreasureType;
 import model.TributeType;
 
 /**
- * Coordinates match setup, turn lifecycle, and player actions between View and Model.
+ * Coordinates match setup, turn lifecycle, counselor claims, scoring,
+ * and player actions between View and Model.
  */
 public class Controller {
     private int currentPlayer = 0;
@@ -97,7 +98,9 @@ public class Controller {
     }
 
     private void calculatePoints() {
-        // Scoring calculation will be expanded in Stage 3.
+        for (int i = 0; i < getTotalPlayers(); i++) {
+            data.calculatePlayerTotalScore(i);
+        }
     }
 
     public boolean createMoveAction(String nodeId) {
@@ -134,6 +137,14 @@ public class Controller {
             this.totalVotes++;
         }
         return traded;
+    }
+
+    public boolean claimOpenCounselor(int cardInd) {
+        boolean claimed = data.setOpenCounselorDone(cardInd, this.currentPlayer);
+        if (claimed) {
+            this.totalVotes++;
+        }
+        return claimed;
     }
 
     public boolean endTurn() {
@@ -211,6 +222,12 @@ public class Controller {
     public int getCurrentPlayerYurtsLeft() { return data.getPlayerYurtsLeft(this.currentPlayer); }
     public int getCurrentPlayerVotes() { return data.getPlayerVotes(this.currentPlayer); }
     public int getCurrentPlayerTreasure(TreasureType type) { return data.getPlayerTreasure(this.currentPlayer, type); }
+
+    public String getOpenCounselorOwnerName(int cardInd) { return data.getOpenCounselorOwnerName(cardInd); }
+    public String getCurrentPlayerPrivateCounselorName() { return data.getPlayerPrivateCounselorName(this.currentPlayer); }
+    public String getCurrentPlayerPrivateCounselorSummary() { return data.getPlayerPrivateCounselorSummary(this.currentPlayer); }
+    public int getCurrentPlayerTotalScore() { return data.calculatePlayerTotalScore(this.currentPlayer); }
+    public List<String> getScoreboardSummary() { return data.getScoreboardSummary(); }
 
     public boolean getGameHasEnded() { return this.ended; }
     public boolean getLastRound() { return this.finalTurn; }

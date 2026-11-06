@@ -58,8 +58,8 @@ class OpenCounselor extends Card {
     }
 
     private static void createFourCards() {
-    	if (cardsInGame != null) return;
-    	
+        if (cardsInGame != null) return;
+
         if (cards.size() < 4) {
             resetDeck();
         }
@@ -85,12 +85,16 @@ class OpenCounselor extends Card {
         return true;
     }
 
+    Player getCompletedBy() {
+        return this.p;
+    }
+
     @Override
     public int gainPoints() {
         return hasBeenCompleted() ? 1 : 0;
     }
 
-    private boolean hasBeenCompleted() {
+    boolean hasBeenCompleted() {
         return this.p != null;
     }
 
@@ -101,21 +105,25 @@ class OpenCounselor extends Card {
     int getMissionTarget() {
         return this.m1.getTargetAmount();
     }
-    
-    static List<String> getAllOpenCounselorsIds() {
-    	List<String> ret = new ArrayList<String>();
-    	for (OpenCounselor open : cards) {
-    		ret.add(open.getMissionType().toString() + "_" + open.getMissionTarget());
-    	}
-    	return ret;
+
+    String getCardId() {
+        return getMissionType().toString() + "_" + getMissionTarget();
     }
-    
+
+    static List<String> getAllOpenCounselorsIds() {
+        List<String> ret = new ArrayList<>();
+        for (OpenCounselor open : cards) {
+            ret.add(open.getCardId());
+        }
+        return ret;
+    }
+
     static List<String> getOpenCounselorsIdGame() {
-    	List<String> ret = new ArrayList<>();
-    	if (cardsInGame == null) OpenCounselor.createFourCards();
-    	for (OpenCounselor open : cardsInGame) {
-    		ret.add(open.getMissionType().toString() + "_" + open.getMissionTarget());
-    	}
-    	return ret;
+        List<String> ret = new ArrayList<>();
+        if (cardsInGame == null) OpenCounselor.createFourCards();
+        for (OpenCounselor open : cardsInGame) {
+            ret.add(open.getCardId());
+        }
+        return ret;
     }
 }

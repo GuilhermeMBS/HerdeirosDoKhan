@@ -1,13 +1,12 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * The individual player board: three colored columns and the white column.
- *
- * @author Vinicius
  */
 class PlayerBoard {
     static final int ACTIVATION_TOKENS = 4;
@@ -24,15 +23,26 @@ class PlayerBoard {
 
     Column getColumn(ColumnColor color) { return columns.get(color); }
 
+    List<Upgrade> getAllUpgrades() {
+        List<Upgrade> all = new ArrayList<>();
+        for (ColumnColor c : ColumnColor.values()) {
+            all.addAll(columns.get(c).getUpgrades());
+        }
+        return all;
+    }
+
+    int getTotalUpgradeCount() {
+        int total = 0;
+        for (ColumnColor c : ColumnColor.values()) {
+            total += columns.get(c).getUpgradeCount();
+        }
+        return total;
+    }
+
     boolean canActivate(ColumnColor color) {
         return !columns.get(color).isOccupied();
     }
 
-    /**
-     * Places an activation token on the column.
-     * Activating the white column takes back all the tokens.
-     * @return {@code false} if the column is already occupied
-     */
     boolean activate(ColumnColor color) {
         if (!canActivate(color)) {
             return false;
@@ -57,7 +67,6 @@ class PlayerBoard {
         return ACTIVATION_TOKENS - occupied;
     }
 
-    /** Places a bought upgrade on one of the colored columns. */
     boolean addUpgrade(ColumnColor color, Upgrade upgrade) {
         if (color == ColumnColor.WHITE) {
             return false;
@@ -65,7 +74,6 @@ class PlayerBoard {
         return columns.get(color).addUpgrade(upgrade);
     }
 
-    /** Complete rows = smallest number of upgrades among the colored columns. */
     int completeRows() {
         int smallest = Column.MAX_UPGRADES;
         for (ColumnColor c : ColumnColor.COLORED) {
@@ -73,31 +81,27 @@ class PlayerBoard {
         }
         return smallest;
     }
-    
+
     boolean hasCompletedSquare() {
-    	ColumnColor[] colors = ColumnColor.COLORED;
-    	
-    	for (int i = 0; i < colors.length - 1; i++) {
-    		int c1 = columns.get(colors[i]).getUpgradeCount();
-    		int c2 = columns.get(colors[i+1]).getUpgradeCount();
-    		
-    		if ((c1 > 1 && c2 > 1)) return true;
-    	}
-    	
-    	int c1 = columns.get(colors[colors.length - 1]).getUpgradeCount();
-    	int c2 = columns.get(ColumnColor.WHITE).getUpgradeCount();
-    	
-    	if (c1 > 1 && c2 > 1) return true;
-    	
-    	return false;
+        ColumnColor[] colors = ColumnColor.COLORED;
+
+        for (int i = 0; i < colors.length - 1; i++) {
+            int c1 = columns.get(colors[i]).getUpgradeCount();
+            int c2 = columns.get(colors[i + 1]).getUpgradeCount();
+            if (c1 > 1 && c2 > 1) {
+                return true;
+            }
+        }
+
+        int c1 = columns.get(colors[colors.length - 1]).getUpgradeCount();
+        int c2 = columns.get(ColumnColor.WHITE).getUpgradeCount();
+        return c1 > 1 && c2 > 1;
     }
 
-    /** Is there a complete row that has not given its free upgrade yet? */
     boolean hasFreeUpgradePending() {
         return completeRows() > rewardedRows;
     }
 
-    /** Places the free upgrade on the white column (any color is accepted). */
     boolean receiveFreeUpgrade(Upgrade upgrade) {
         if (!hasFreeUpgradePending()) {
             return false;

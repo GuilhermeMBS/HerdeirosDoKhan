@@ -29,7 +29,7 @@ import model.TreasureType;
 
 /**
  * Lateral control panel integrating the Controller, observing match state changes,
- * and rendering the active player's full inventory of tributes, treasures, and actions.
+ * and rendering the active player's full inventory, secret counselor status, and scoreboard.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -55,7 +55,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(30, 8, 6, 8));
 
-        JPanel actionsPanel = new JPanel(new GridLayout(8, 1, 4, 4));
+        JPanel actionsPanel = new JPanel(new GridLayout(8, 1, 3, 3));
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Board Node & Province Actions"));
 
         JButton harvestButton = new JButton("Harvest Province Tribute");
@@ -68,7 +68,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton = new JButton("Attack City (Plunder Selected Slot)");
         JButton buildYurtButton = new JButton("Build Yurt on Visited Node");
         JButton moveKhanButton = new JButton("Move Khan");
-        JButton openCounselorButton = new JButton("See Open Counselors");
+        JButton openCounselorButton = new JButton("See Counselors (Open & Secret)");
 
         this.treasureTradeCombo = new JComboBox<>(new String[] {
             "FUR + SILK (Counselor)",
@@ -94,7 +94,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
         add(Box.createVerticalStrut(4));
 
-        JPanel systemPanel = new JPanel(new GridLayout(2, 1, 4, 4));
+        JPanel systemPanel = new JPanel(new GridLayout(2, 1, 3, 3));
         systemPanel.setBorder(BorderFactory.createTitledBorder("Turn & Match State"));
 
         JButton endTurnButton = new JButton("Next Player Turn");
@@ -222,7 +222,11 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             @Override
             public void actionPerformed(ActionEvent e) {
                 controller.endTurn();
-                statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentPlayerName());
+                if (controller.getGameHasEnded()) {
+                    statusFeedbackLabel.setText("MATCH ENDED! Check Scoreboard above.");
+                } else {
+                    statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentPlayerName());
+                }
             }
         });
 
@@ -260,16 +264,16 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
     /**
      * Custom Java2D panel displaying the active player's tributes, virtual tributes,
-     * action hands, yurts in stock, votes, and plundered city treasures.
+     * plundered treasures, secret counselor status, and live match scoreboard.
      */
     private final class InventoryDisplayPanel extends JPanel {
 
         private static final long serialVersionUID = 1L;
 
         private InventoryDisplayPanel() {
-            setPreferredSize(new Dimension(340, 175));
+            setPreferredSize(new Dimension(340, 265));
             setBackground(new Color(245, 240, 230));
-            setBorder(BorderFactory.createTitledBorder("Active Player Resources & Inventory"));
+            setBorder(BorderFactory.createTitledBorder("Resources, Secret Mission & Scoreboard"));
         }
 
         @Override
@@ -279,25 +283,25 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             g2.setColor(new Color(35, 30, 25));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
 
-            int xLeft = 14;
-            int xRight = 180;
-            int y = 34;
-            int rowStep = 21;
+            int xLeft = 12;
+            int xRight = 175;
+            int y = 28;
+            int rowStep = 17;
 
             int hands = controller.getHandsLeft();
             boolean khanPending = controller.isKhanPending();
-            int votes = controller.getCurrentPlayerVotes();
+            int totalScore = controller.getCurrentPlayerTotalScore();
             int yurtsStock = controller.getCurrentPlayerYurtsLeft();
 
             g2.drawString("Hands Left: " + hands, xLeft, y);
             g2.drawString("Khan Action: " + (khanPending ? "READY" : "None"), xRight, y);
             y += rowStep;
 
-            g2.drawString("Political Votes: " + votes, xLeft, y);
+            g2.drawString("Total Score: " + totalScore + " pts", xLeft, y);
             g2.drawString("Yurts in Stock: " + yurtsStock, xRight, y);
-            y += rowStep + 4;
+            y += rowStep;
 
             int coins = controller.getCurrentPlayerCoins();
             int vCoins = controller.getCurrentPlayerVirtualCoins();
@@ -307,26 +311,42 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             int vYurts = controller.getCurrentPlayerVirtualYurts();
 
             g2.setColor(new Color(145, 95, 10));
-            g2.drawString("Coins: " + coins + (vCoins > 0 ? " (+" + vCoins + " virt)" : ""), xLeft, y);
+            g2.drawString("Coins: " + coins + (vCoins > 0 ? " (+" + vCoins + "v)" : ""), xLeft, y);
             g2.setColor(new Color(165, 35, 35));
-            g2.drawString("Swords: " + swords + (vSwords > 0 ? " (+" + vSwords + " virt)" : ""), xRight, y);
+            g2.drawString("Swords: " + swords + (vSwords > 0 ? " (+" + vSwords + "v)" : ""), xRight, y);
             y += rowStep;
 
             g2.setColor(new Color(40, 110, 60));
-            g2.drawString("Yurt Tributes: " + yurts + (vYurts > 0 ? " (+" + vYurts + " virt)" : ""), xLeft, y);
-            y += rowStep + 4;
+            g2.drawString("Yurt Tributes: " + yurts + (vYurts > 0 ? " (+" + vYurts + "v)" : ""), xLeft, y);
+            g2.setColor(new Color(55, 30, 85));
+            g2.drawString("Secret: " + controller.getCurrentPlayerPrivateCounselorName(), xRight, y);
+            y += rowStep + 2;
 
             g2.setColor(new Color(50, 40, 90));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
-            String treasuresLine1 = "Treasures -> FUR: " + controller.getCurrentPlayerTreasure(TreasureType.FUR)
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            String treasuresLine1 = "FUR: " + controller.getCurrentPlayerTreasure(TreasureType.FUR)
                 + " | SILK: " + controller.getCurrentPlayerTreasure(TreasureType.SILK)
-                + " | IRON: " + controller.getCurrentPlayerTreasure(TreasureType.IRON);
-            String treasuresLine2 = "ANIMAL: " + controller.getCurrentPlayerTreasure(TreasureType.ANIMAL)
+                + " | IRON: " + controller.getCurrentPlayerTreasure(TreasureType.IRON)
+                + " | ANIMAL: " + controller.getCurrentPlayerTreasure(TreasureType.ANIMAL)
                 + " | SPICE: " + controller.getCurrentPlayerTreasure(TreasureType.SPICE);
-
             g2.drawString(treasuresLine1, xLeft, y);
+            y += rowStep + 2;
+
+            // Draw Scoreboard section
+            g2.setColor(new Color(160, 145, 125));
+            g2.drawLine(xLeft, y - 10, getWidth() - 12, y - 10);
+
+            g2.setColor(new Color(30, 30, 30));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
+            g2.drawString("Match Scoreboard:", xLeft, y);
             y += rowStep - 2;
-            g2.drawString(treasuresLine2, xLeft, y);
+
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            List<String> standings = controller.getScoreboardSummary();
+            for (String line : standings) {
+                g2.drawString(line, xLeft, y);
+                y += 14;
+            }
 
             g2.dispose();
         }
