@@ -4,158 +4,149 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import controller.Controller;
+import model.GameData;
+import model.ObservadoIF;
+import model.ObservadorIF;
 
-class OpenCounselorFrame extends JFrame {
-	private static final long serialVersionUID = 1L;
-	
-	private final String COMMON_PATH = "assets/openCounselors/";
-	private final int COUNSELOR_WIDTH = 100;
-	private final int COUNSELOR_HEIGHT = 300;
-	private HashMap<String, Image> counselorImages;
-	
-	JPanel CounselorPanel;
-	
-	
-	OpenCounselorFrame() {
-		super("Open Counselors");
-		
-		setSize(new Dimension(4*this.COUNSELOR_WIDTH + 100, this.COUNSELOR_HEIGHT + 100));
+/**
+ * Displays the 4 Open Counselor cards in play using Graphics2D.drawImage()
+ * and observes match state updates via the Observer pattern.
+ */
+class OpenCounselorFrame extends JFrame implements ObservadorIF {
+
+    private static final long serialVersionUID = 1L;
+
+    private static final String COMMON_PATH = "assets/openCounselors/";
+    private static final int COUNSELOR_WIDTH = 160;
+    private static final int COUNSELOR_HEIGHT = 280;
+    private static final int PADDING = 20;
+
+    private final Controller controller;
+    private final Map<String, Image> counselorImages;
+    private final CounselorCanvasPanel canvasPanel;
+
+    OpenCounselorFrame() {
+        super("Open Counselors");
+
+        this.controller = Controller.getController();
+        this.counselorImages = new HashMap<>();
+
+        int frameWidth = (4 * COUNSELOR_WIDTH) + (5 * PADDING) + 20;
+        int frameHeight = COUNSELOR_HEIGHT + (2 * PADDING) + 50;
+
+        setSize(new Dimension(frameWidth, frameHeight));
         setResizable(true);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout());
         setLocationRelativeTo(null);
-        
-        this.CounselorPanel = new JPanel(
-        		new GridLayout(0, 4, 0, 0)
-        );
-        
-		counselorImages = new HashMap<>();
-		List<String> tmp = Controller.getController().getOpenCounselorsIds();
-		for (String name : tmp) {
-			String path = this.COMMON_PATH + name + ".jpg";			
-			this.counselorImages.put(name, this.loadOrCreatePlaceholder(path, this.COUNSELOR_HEIGHT, this.COUNSELOR_WIDTH, new Color(40, 40, 40)));
-		}
-		
-		List<String> inGame = Controller.getController().getGameOpenCounselorsIds();
-		for (String id : inGame) {
-			Image img = this.counselorImages.get(id);
-			
-			if (img != null) {
-				Image scalled = img.getScaledInstance(COUNSELOR_WIDTH, COUNSELOR_HEIGHT, Image.SCALE_SMOOTH);
-				JLabel card = new JLabel(new ImageIcon(scalled));
-				card.setHorizontalAlignment(SwingConstants.CENTER);
-				
-				this.CounselorPanel.add(card);
-			}
-		}
-		
-		add(this.CounselorPanel, BorderLayout.CENTER);
-		
-		revalidate();
-		repaint();
-		
-		setVisible(true);
-	}
-	
-	static BufferedImage readProjectImage(String relativePath) {
-        String[] candidatePrefixes = new String[] {
-            "",
-            "src/",
-            "bin/",
-            "../",
-            "../src/",
-            "../../"
-        };
 
-        for (String prefix : candidatePrefixes) {
-            File candidate = new File(prefix + relativePath);
-            if (candidate.exists() && candidate.isFile()) {
-                try {
-                    return ImageIO.read(candidate);
-                } catch (IOException ignored) {
-                }
-            }
-        }
+        loadActiveCounselorImages();
 
-        try (InputStream in = BoardPanel.class.getClassLoader().getResourceAsStream(relativePath)) {
-            if (in != null) {
-                return ImageIO.read(in);
-            }
-        } catch (IOException ignored) {
-        }
+        this.canvasPanel = new CounselorCanvasPanel();
+        add(this.canvasPanel, BorderLayout.CENTER);
 
-        File targetName = new File(relativePath);
-        File found = findFileByName(new File(System.getProperty("user.dir")), targetName.getName(), 3);
-        if (found != null) {
-            try {
-                return ImageIO.read(found);
-            } catch (IOException ignored) {
+        this.controller.registra(this);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                GameData.getData().remove(OpenCounselorFrame.this);
             }
-        }
-        return null;
+        });
     }
-	
-	private static File findFileByName(File dir, String fileName, int maxDepth) {
-        if (dir == null || !dir.isDirectory() || maxDepth < 0) {
-            return null;
-        }
-        File[] children = dir.listFiles();
-        if (children == null) {
-            return null;
-        }
-        for (File child : children) {
-            if (child.isFile() && child.getName().equalsIgnoreCase(fileName)) {
-                return child;
-            }
-        }
-        for (File child : children) {
-            if (child.isDirectory() && !child.getName().startsWith(".")) {
-                File match = findFileByName(child, fileName, maxDepth - 1);
-                if (match != null) {
-                    return match;
-                }
-            }
-        }
-        return null;
+
+    @Override
+    public void notify(ObservadoIF o) {
+        loadActiveCounselorImages();
+        this.canvasPanel.repaint();
     }
-	
-	private Image loadOrCreatePlaceholder(String path, int width, int height, Color fallbackColor) {
-        BufferedImage loaded = readProjectImage(path);
+
+    private void loadActiveCounselorImages() {
+        List<String> inGameIds = this.controller.getGameOpenCounselorsIds();
+        for (String id : inGameIds) {
+            if (!this.counselorImages.containsKey(id)) {
+                String path = COMMON_PATH + id + ".jpg";
+                Image img = loadOrCreateCardPlaceholder(id, path, COUNSELOR_WIDTH, COUNSELOR_HEIGHT);
+                this.counselorImages.put(id, img);
+            }
+        }
+    }
+
+    private Image loadOrCreateCardPlaceholder(String cardId, String path, int width, int height) {
+        BufferedImage loaded = BoardPanel.readProjectImage(path);
         if (loaded != null) {
             return loaded;
         }
         BufferedImage fallback = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = fallback.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(fallbackColor);
-        if (width > 100) {
-            g2.fillRect(0, 0, width, height);
-        } else {
-            g2.fillOval(2, 2, width - 4, height - 4);
-            g2.setColor(Color.BLACK);
-            g2.setStroke(new BasicStroke(2f));
-            g2.drawOval(2, 2, width - 4, height - 4);
-        }
+        g2.setColor(new Color(65, 55, 45));
+        g2.fillRoundRect(2, 2, width - 4, height - 4, 12, 12);
+        g2.setColor(new Color(218, 165, 32));
+        g2.setStroke(new BasicStroke(2f));
+        g2.drawRoundRect(2, 2, width - 4, height - 4, 12, 12);
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+        g2.drawString(cardId, 14, height / 2);
         g2.dispose();
         return fallback;
+    }
+
+    /**
+     * Custom Java2D canvas rendering all active Open Counselor cards via Graphics2D.drawImage().
+     */
+    private final class CounselorCanvasPanel extends JPanel {
+
+        private static final long serialVersionUID = 1L;
+
+        private CounselorCanvasPanel() {
+            setBackground(new Color(230, 218, 195));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            List<String> inGameIds = controller.getGameOpenCounselorsIds();
+            int totalCards = inGameIds.size();
+            if (totalCards == 0) {
+                g2d.dispose();
+                return;
+            }
+
+            int availableWidth = Math.max(getWidth(), (totalCards * COUNSELOR_WIDTH) + ((totalCards + 1) * PADDING));
+            int totalCardsWidth = (totalCards * COUNSELOR_WIDTH) + ((totalCards - 1) * PADDING);
+            int startX = Math.max(PADDING, (availableWidth - totalCardsWidth) / 2);
+            int startY = Math.max(PADDING, (getHeight() - COUNSELOR_HEIGHT) / 2);
+
+            for (int i = 0; i < totalCards; i++) {
+                String id = inGameIds.get(i);
+                Image cardImage = counselorImages.get(id);
+                int x = startX + i * (COUNSELOR_WIDTH + PADDING);
+                if (cardImage != null) {
+                    g2d.drawImage(cardImage, x, startY, COUNSELOR_WIDTH, COUNSELOR_HEIGHT, this);
+                }
+            }
+
+            g2d.dispose();
+        }
     }
 }

@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -16,8 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import java.util.List;
 
 import controller.Controller;
 import loader.GameStateLoader;
@@ -27,10 +26,9 @@ import model.ObservadorIF;
 import model.PlayerColor;
 
 /**
- * Lateral control panel preserving the exact layout of Iteration 2
- * while integrating the Controller.
- * It observes the match: when the turn or the horses left change,
- * the Model notifies it and the colored turn indicator is redrawn.
+ * Lateral control panel integrating the Controller and observing the match state.
+ * When the active player or the remaining movement points change, the Model
+ * notifies this panel and the turn header is immediately redrawn.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -43,7 +41,6 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final JComboBox<String> treasureTradeCombo;
     private final JLabel statusFeedbackLabel;
 
-    // Read from the Model every time it notifies a change
     private int movementsLeft;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
@@ -61,11 +58,9 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton harvestButton = new JButton("Harvest Province Tribute");
         JButton attackCityButton = new JButton("Attack City (Plunder Treasure)");
         JButton buildYurtButton = new JButton("Build Yurt on Current Node");
-//        JButton moveKhanProvinceButton = new JButton("Move Khan to Selected Province");
-//        JButton moveKhanUpgradesButton = new JButton("Move Khan to Upgrades Area");
         JButton moveKhanButton = new JButton("Move Khan");
-        JButton OpenCounselorButton = new JButton("See Open Counselors");
-        
+        JButton openCounselorButton = new JButton("See Open Counselors");
+
         this.treasureTradeCombo = new JComboBox<>(new String[] {
             "FUR + SILK (Counselor)",
             "FUR + IRON + ANIMAL (Karakorum Default)",
@@ -77,9 +72,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
         actionsPanel.add(moveKhanButton);
-        actionsPanel.add(OpenCounselorButton);
-//        actionsPanel.add(moveKhanProvinceButton);
-//        actionsPanel.add(moveKhanUpgradesButton);
+        actionsPanel.add(openCounselorButton);
         actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
         add(actionsPanel);
@@ -103,7 +96,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             attackCityButton,
             buildYurtButton,
             moveKhanButton,
-            OpenCounselorButton,
+            openCounselorButton,
             executeTradeButton,
             endTurnButton,
             saveGameButton
@@ -113,10 +106,10 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         this.controller.registra(this);
     }
 
-    /** The state of the match changed: read the horses left and redraw the indicator. */
     @Override
     public void notify(ObservadoIF o) {
         this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
+        repaint();
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -176,23 +169,22 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 }
             }
         });
-        
+
         moveKhanButton.addActionListener(new ActionListener() {
-        	@Override
-        	public void actionPerformed(ActionEvent e) {
-        		List<String> provinces = controller.getKhanProvincesIds();
-        		
-        		KhanFrame khanFrame = new KhanFrame(provinces);
-        		khanFrame.setVisible(true);
-        	}
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<String> provinces = controller.getKhanProvincesIds();
+                KhanFrame khanFrame = new KhanFrame(provinces);
+                khanFrame.setVisible(true);
+            }
         });
-        
+
         openCounselorButton.addActionListener(new ActionListener() {
-        	@Override
-        	public void actionPerformed(ActionEvent e) {
-        		OpenCounselorFrame counselors = new OpenCounselorFrame();
-        		counselors.setVisible(true);
-        	}
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                OpenCounselorFrame counselors = new OpenCounselorFrame();
+                counselors.setVisible(true);
+            }
         });
 
         executeTradeButton.addActionListener(new ActionListener() {
@@ -228,22 +220,22 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         });
     }
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            PlayerColor pColor = controller.getCurrentPlayerColor();
-            g2d.setColor(resolveColor(pColor));
-            g2d.fillRect(0, 0, getWidth(), getHeight());
+        PlayerColor pColor = controller.getCurrentPlayerColor();
+        g2d.setColor(resolveColor(pColor));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
 
-            g2d.setColor(pColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
-            g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
-            g2d.drawString(
-                "Current Turn: " + controller.getCurrentPlayerName() + " (Steps: " + movementsLeft + ")",
-                14,
-                22
-            );
+        g2d.setColor(pColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
+        g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
+        g2d.drawString(
+            "Current Turn: " + controller.getCurrentPlayerName() + " (Steps: " + movementsLeft + ")",
+            14,
+            22
+        );
     }
 }
