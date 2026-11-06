@@ -5,10 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A player's pawn on the map. Keeps its current node and the nodes
- * it stopped at during the current turn.
- *
- * @author Vinicius
+ * A player's pawn on the map. Tracks its current node and all stops
+ * visited during the active turn.
  */
 class Pawn {
     private final PlayerColor color;
@@ -20,48 +18,86 @@ class Pawn {
         this.currentNode = startNode;
         if (startNode != null) {
             startNode.enterNode();
+            this.turnPath.add(startNode);
         }
     }
 
     PlayerColor getColor() { return color; }
     Node getCurrentNode() { return currentNode; }
 
-    /** Starts the turn: the path only contains the current node. */
+    /** Starts the turn: resets the path to contain only the current node. */
     void startTurn() {
         turnPath.clear();
-        turnPath.add(currentNode);
+        if (currentNode != null) {
+            turnPath.add(currentNode);
+        }
     }
 
     /**
-     * Records that the pawn stopped at this node. Nodes skipped
-     * through the player's own yurts must NOT be passed here.
+     * Records that the pawn stopped at this node during its movement.
      */
     void moveTo(Node node) {
+        if (node == null) {
+            return;
+        }
         currentNode = node;
-        turnPath.add(node);
+        if (!turnPath.contains(node)) {
+            turnPath.add(node);
+        }
     }
 
     /**
-     * Walks through the given stops and ends the movement at the last one.
-     * The pawn may pass through full stops, but it must fit in the last one.
-     * @param stops the stops on the way, in order (the destination is the last one)
-     * @return {@code false} (and the pawn does not move) if the destination is full
+     * Walks through the given stops in order and ends the movement at the last one.
+     * The pawn may pass through full stops, but must fit in the final destination.
      */
     boolean walk(List<Node> stops) {
+        if (stops == null || stops.isEmpty()) {
+            return false;
+        }
         Node destination = stops.get(stops.size() - 1);
         if (!destination.enterNode()) {
             return false;
         }
-        currentNode.leaveNode();
+        if (currentNode != null) {
+            currentNode.leaveNode();
+        }
+        if (turnPath.isEmpty() && currentNode != null) {
+            turnPath.add(currentNode);
+        }
         for (Node stop : stops) {
             moveTo(stop);
         }
         return true;
     }
 
-    boolean hasVisited(Node node) { return turnPath.contains(node); }
+    boolean hasVisited(Node node) {
+        if (node == null) {
+            return false;
+        }
+        if (turnPath.isEmpty()) {
+            return node == currentNode;
+        }
+        return turnPath.contains(node);
+    }
 
     List<Node> getTurnPath() {
+        if (turnPath.isEmpty() && currentNode != null) {
+            return Collections.singletonList(currentNode);
+        }
         return Collections.unmodifiableList(turnPath);
+    }
+
+    void setTurnPath(List<Node> restoredPath) {
+        turnPath.clear();
+        if (restoredPath != null) {
+            for (Node n : restoredPath) {
+                if (n != null && !turnPath.contains(n)) {
+                    turnPath.add(n);
+                }
+            }
+        }
+        if (turnPath.isEmpty() && currentNode != null) {
+            turnPath.add(currentNode);
+        }
     }
 }

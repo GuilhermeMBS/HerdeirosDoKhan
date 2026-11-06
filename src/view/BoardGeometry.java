@@ -10,7 +10,7 @@ import controller.Controller;
 
 /**
  * Maps logical board identifiers from model.Map to exact 2D pixel coordinates
- * on the 980x760 board image (img/tabuleiro.jpg).
+ * on the 980x760 board image (assets/tabuleiro.jpg).
  */
 public final class BoardGeometry {
 
@@ -19,24 +19,31 @@ public final class BoardGeometry {
 
     private static final Map<String, Point> NODE_COORDINATES = new LinkedHashMap<>();
     private static final Map<String, Point> PROVINCE_COORDINATES = new LinkedHashMap<>();
+    private static final Map<String, Point> KHAN_PROVINCE_COORDINATES = new LinkedHashMap<>();
     private static final Point UPGRADES_AREA_COORDINATE = new Point(34, 710);
 
     static {
-    	HashMap<String, int[]> nodeCoordinates = Controller.getController().getNodeCoordinates();
-    	for (Map.Entry<String, int[]> entry : nodeCoordinates.entrySet()) {
-    		String id = entry.getKey();
-    		int[] pos = entry.getValue();
-    		NODE_COORDINATES.put(id, new Point(pos[0], pos[1]));
-    	}
-    	
-    	HashMap<String, int[]> provinceCoord = Controller.getController().getProvinceCoordinates();
-    	for (Map.Entry<String, int[]> entry : provinceCoord.entrySet()) {
-    		String id = entry.getKey();
-    		int[] pos = entry.getValue();
-    		PROVINCE_COORDINATES.put(id, new Point(pos[0], pos[1]));
-    	}
+        HashMap<String, int[]> nodeCoordinates = Controller.getController().getNodeCoordinates();
+        for (Map.Entry<String, int[]> entry : nodeCoordinates.entrySet()) {
+            String id = entry.getKey();
+            int[] pos = entry.getValue();
+            NODE_COORDINATES.put(id, new Point(pos[0], pos[1]));
+        }
+
+        HashMap<String, int[]> provinceCoord = Controller.getController().getProvinceCoordinates();
+        for (Map.Entry<String, int[]> entry : provinceCoord.entrySet()) {
+            String id = entry.getKey();
+            int[] pos = entry.getValue();
+            PROVINCE_COORDINATES.put(id, new Point(pos[0], pos[1]));
+        }
+
+        HashMap<String, int[]> khanCoord = Controller.getController().getKhanCoordinates();
+        for (Map.Entry<String, int[]> entry : khanCoord.entrySet()) {
+            String id = entry.getKey();
+            int[] pos = entry.getValue();
+            KHAN_PROVINCE_COORDINATES.put(id, new Point(pos[0], pos[1]));
+        }
     }
-    
 
     private BoardGeometry() {
     }
@@ -75,6 +82,14 @@ public final class BoardGeometry {
     }
 
     public static Point getProvinceCoordinates(String provinceId) {
+        return PROVINCE_COORDINATES.get(provinceId);
+    }
+
+    public static Point getKhanProvinceCoordinates(String provinceId) {
+        Point dedicated = KHAN_PROVINCE_COORDINATES.get(provinceId);
+        if (dedicated != null) {
+            return dedicated;
+        }
         return PROVINCE_COORDINATES.get(provinceId);
     }
 

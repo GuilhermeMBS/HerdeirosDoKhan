@@ -8,34 +8,29 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-
 import javax.swing.JPanel;
 
 import controller.Controller;
 import model.ObservadoIF;
 import model.ObservadorIF;
 
-
 /**
  * Primary Java2D canvas responsible for rendering the game board, player pawns,
- * constructed yurts, province tributes, and Genghis Khan via Graphics2D.drawImage().
- * It observes the match: when a pawn moves (or anything else on the board changes),
- * the Model notifies it and the board is redrawn.
+ * turn path highlights, constructed yurts, province tributes, and Genghis Khan.
  */
 public class BoardPanel extends JPanel implements ObservadorIF {
 
@@ -46,22 +41,21 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final Controller controller;
 
     private Image boardBackgroundImage;
-    
     private Image yurtSprite;
     private Image khanSprite;
-    
+
     private Image yurtTributeSprite;
     private Image swordTributeSprite;
     private Image coinTributeSprite;
-    
+
     private final int TRIBUTE_SIZE = 40;
-    
+
     private final String IMAGE_PATH_START = "assets/cities/";
-    private HashMap<String, Image> citiesImages = new HashMap<>();
+    private final HashMap<String, Image> citiesImages = new HashMap<>();
     private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
     private final int CITY_SIZE = 70;
     private final int CITY_OFFSET = CITY_SIZE / 2;
-    
+
     private final Map<Integer, Image> playerPawnSprites;
 
     private String selectedNodeId;
@@ -81,9 +75,13 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.controller.registra(this);
     }
 
-    /** The state of the match changed (e.g. a pawn moved): redraw the board. */
     @Override
     public void notify(ObservadoIF o) {
+        String currentPawnNode = this.controller.getPlayerNodeId(this.controller.getCurrentPlayerIndex());
+        List<String> turnPath = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
+        if (this.selectedNodeId == null || !turnPath.contains(this.selectedNodeId)) {
+            this.selectedNodeId = currentPawnNode;
+        }
         repaint();
     }
 
@@ -153,7 +151,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.boardBackgroundImage = loadOrCreatePlaceholder("assets/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
         this.yurtSprite = loadOrCreatePlaceholder("assets/yurt.png", 26, 26, new Color(245, 245, 245));
         this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(40, 40, 40));
-        
+
         this.yurtTributeSprite = loadOrCreatePlaceholder("assets/tributeType/YURT.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
         this.coinTributeSprite = loadOrCreatePlaceholder("assets/tributeType/COIN.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
         this.swordTributeSprite = loadOrCreatePlaceholder("assets/tributeType/SWORD.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
@@ -163,13 +161,13 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.playerPawnSprites.put(2, loadOrCreatePlaceholder("assets/pawn_green.png", 28, 28, new Color(30, 140, 60)));
         this.playerPawnSprites.put(3, loadOrCreatePlaceholder("assets/pawn_yellow.png", 28, 28, new Color(230, 190, 30)));
         this.playerPawnSprites.put(4, loadOrCreatePlaceholder("assets/pawn_black.png", 28, 28, new Color(40, 40, 40)));
-        
+
         this.CITIES_COORDINATE = controller.getCitiesCoordinates();
         for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
-        	String name = entry.getKey();
-        	String path = this.IMAGE_PATH_START + name + ".jpg";
-        	Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
-        	this.citiesImages.put(name, img); 
+            String name = entry.getKey();
+            String path = this.IMAGE_PATH_START + name + ".jpg";
+            Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
+            this.citiesImages.put(name, img);
         }
     }
 
@@ -200,10 +198,6 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             public void mousePressed(MouseEvent event) {
                 int logicalX = (int) Math.round((double) event.getX() * CANVAS_WIDTH / Math.max(1, getWidth()));
                 int logicalY = (int) Math.round((double) event.getY() * CANVAS_HEIGHT / Math.max(1, getHeight()));
-                
-                // Print clicked coordinates
-                System.out.println("Clicked at: (" + logicalX + ", " + logicalY + ")");
-                
                 handleBoardClick(logicalX, logicalY);
             }
         });
@@ -213,16 +207,19 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         String clickedNode = BoardGeometry.findNodeAt(mouseX, mouseY);
         if (clickedNode != null) {
             this.selectedNodeId = clickedNode;
-            // If the move is valid, the Model notifies this panel (see notify)
-            this.controller.createMoveAction(clickedNode);
-            repaint(); // only for the selection ring, which is not part of the Model
+            List<String> visitedInTurn = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
+            // Only attempt movement if the clicked node is not already in the active turn path
+            if (!visitedInTurn.contains(clickedNode)) {
+                this.controller.createMoveAction(clickedNode);
+            }
+            repaint();
             return;
         }
 
         String clickedProvince = BoardGeometry.findProvinceAt(mouseX, mouseY);
         if (clickedProvince != null) {
             this.selectedProvinceId = clickedProvince;
-            repaint(); // only for the selection ring, which is not part of the Model
+            repaint();
         }
     }
 
@@ -251,9 +248,29 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     }
 
     private void drawNodeAndProvinceGuides(Graphics2D g2d, double scaleX, double scaleY) {
-        Set<String> reachable = new HashSet<>(
-            controller.getReachableNodeIds(this.controller.getCurrentPlayerIndex())
-        );
+        int currentPlayer = this.controller.getCurrentPlayerIndex();
+        Set<String> reachable = new HashSet<>(controller.getReachableNodeIds(currentPlayer));
+        List<String> turnPath = controller.getTurnPathNodeIds(currentPlayer);
+        Set<String> visitedSet = new HashSet<>(turnPath);
+
+        // Draw dashed line connecting the sequence of visited nodes in turnPath
+        if (turnPath.size() > 1) {
+            Stroke previousStroke = g2d.getStroke();
+            g2d.setColor(new Color(0, 195, 255, 200));
+            g2d.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[] {8f, 6f}, 0));
+            for (int i = 0; i < turnPath.size() - 1; i++) {
+                Point p1 = BoardGeometry.getNodeCoordinates(turnPath.get(i));
+                Point p2 = BoardGeometry.getNodeCoordinates(turnPath.get(i + 1));
+                if (p1 != null && p2 != null) {
+                    int x1 = (int) Math.round(p1.x * scaleX);
+                    int y1 = (int) Math.round(p1.y * scaleY);
+                    int x2 = (int) Math.round(p2.x * scaleX);
+                    int y2 = (int) Math.round(p2.y * scaleY);
+                    g2d.drawLine(x1, y1, x2, y2);
+                }
+            }
+            g2d.setStroke(previousStroke);
+        }
 
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();
@@ -265,6 +282,10 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             if (nodeId.equals(this.selectedNodeId)) {
                 g2d.setColor(new Color(255, 215, 0, 230));
                 g2d.setStroke(new BasicStroke(3f));
+                g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
+            } else if (visitedSet.contains(nodeId)) {
+                g2d.setColor(new Color(0, 195, 255, 230));
+                g2d.setStroke(new BasicStroke(2.8f));
                 g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
             } else if (reachable.contains(nodeId)) {
                 g2d.setColor(new Color(40, 220, 90, 210));
@@ -310,17 +331,18 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     }
 
     private void drawCitiesForSack(Graphics2D g2d, double scaleX, double scaleY) {
-    	List<String> cities = controller.getCitiesToSack();
-        
-    	for (String name : cities) {
-    		int[] pos = this.CITIES_COORDINATE.get(name);
-        	int sx = (int) Math.round(pos[0] * scaleX) - this.CITY_OFFSET;
-            int sy = (int) Math.round(pos[1] * scaleY) - this.CITY_OFFSET;
-            
-    		g2d.drawImage(this.citiesImages.get(name), sx, sy, this.CITY_SIZE, this.CITY_SIZE, this);
-    	}
+        List<String> cities = controller.getCitiesToSack();
+
+        for (String name : cities) {
+            int[] pos = this.CITIES_COORDINATE.get(name);
+            if (pos != null) {
+                int sx = (int) Math.round(pos[0] * scaleX) - this.CITY_OFFSET;
+                int sy = (int) Math.round(pos[1] * scaleY) - this.CITY_OFFSET;
+                g2d.drawImage(this.citiesImages.get(name), sx, sy, this.CITY_SIZE, this.CITY_SIZE, this);
+            }
+        }
     }
-    
+
     private void drawConstructedYurts(Graphics2D g2d, double scaleX, double scaleY) {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();
@@ -340,13 +362,13 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         } else {
             String khanProv = controller.getKhanProvinceId();
             if (khanProv != null) {
-                khanPt = BoardGeometry.getProvinceCoordinates(khanProv);
+                khanPt = BoardGeometry.getKhanProvinceCoordinates(khanProv);
             }
         }
         if (khanPt != null && this.khanSprite != null) {
             int sx = (int) Math.round(khanPt.x * scaleX);
             int sy = (int) Math.round(khanPt.y * scaleY);
-            g2d.drawImage(this.khanSprite, sx - 16, sy + 4, 32, 32, this);
+            g2d.drawImage(this.khanSprite, sx - 16, sy - 16, 32, 32, this);
         }
     }
 

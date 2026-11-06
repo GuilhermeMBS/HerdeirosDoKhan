@@ -119,6 +119,7 @@ class Player {
     void setMovementsLeft(int steps) { this.movementsLeft = Math.max(0, steps); }
 
     int getHandsLeft() { return handsLeft; }
+    void setHandsLeft(int hands) { this.handsLeft = Math.max(0, hands); }
 
     boolean useMovement(int qty) {
         if (qty <= 0 || movementsLeft < qty) {
@@ -138,6 +139,7 @@ class Player {
 
     boolean mustUseKhan() { return khanPending; }
     void useKhan() { khanPending = false; }
+    void setKhanPending(boolean pending) { this.khanPending = pending; }
 
     int getPawnCount() { return pawns.size(); }
     Pawn getPawn(int index) { return pawns.get(index); }
@@ -147,6 +149,7 @@ class Player {
     void moveTo(Node node) { activePawn.moveTo(node); }
     boolean hasVisited(Node node) { return activePawn.hasVisited(node); }
     List<Node> getTurnPath() { return activePawn.getTurnPath(); }
+    void setTurnPath(List<Node> nodes) { activePawn.setTurnPath(nodes); }
 
     boolean moveActivePawn(Node destination) {
         List<Node> stops = findPath(destination);

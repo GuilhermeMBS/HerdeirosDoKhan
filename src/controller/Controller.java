@@ -1,9 +1,9 @@
 package controller;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import model.ColumnColor;
 import model.GameData;
@@ -25,9 +25,9 @@ public class Controller {
 
     private boolean firstSackCity = true;
     private ColumnColor chosenColumn = null;
-    
+
     private List<String> cityNames;
-    private List<String> availableCitiesToSack = new ArrayList<>();
+    private final List<String> availableCitiesToSack = new ArrayList<>();
 
     private static Controller controller = null;
     private GameData data = null;
@@ -42,22 +42,20 @@ public class Controller {
         return controller;
     }
 
-    /**
-     * Registers a screen as an observer of the match (Observer pattern):
-     * the Controller passes the request on to the Model's facade, which will
-     * notify the screen every time the state of the match changes.
-     */
     public void registra(ObservadorIF o) {
         GameData.getData().add(o);
     }
 
     private boolean startGame(boolean alternativeKarakorum) {
         data = GameData.createData(alternativeKarakorum);
-        
+
+        this.availableCitiesToSack.clear();
         this.cityNames = data.getCityNames();
-        Collections.shuffle(cityNames); // Randomize the order
-        for (int i = 0; i < 4; i++) this.availableCitiesToSack.add(this.cityNames.remove(0));
-        
+        Collections.shuffle(this.cityNames);
+        for (int i = 0; i < 4 && !this.cityNames.isEmpty(); i++) {
+            this.availableCitiesToSack.add(this.cityNames.remove(0));
+        }
+
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -110,7 +108,7 @@ public class Controller {
     }
 
     private void calculatePoints() {
-        // End-of-match scoring hook for Iteration 3/4.
+        // Scoring calculation will be expanded in Stage 3.
     }
 
     public boolean createMoveAction(String nodeId) {
@@ -150,8 +148,6 @@ public class Controller {
     }
 
     public boolean endTurn() {
-//    	if (!data.usedAllActions(currentPlayer)) return false;
-    	
         int total = getTotalPlayers();
         if (this.ended || total == 0) {
             return false;
@@ -187,9 +183,17 @@ public class Controller {
         this.chosenColumn = column;
         return true;
     }
-    
-    
+
+    public void restoreControllerTurnState(int activePlayerInd, ColumnColor column) {
+        if (activePlayerInd >= 0 && activePlayerInd < getTotalPlayers()) {
+            this.currentPlayer = activePlayerInd;
+            this.chosenColumn = column;
+            data.setCurrentPlayer(this.currentPlayer);
+        }
+    }
+
     public List<String> getReachableNodeIds(int playerInd) { return data.getReachableNodeIds(playerInd); }
+    public List<String> getTurnPathNodeIds(int playerInd) { return data.getTurnPathNodeIds(playerInd); }
     public int getProvinceResourceCount(String provinceId) { return data.getProvinceResourceCount(provinceId); }
     public boolean nodeHasYurt(String nodeId) { return data.nodeHasYurt(nodeId); }
     public String getKhanProvinceId() { return data.getKhanProvinceId(); }
@@ -200,7 +204,7 @@ public class Controller {
     public int getCurrentPlayerIndex() { return this.currentPlayer; }
     public String getCurrentPlayerName() { return data.getPlayerName(this.currentPlayer); }
     public int getTotalVotes() { return this.totalVotes; }
-    public int getTotalPlayers() { return data.getPlayerCount(); }
+    public int getTotalPlayers() { return data != null ? data.getPlayerCount() : 0; }
     public PlayerColor getCurrentPlayerColor() { return data.getPlayerColor(this.currentPlayer); }
     public ColumnColor getChosenColumn() { return this.chosenColumn; }
     public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(this.currentPlayer, column); }
@@ -211,6 +215,7 @@ public class Controller {
     public boolean isKhanAtUpgradeArea() { return data.isKhanAtUpgradeArea(); }
     public HashMap<String, int[]> getNodeCoordinates() { return data.getNodeCoordinates(); }
     public HashMap<String, int[]> getProvinceCoordinates() { return data.getProvinceCoordinates(); }
+    public HashMap<String, int[]> getKhanCoordinates() { return data.getKhanCoordinates(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return data.getCitiesCoordinates(); }
     public List<String> getCitiesToSack() { return this.availableCitiesToSack; }
     public List<String> getCitiesNames() { return data.getCityNames(); }

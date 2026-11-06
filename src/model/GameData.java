@@ -9,8 +9,8 @@ import java.util.ListIterator;
 
 /**
  * Singleton and Facade providing external access to the Model package.
- * It is also the observed object of the Observer pattern: every time the
- * state of the match changes, the screens registered as observers are notified.
+ * Also acts as the observed subject in the Observer pattern, notifying
+ * registered views whenever the match state changes.
  */
 public class GameData implements ObservadoIF {
     /** Codes for {@link #get(int)}: index of the player whose turn it is. */
@@ -26,7 +26,6 @@ public class GameData implements ObservadoIF {
     private Action action = null;
     private int currentPlayer = 0;
 
-    /** Screens that are notified when the state of the match changes. */
     private final List<ObservadorIF> observers = new ArrayList<>();
 
     private static GameData data = null;
@@ -36,9 +35,6 @@ public class GameData implements ObservadoIF {
         Map.resetMap(altKarakorum);
     }
 
-    /**
-     * Ensures a single shared GameData instance across Controller and View.
-     */
     public static GameData createData(boolean alt) {
         if (data == null) {
             data = new GameData(alt);
@@ -52,20 +48,16 @@ public class GameData implements ObservadoIF {
 
     public static GameData getData() {
         if (data == null) {
-            data = new GameData(false); // Creates a default Karakorum
+            data = new GameData(false);
         }
         return data;
     }
 
-    /*
-     *
-     * Observer methods (ObservadoIF)
-     *
-     */
-
     @Override
     public void add(ObservadorIF o) {
-        observers.add(o);
+        if (o != null && !observers.contains(o)) {
+            observers.add(o);
+        }
     }
 
     @Override
@@ -87,15 +79,14 @@ public class GameData implements ObservadoIF {
         }
     }
 
-    /** Notifies every observer that the state of the match changed. */
     private void atualiza() {
-        ListIterator<ObservadorIF> li = observers.listIterator();
+        List<ObservadorIF> snapshot = new ArrayList<>(observers);
+        ListIterator<ObservadorIF> li = snapshot.listIterator();
         while (li.hasNext()) {
             li.next().notify(this);
         }
     }
 
-    /** The Controller tells whose turn it is now; the screens are notified. */
     public void setCurrentPlayer(int playerInd) {
         currentPlayer = playerInd;
         atualiza();
@@ -141,7 +132,10 @@ public class GameData implements ObservadoIF {
         }
         Node target = nodeById(nodeId);
         if (target != null) {
-            players[playerInd].getCurrentNode().leaveNode();
+            Node current = players[playerInd].getCurrentNode();
+            if (current != null) {
+                current.leaveNode();
+            }
             target.enterNode();
             players[playerInd].moveTo(target);
             atualiza();
@@ -149,8 +143,42 @@ public class GameData implements ObservadoIF {
     }
 
     /**
-     * Returns the list of node IDs that the specified player can currently reach.
+     * Returns the ordered list of node IDs visited by the specified player during the current turn.
      */
+    public List<String> getTurnPathNodeIds(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return Collections.emptyList();
+        }
+        List<String> pathIds = new ArrayList<>();
+        for (Node n : players[playerInd].getTurnPath()) {
+            String id = getMap().getNodeId(n);
+            if (id != null) {
+                pathIds.add(id);
+            }
+        }
+        return pathIds;
+    }
+
+    /**
+     * Restores the turn path of the specified player from a list of node IDs.
+     */
+    public void setTurnPathNodeIds(int playerInd, List<String> nodeIds) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        List<Node> nodes = new ArrayList<>();
+        if (nodeIds != null) {
+            for (String id : nodeIds) {
+                Node n = nodeById(id);
+                if (n != null) {
+                    nodes.add(n);
+                }
+            }
+        }
+        players[playerInd].setTurnPath(nodes);
+        atualiza();
+    }
+
     public List<String> getReachableNodeIds(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return Collections.emptyList();
@@ -173,15 +201,14 @@ public class GameData implements ObservadoIF {
         }
         return ids;
     }
-    
+
     public List<String> getKhanProvincesIds() {
-    	List<String> ret = new ArrayList<String>();
-    	ret.add(ProvinceId.RUSSIA_YURT1.toString());
-    	ret.add(ProvinceId.RUSSIA_COIN1.toString());
-    	ret.add(ProvinceId.CHINA_YURT1.toString());
-    	ret.add(ProvinceId.PERSIA_COIN1.toString());
-    	
-    	return ret;
+        List<String> ret = new ArrayList<>();
+        ret.add(ProvinceId.RUSSIA_YURT1.toString());
+        ret.add(ProvinceId.RUSSIA_COIN1.toString());
+        ret.add(ProvinceId.CHINA_YURT1.toString());
+        ret.add(ProvinceId.PERSIA_COIN1.toString());
+        return ret;
     }
 
     public boolean nodeHasYurt(String nodeId) {
@@ -206,18 +233,28 @@ public class GameData implements ObservadoIF {
         }
         return null;
     }
-    
+
+    /**
+     * Restores the Khan piece state from a saved match without triggering cascading tributes.
+     */
+    public void restoreKhanState(boolean atUpgrades, String provinceId) {
+        Province target = atUpgrades ? null : provinceById(provinceId);
+        getMap().getKhan().restoreLocation(atUpgrades, target);
+        atualiza();
+    }
+
     public HashMap<String, int[]> getNodeCoordinates() { return getMap().getNodeCoordinates(); }
     public HashMap<String, int[]> getProvinceCoordinates() { return getMap().getProvinceCoordinates(); }
+    public HashMap<String, int[]> getKhanCoordinates() { return getMap().getKhanCoordinates(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return getMap().getCitiesCoordinates(); }
-    
+
     public List<String> getCityNames() {
-    	HashMap<String, int[]> map = this.getCitiesCoordinates();
-    	List<String> ret = new ArrayList<>();
-    	for (EnumMap.Entry<String, int[]> entry : map.entrySet()) {
-    		ret.add(entry.getKey());
-    	}
-    	return ret;
+        HashMap<String, int[]> map = this.getCitiesCoordinates();
+        List<String> ret = new ArrayList<>();
+        for (java.util.Map.Entry<String, int[]> entry : map.entrySet()) {
+            ret.add(entry.getKey());
+        }
+        return ret;
     }
 
     public void setProvinceResourceCount(String provinceId, int qty) {
@@ -234,7 +271,7 @@ public class GameData implements ObservadoIF {
         }
         return true;
     }
-    
+
     public List<String> getOpenCounselorsId() { return OpenCounselor.getAllOpenCounselorsIds(); }
     public List<String> getGameOpenCounselorIds() { return OpenCounselor.getOpenCounselorsIdGame(); }
 
@@ -290,6 +327,7 @@ public class GameData implements ObservadoIF {
         }
         if (card.playerHasCompleted(p)) {
             p.addVotes(1);
+            atualiza();
             return true;
         }
         return false;
@@ -381,24 +419,46 @@ public class GameData implements ObservadoIF {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
+        Player p = players[playerInd];
         Node n = nodeById(nodeId);
-        if (n == null) {
+        if (n == null || !p.hasVisited(n)) {
             return false;
         }
         newYurtAction(playerInd, n);
         return doAction();
     }
 
+    /**
+     * Harvests a tribute from the given province if the specified node OR any node
+     * visited in the player's current turn path borders that province.
+     */
     public boolean harvestProvinceResource(int playerInd, String nodeId, String provinceId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
-        Node n = nodeById(nodeId);
+        Player p = players[playerInd];
         Province province = provinceById(provinceId);
-        if (n == null || province == null || !n.getProvinces().contains(province)) {
+        if (province == null) {
             return false;
         }
-        newTributeAction(players[playerInd], n, province);
+
+        Node validNode = null;
+        Node candidate = nodeById(nodeId);
+        if (candidate != null && p.hasVisited(candidate) && candidate.getProvinces().contains(province)) {
+            validNode = candidate;
+        } else {
+            for (Node visited : p.getTurnPath()) {
+                if (visited != null && visited.getProvinces().contains(province)) {
+                    validNode = visited;
+                    break;
+                }
+            }
+        }
+
+        if (validNode == null) {
+            return false;
+        }
+        newTributeAction(p, validNode, province);
         return doAction();
     }
 
@@ -406,17 +466,35 @@ public class GameData implements ObservadoIF {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
+        Player p = players[playerInd];
         int cityInd = getMap().getCityInd(nodeOrCityName);
+        Node actionNode = p.getCurrentNode();
+
         if (cityInd < 0) {
-            Node n = nodeById(nodeOrCityName);
-            if (n instanceof SingleNode) {
-                cityInd = getMap().getCityInd(((SingleNode) n).getCityName());
+            Node clicked = nodeById(nodeOrCityName);
+            if (clicked instanceof SingleNode && p.hasVisited(clicked)) {
+                cityInd = getMap().getCityInd(((SingleNode) clicked).getCityName());
+                actionNode = clicked;
             }
         }
+
+        if (cityInd < 0) {
+            for (Node visited : p.getTurnPath()) {
+                if (visited instanceof SingleNode) {
+                    int candidateInd = getMap().getCityInd(((SingleNode) visited).getCityName());
+                    if (candidateInd >= 0 && getMap().getCity(candidateInd).canBeSacked()) {
+                        cityInd = candidateInd;
+                        actionNode = visited;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (cityInd < 0) {
             return false;
         }
-        newSackAction(playerInd, players[playerInd].getCurrentNode(), cityInd, qtySword, treasureInd);
+        newSackAction(playerInd, actionNode, cityInd, qtySword, treasureInd);
         return doAction();
     }
 
@@ -439,8 +517,18 @@ public class GameData implements ObservadoIF {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
+        Player p = players[playerInd];
         Node n = nodeById(nodeId);
-        if (n == null || n instanceof SingleNode) {
+        if (n == null || n instanceof SingleNode || !p.hasVisited(n)) {
+            n = null;
+            for (Node visited : p.getTurnPath()) {
+                if (visited instanceof CentralNode || visited instanceof DoubleNode) {
+                    n = visited;
+                    break;
+                }
+            }
+        }
+        if (n == null) {
             return false;
         }
         TradingPost post = (n instanceof CentralNode)
@@ -480,16 +568,47 @@ public class GameData implements ObservadoIF {
         }
         return players[playerInd].getMovementsLeft();
     }
-    
-    public boolean usedAllActions(int playerInd) {
-    	return (getMovementsLeft(playerInd) == 0) && !(players[playerInd].mustUseKhan()) && (players[playerInd].getHandsLeft() == 0);
+
+    public void setMovementsLeft(int playerInd, int steps) {
+        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+            players[playerInd].setMovementsLeft(steps);
+            atualiza();
+        }
     }
 
-    // public void setMovementsLeft(int playerInd, int steps) {
-    //     if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
-    //         players[playerInd].setMovementsLeft(steps);
-    //         atualiza();
-    //     }
+    public int getHandsLeft(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getHandsLeft();
+    }
+
+    public void setHandsLeft(int playerInd, int hands) {
+        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+            players[playerInd].setHandsLeft(hands);
+            atualiza();
+        }
+    }
+
+    public boolean isKhanPending(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        return players[playerInd].mustUseKhan();
+    }
+
+    public void setKhanPending(int playerInd, boolean pending) {
+        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+            players[playerInd].setKhanPending(pending);
+            atualiza();
+        }
+    }
+
+    public boolean usedAllActions(int playerInd) {
+        return (getMovementsLeft(playerInd) == 0)
+            && !(players[playerInd].mustUseKhan())
+            && (players[playerInd].getHandsLeft() == 0);
+    }
 
     private void newMoveAction(Player p, Node node, int qty) {
         action = new Action(p, node, new MovementAction(qty));
@@ -518,10 +637,6 @@ public class GameData implements ObservadoIF {
         action = new Action(players[playerInd], refNode, new TradeAction(post));
     }
 
-    /**
-     * Runs the prepared action. Only a successful action changes the match,
-     * so only then the screens are notified (an invalid move changes nothing).
-     */
     private boolean doAction() {
         if (action == null || action.doAction() != DebugReturn.SUCCESS) {
             return false;

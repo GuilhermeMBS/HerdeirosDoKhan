@@ -3,40 +3,60 @@ package loader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+
+import controller.Controller;
+import model.ColumnColor;
 import model.GameData;
 import view.BoardPanel;
 
 /**
  * Persistence manager responsible for serializing and restoring the current match state
- * to and from a key-value properties file.
+ * (including Khan location, player pawns, and active turn path) to and from a properties file.
  */
 public class GameStateLoader {
 
-    /**
-     * Saves the current topological and turn state of the match into a file.
-     *
-     * @param filePath         The target file path on disk.
-     * @param GameData.getData()      The active domain model facade.
-     * @param boardPanel       The active board view storing pawn coordinates.
-     * @param activePlayerName The name of the player whose turn is currently active.
-     * @return True if the file was written successfully; false on I/O failure.
-     */
     public boolean saveMatchState(
         String filePath,
-//        GameData GameData.getData(),
         BoardPanel boardPanel,
         String activePlayerName
     ) {
+        GameData data = GameData.getData();
+        Controller controller = Controller.getController();
         Properties props = new Properties();
-        props.setProperty("activePlayer", activePlayerName);
-        props.setProperty("alternativeKarakorum", String.valueOf(GameData.getData().isAlternativeKarakorum()));
-        props.setProperty("khanAtUpgrades", String.valueOf(GameData.getData().isKhanAtUpgradeArea()));
-        props.setProperty("pawn.0.node", boardPanel.getPawnLocation(0));
-        props.setProperty("pawn.1.node", boardPanel.getPawnLocation(1));
 
-        for (String provId : GameData.getData().getAllProvinceIds()) {
-            int count = GameData.getData().getProvinceResourceCount(provId);
+        int currentPlayerInd = controller.getCurrentPlayerIndex();
+        props.setProperty("activePlayer", activePlayerName);
+        props.setProperty("activePlayerIndex", String.valueOf(currentPlayerInd));
+        props.setProperty("alternativeKarakorum", String.valueOf(data.isAlternativeKarakorum()));
+
+        // Save Khan state
+        props.setProperty("khanAtUpgrades", String.valueOf(data.isKhanAtUpgradeArea()));
+        String khanProvince = data.getKhanProvinceId();
+        props.setProperty("khanProvince", khanProvince != null ? khanProvince : "NONE");
+
+        // Save active turn state
+        ColumnColor chosenCol = controller.getChosenColumn();
+        props.setProperty("chosenColumn", chosenCol != null ? chosenCol.name() : "NONE");
+        props.setProperty("movementsLeft", String.valueOf(data.getMovementsLeft(currentPlayerInd)));
+        props.setProperty("handsLeft", String.valueOf(data.getHandsLeft(currentPlayerInd)));
+        props.setProperty("khanPending", String.valueOf(data.isKhanPending(currentPlayerInd)));
+
+        // Save all players' pawn locations and turn paths
+        int totalPlayers = Math.max(2, data.getPlayerCount());
+        props.setProperty("playerCount", String.valueOf(totalPlayers));
+        for (int i = 0; i < totalPlayers; i++) {
+            props.setProperty("pawn." + i + ".node", boardPanel.getPawnLocation(i));
+            List<String> turnPath = data.getTurnPathNodeIds(i);
+            props.setProperty("pawn." + i + ".turnPath", String.join(",", turnPath));
+        }
+
+        // Save province resource counts
+        for (String provId : data.getAllProvinceIds()) {
+            int count = data.getProvinceResourceCount(provId);
             props.setProperty("province." + provId, String.valueOf(count));
         }
 
@@ -48,14 +68,6 @@ public class GameStateLoader {
         }
     }
 
-    /**
-     * Restores a previously saved match state from disk into the Model and View.
-     *
-     * @param filePath    The source file path on disk.
-     * @param GameData.getData() The domain model facade to populate.
-     * @param boardPanel  The board panel to update and repaint.
-     * @return True if loaded successfully; false if the file does not exist or fails to parse.
-     */
     public boolean loadMatchState(String filePath, BoardPanel boardPanel) {
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream(filePath)) {
@@ -64,21 +76,58 @@ public class GameStateLoader {
             return false;
         }
 
-        String pawn0Node = props.getProperty("pawn.0.node", "Karakorum");
-        String pawn1Node = props.getProperty("pawn.1.node", "Karakorum");
-        boardPanel.setPawnLocation(0, pawn0Node);
-        boardPanel.setPawnLocation(1, pawn1Node);
+        GameData data = GameData.getData();
+        Controller controller = Controller.getController();
 
-        for (String provId : GameData.getData().getAllProvinceIds()) {
+        int totalPlayers = data.getPlayerCount();
+        for (int i = 0; i < totalPlayers; i++) {
+            String pawnNode = props.getProperty("pawn." + i + ".node", "CENTRAL");
+            boardPanel.setPawnLocation(i, pawnNode);
+
+            String rawPath = props.getProperty("pawn." + i + ".turnPath", "");
+            if (!rawPath.trim().isEmpty()) {
+                List<String> pathNodes = new ArrayList<>(Arrays.asList(rawPath.split(",")));
+                data.setTurnPathNodeIds(i, pathNodes);
+            }
+        }
+
+        // Restore Khan state
+        boolean khanAtUpgrades = Boolean.parseBoolean(props.getProperty("khanAtUpgrades", "false"));
+        String khanProvince = props.getProperty("khanProvince", "NONE");
+        if ("NONE".equalsIgnoreCase(khanProvince)) {
+            khanProvince = null;
+        }
+        data.restoreKhanState(khanAtUpgrades, khanProvince);
+
+        // Restore province resources
+        for (String provId : data.getAllProvinceIds()) {
             String rawCount = props.getProperty("province." + provId);
             if (rawCount != null) {
                 try {
                     int count = Integer.parseInt(rawCount);
-                    GameData.getData().setProvinceResourceCount(provId, count);
+                    data.setProvinceResourceCount(provId, count);
                 } catch (NumberFormatException ignored) {
-                    // Keeps default resource count if property is malformed.
                 }
             }
+        }
+
+        // Restore active turn state
+        try {
+            int activeInd = Integer.parseInt(props.getProperty("activePlayerIndex", "0"));
+            String rawColumn = props.getProperty("chosenColumn", "NONE");
+            ColumnColor col = null;
+            if (!"NONE".equalsIgnoreCase(rawColumn)) {
+                col = ColumnColor.valueOf(rawColumn);
+            }
+            controller.restoreControllerTurnState(activeInd, col);
+
+            int moves = Integer.parseInt(props.getProperty("movementsLeft", "0"));
+            int hands = Integer.parseInt(props.getProperty("handsLeft", "0"));
+            boolean khanPend = Boolean.parseBoolean(props.getProperty("khanPending", "false"));
+            data.setMovementsLeft(activeInd, moves);
+            data.setHandsLeft(activeInd, hands);
+            data.setKhanPending(activeInd, khanPend);
+        } catch (IllegalArgumentException ignored) {
         }
 
         boardPanel.repaint();
