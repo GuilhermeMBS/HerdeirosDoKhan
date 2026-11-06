@@ -87,9 +87,9 @@ class Map {
     	cities.put(Region.RUSSIA, map2);
     	
     	EnumMap<CityPosition, String> map3 = new EnumMap<>(CityPosition.class);
-    	map3.put(CityPosition.CITY1, "Sarai");
-    	map3.put(CityPosition.CITY2, "Moscou");
-    	map3.put(CityPosition.CITY3, "Kiev");
+    	map3.put(CityPosition.CITY1, "Samarcanda");
+    	map3.put(CityPosition.CITY2, "Cabul");
+    	map3.put(CityPosition.CITY3, "Bagdá");
     	cities.put(Region.PERSIA, map3);
     	
 //        cityNames.put(Region.CHINA, new String[] { "Pequim", "Kaesong", "Cantão" });

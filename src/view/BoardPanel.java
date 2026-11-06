@@ -56,7 +56,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     
     private final int TRIBUTE_SIZE = 40;
     
-    private final String IMAGE_PATH_START = "assets/cartoes/cartoes2/";
+    private final String IMAGE_PATH_START = "assets/cities/";
     private HashMap<String, Image> citiesImages = new HashMap<>();
     private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
     private final int CITY_SIZE = 70;
@@ -153,9 +153,10 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.boardBackgroundImage = loadOrCreatePlaceholder("assets/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
         this.yurtSprite = loadOrCreatePlaceholder("assets/yurt.png", 26, 26, new Color(245, 245, 245));
         this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(40, 40, 40));
-        this.yurtTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-1.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
-        this.coinTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-3.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
-        this.swordTributeSprite = loadOrCreatePlaceholder("assets/cartoes/cartoes6/cartoes6-2.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        
+        this.yurtTributeSprite = loadOrCreatePlaceholder("assets/tributeType/YURT.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        this.coinTributeSprite = loadOrCreatePlaceholder("assets/tributeType/COIN.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        this.swordTributeSprite = loadOrCreatePlaceholder("assets/tributeType/SWORD.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
 
         this.playerPawnSprites.put(0, loadOrCreatePlaceholder("assets/pawn_blue.png", 28, 28, new Color(30, 90, 200)));
         this.playerPawnSprites.put(1, loadOrCreatePlaceholder("assets/pawn_red.png", 28, 28, new Color(200, 40, 40)));
@@ -166,37 +167,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.CITIES_COORDINATE = controller.getCitiesCoordinates();
         for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
         	String name = entry.getKey();
-        	
-        	int num;
-        	switch(name) {
-        	case "Bagdá":
-        		num = 2;
-        		break;
-        	case "Cabul":
-        		num = 3;
-        		break;
-        	case "Kiev":
-        		num = 4;
-        		break;
-        	case "Moscou":
-        		num = 5;
-        		break;
-        	case "Sarai":
-        		num = 6;
-        		break;
-        	case "Cantão":
-        		num = 7;
-        		break;
-        	case "Kaesong":
-        		num = 8;
-        		break;
-        	case "Pequim":
-        		num = 9;
-        		break;
-        	default:
-        		num = 1;
-        	}
-        	String path = this.IMAGE_PATH_START + "cartoes2-" + num + ".jpg";
+        	String path = this.IMAGE_PATH_START + name + ".jpg";
         	Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
         	this.citiesImages.put(name, img); 
         }

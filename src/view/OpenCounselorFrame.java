@@ -28,7 +28,7 @@ import controller.Controller;
 class OpenCounselorFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
-	private final String COMMON_PATH = "assets/cartas/";
+	private final String COMMON_PATH = "assets/openCounselors/";
 	private final int COUNSELOR_WIDTH = 100;
 	private final int COUNSELOR_HEIGHT = 300;
 	private HashMap<String, Image> counselorImages;
@@ -51,39 +51,7 @@ class OpenCounselorFrame extends JFrame {
 		counselorImages = new HashMap<>();
 		List<String> tmp = Controller.getController().getOpenCounselorsIds();
 		for (String name : tmp) {
-			String path = COMMON_PATH;
-			if (name.startsWith("POWERUPS_COL") || name.startsWith("POWERUPS_SQUARE")) {
-				path += "cartas3/cartas3-";
-				if (name.startsWith("POWERUPS_COL")) path += "1.jpg";
-				else path += "2.jpg";
-			}
-			else if (name.startsWith("CITIESDOMINATED") || name.startsWith("POWERUPS_LINE")) {
-				path += "cartas2/cartas2-";
-				if (name.startsWith("CITIESDOMINATED")) {
-					if (name.endsWith("3")) path += "1.jpg";
-					else path += "2.jpg";
-				}
-				else path += "3.jpg";
-			}
-			else {
-				path += "cartas1/cartas1-";
-				if (name.startsWith("YURT")) {
-					if (name.endsWith("6")) path += "2.jpg";
-					else path += "3.jpg";
-				}
-				else if (name.startsWith("YURTREGION")) {
-					if (name.endsWith("2")) path += "5.jpg";
-					else path += "6.jpg";
-				}
-				else if (name.startsWith("POINTS")) {
-					if (name.endsWith("2")) path += "7.jpg";
-					else path += "8.jpg";
-				}
-				else if (name.startsWith("SWORD")) path += "1.jpg";
-				else if (name.startsWith("TREASURE")) path += "4.jpg";
-				else path += "9.jpg";
-			}
-			
+			String path = this.COMMON_PATH + name + ".jpg";			
 			this.counselorImages.put(name, this.loadOrCreatePlaceholder(path, this.COUNSELOR_HEIGHT, this.COUNSELOR_WIDTH, new Color(40, 40, 40)));
 		}
 		
