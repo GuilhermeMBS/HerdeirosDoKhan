@@ -52,6 +52,13 @@ abstract class Node {
 
     abstract boolean hasYurtOf(Player player);
 
+    /**
+     * Tells whether one more pawn fits in this node, without changing anything.
+     *
+     * @return true if a pawn can still end its movement here
+     */
+    abstract boolean hasRoom();
+
     abstract boolean enterNode();
 
     abstract void leaveNode();

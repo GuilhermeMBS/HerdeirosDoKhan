@@ -907,6 +907,21 @@ public class GameData implements ObservadoIF {
         return players[playerInd].canActivate(column);
     }
 
+    /**
+     * Marks a column of a player's board as occupied or free.
+     * Used by the save loader to restore which columns were already used.
+     *
+     * @param playerInd index of the player
+     * @param column the column to change
+     * @param occupied true if the column was in use when the match was saved
+     */
+    public void setColumnOccupied(int playerInd, ColumnColor column, boolean occupied) {
+        if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
+            players[playerInd].setColumnOccupied(column, occupied);
+            atualiza();
+        }
+    }
+
     public int getMovementsLeft(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;

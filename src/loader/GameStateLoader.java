@@ -52,6 +52,12 @@ public class GameStateLoader {
             props.setProperty("pawn." + i + ".node", boardPanel.getPawnLocation(i));
             List<String> turnPath = data.getTurnPathNodeIds(i);
             props.setProperty("pawn." + i + ".turnPath", String.join(",", turnPath));
+
+            // Save which columns of the player board are already used
+            for (ColumnColor color : ColumnColor.values()) {
+                boolean occupied = !data.isColumnFree(i, color);
+                props.setProperty("board." + i + ".column." + color.name(), String.valueOf(occupied));
+            }
         }
 
         // Save province resource counts
@@ -88,6 +94,14 @@ public class GameStateLoader {
             if (!rawPath.trim().isEmpty()) {
                 List<String> pathNodes = new ArrayList<>(Arrays.asList(rawPath.split(",")));
                 data.setTurnPathNodeIds(i, pathNodes);
+            }
+
+            // Restore which columns of the player board were already used
+            for (ColumnColor color : ColumnColor.values()) {
+                String rawOccupied = props.getProperty("board." + i + ".column." + color.name());
+                if (rawOccupied != null) {
+                    data.setColumnOccupied(i, color, Boolean.parseBoolean(rawOccupied));
+                }
             }
         }
 

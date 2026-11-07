@@ -81,6 +81,7 @@ class Player {
     PlayerBoard getBoard() { return board; }
 
     boolean canActivate(ColumnColor column) { return board.canActivate(column); }
+    void setColumnOccupied(ColumnColor column, boolean occupied) { board.setOccupied(column, occupied); }
 
     PrivateCounselor getSecretCard() { return secretCard; }
     void setSecretCard(PrivateCounselor card) { this.secretCard = card; }
@@ -166,6 +167,10 @@ class Player {
     List<Node> findPath(Node destination) {
         Node start = getCurrentNode();
         if (start == null || destination == null || destination == start) {
+            return null;
+        }
+        // The pawn may pass through full nodes, but cannot stop in one.
+        if (!destination.hasRoom()) {
             return null;
         }
 

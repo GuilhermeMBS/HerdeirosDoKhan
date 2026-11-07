@@ -57,6 +57,20 @@ class PlayerBoard {
         return true;
     }
 
+    /**
+     * Forces a column to be occupied or free. Used only when loading a saved match.
+     *
+     * @param color the column to change
+     * @param occupied true to occupy it, false to free it
+     */
+    void setOccupied(ColumnColor color, boolean occupied) {
+        if (occupied) {
+            columns.get(color).occupy();
+        } else {
+            columns.get(color).free();
+        }
+    }
+
     int availableTokens() {
         int occupied = 0;
         for (Column c : columns.values()) {

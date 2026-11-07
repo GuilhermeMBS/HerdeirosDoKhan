@@ -45,8 +45,13 @@ abstract class CommonNode extends Node {
     }
 
     @Override
+    boolean hasRoom() {
+        return this.currentOccupancy < getMaxCapacity();
+    }
+
+    @Override
     boolean enterNode() {
-        if (this.currentOccupancy < getMaxCapacity()) {
+        if (hasRoom()) {
             this.currentOccupancy++;
             return true;
         }
