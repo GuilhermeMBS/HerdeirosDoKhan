@@ -42,6 +42,11 @@ class CentralNode extends Node {
     }
 
     @Override
+    boolean hasRoom() {
+        return true;
+    }
+
+    @Override
     boolean enterNode() {
         return true;
     }
