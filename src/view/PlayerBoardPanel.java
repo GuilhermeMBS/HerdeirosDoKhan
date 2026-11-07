@@ -18,9 +18,9 @@ import javax.swing.SwingUtilities;
 
 import controller.Controller;
 import model.ColumnColor;
-import model.GameData;
 import model.ObservadoIF;
 import model.ObservadorIF;
+import model.ObserverEnum;
 import model.PlayerColor;
 
 /**
@@ -69,7 +69,6 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
 
     // Read from the Model every time it notifies a change
     private int currentPlayer;
-    private int movementsLeft;
 
     public PlayerBoardPanel() {
         this.controller = Controller.getController();
@@ -77,7 +76,6 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         addMouseListener(new ColumnClickListener(this, controller));
 
         this.currentPlayer = controller.getCurrentPlayerIndex();
-        this.movementsLeft = controller.getMovementsLeft();
         controller.registra(this);
     }
 
@@ -87,8 +85,7 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
      */
     @Override
     public void notify(ObservadoIF o) {
-        int player = o.get(GameData.CURRENT_PLAYER);
-        this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
+        int player = o.get(ObserverEnum.CURRENT_PLAYER);
 
         if (player != this.currentPlayer) {
             this.currentPlayer = player;
@@ -155,11 +152,8 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         g2.fillRect(0, 0, BOARD_WIDTH, HEADER);
 
         String text = "Vez de " + controller.getCurrentHeirName();
-        if (controller.getChosenColumn() == null) {
-            text += " - escolha uma coluna";
-        } else {
-            text += " - cavalos: " + movementsLeft;
-        }
+        if (controller.getChosenColumn() == null) text += " - escolha uma coluna";
+        
         g2.setColor(playerColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
         g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         g2.drawString(text, 10, 18);
@@ -184,7 +178,7 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
     }
 
     private Image loadBoardImage(String file) {
-        BufferedImage image = BoardPanel.readProjectImage(file);
+        BufferedImage image = ImageUtils.readProjectImage(file);
         if (image == null) {
             return null;
         }

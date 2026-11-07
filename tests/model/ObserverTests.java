@@ -25,7 +25,7 @@ public class ObserverTests {
 		@Override
 		public void notify(ObservadoIF o) {
 			notifications++;
-			movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
+			movementsLeft = o.get(ObserverEnum.MOVEMENTS_LEFT);
 		}
 	}
 
@@ -107,6 +107,6 @@ public class ObserverTests {
 		data.setCurrentPlayer(1);
 
 		assertEquals(1, screen.notifications);
-		assertEquals(1, data.get(GameData.CURRENT_PLAYER));
+		assertEquals(1, data.get(ObserverEnum.CURRENT_PLAYER));
 	}
 }

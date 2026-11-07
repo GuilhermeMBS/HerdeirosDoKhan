@@ -49,7 +49,7 @@ public class GameStateLoader {
         int totalPlayers = Math.max(2, data.getPlayerCount());
         props.setProperty("playerCount", String.valueOf(totalPlayers));
         for (int i = 0; i < totalPlayers; i++) {
-            props.setProperty("pawn." + i + ".node", boardPanel.getPawnLocation(i));
+            props.setProperty("pawn." + i + ".node", controller.getPlayerNodeId(i));
             List<String> turnPath = data.getTurnPathNodeIds(i);
             props.setProperty("pawn." + i + ".turnPath", String.join(",", turnPath));
         }
@@ -82,7 +82,7 @@ public class GameStateLoader {
         int totalPlayers = data.getPlayerCount();
         for (int i = 0; i < totalPlayers; i++) {
             String pawnNode = props.getProperty("pawn." + i + ".node", "CENTRAL");
-            boardPanel.setPawnLocation(i, pawnNode);
+            controller.setPlayerNodeId(i, pawnNode);
 
             String rawPath = props.getProperty("pawn." + i + ".turnPath", "");
             if (!rawPath.trim().isEmpty()) {

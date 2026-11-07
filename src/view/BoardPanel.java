@@ -13,21 +13,18 @@ import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import controller.Controller;
 import model.ObservadoIF;
 import model.ObservadorIF;
+import model.PlayerColor;
 import model.TreasureType;
 
 /**
@@ -44,7 +41,6 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final Controller controller;
 
     private Image boardBackgroundImage;
-    private Image yurtSprite;
     private Image khanSprite;
 
     private Image yurtTributeSprite;
@@ -61,6 +57,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final int CITY_SIZE = 70;
     private final int CITY_OFFSET = CITY_SIZE / 2;
 
+    private final Map<PlayerColor, Color> playerColorsMap;
     private final Map<Integer, Image> playerPawnSprites;
 
     private String selectedNodeId;
@@ -68,6 +65,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
     public BoardPanel() {
         this.controller = Controller.getController();
+        this.playerColorsMap = new HashMap<>();
         this.playerPawnSprites = new HashMap<>();
         this.selectedNodeId = "CENTRAL";
         this.selectedProvinceId = "RUSSIA_YURT1";
@@ -90,82 +88,25 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         repaint();
     }
 
-    static BufferedImage readProjectImage(String relativePath) {
-        String[] candidatePrefixes = new String[] {
-            "",
-            "src/",
-            "bin/",
-            "../",
-            "../src/",
-            "../../"
-        };
-
-        for (String prefix : candidatePrefixes) {
-            File candidate = new File(prefix + relativePath);
-            if (candidate.exists() && candidate.isFile()) {
-                try {
-                    return ImageIO.read(candidate);
-                } catch (IOException ignored) {
-                }
-            }
-        }
-
-        try (InputStream in = BoardPanel.class.getClassLoader().getResourceAsStream(relativePath)) {
-            if (in != null) {
-                return ImageIO.read(in);
-            }
-        } catch (IOException ignored) {
-        }
-
-        File targetName = new File(relativePath);
-        File found = findFileByName(new File(System.getProperty("user.dir")), targetName.getName(), 3);
-        if (found != null) {
-            try {
-                return ImageIO.read(found);
-            } catch (IOException ignored) {
-            }
-        }
-        return null;
-    }
-
-    private static File findFileByName(File dir, String fileName, int maxDepth) {
-        if (dir == null || !dir.isDirectory() || maxDepth < 0) {
-            return null;
-        }
-        File[] children = dir.listFiles();
-        if (children == null) {
-            return null;
-        }
-        for (File child : children) {
-            if (child.isFile() && child.getName().equalsIgnoreCase(fileName)) {
-                return child;
-            }
-        }
-        for (File child : children) {
-            if (child.isDirectory() && !child.getName().startsWith(".")) {
-                File match = findFileByName(child, fileName, maxDepth - 1);
-                if (match != null) {
-                    return match;
-                }
-            }
-        }
-        return null;
-    }
-
     private void loadGameAssets() {
         this.boardBackgroundImage = loadOrCreatePlaceholder("assets/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
-        this.yurtSprite = loadOrCreatePlaceholder("assets/yurt.png", 26, 26, new Color(245, 245, 245));
         this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(40, 40, 40));
 
         this.yurtTributeSprite = loadOrCreatePlaceholder("assets/tributeType/YURT.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
         this.coinTributeSprite = loadOrCreatePlaceholder("assets/tributeType/COIN.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
         this.swordTributeSprite = loadOrCreatePlaceholder("assets/tributeType/SWORD.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
+        
+        this.playerColorsMap.put(PlayerColor.RED, Color.RED);
+        this.playerColorsMap.put(PlayerColor.BLACK, Color.BLACK);
+        this.playerColorsMap.put(PlayerColor.BLUE, Color.BLUE);
+        this.playerColorsMap.put(PlayerColor.GREEN, Color.GREEN);
+        this.playerColorsMap.put(PlayerColor.YELLOW, Color.YELLOW);
 
-        this.playerPawnSprites.put(0, loadOrCreatePlaceholder("assets/pawn_blue.png", 28, 28, new Color(30, 90, 200)));
-        this.playerPawnSprites.put(1, loadOrCreatePlaceholder("assets/pawn_red.png", 28, 28, new Color(200, 40, 40)));
-        this.playerPawnSprites.put(2, loadOrCreatePlaceholder("assets/pawn_green.png", 28, 28, new Color(30, 140, 60)));
-        this.playerPawnSprites.put(3, loadOrCreatePlaceholder("assets/pawn_yellow.png", 28, 28, new Color(230, 190, 30)));
-        this.playerPawnSprites.put(4, loadOrCreatePlaceholder("assets/pawn_black.png", 28, 28, new Color(40, 40, 40)));
+        this.playerPawnSprites.put(0, loadOrCreatePlaceholder("assets/pawn_blue.png", 28, 28, this.playerColorsMap.get(PlayerColor.BLUE)));
+        this.playerPawnSprites.put(1, loadOrCreatePlaceholder("assets/pawn_red.png", 28, 28, this.playerColorsMap.get(PlayerColor.RED)));
+        this.playerPawnSprites.put(2, loadOrCreatePlaceholder("assets/pawn_green.png", 28, 28, this.playerColorsMap.get(PlayerColor.GREEN)));
+        this.playerPawnSprites.put(3, loadOrCreatePlaceholder("assets/pawn_yellow.png", 28, 28, this.playerColorsMap.get(PlayerColor.YELLOW)));
+        this.playerPawnSprites.put(4, loadOrCreatePlaceholder("assets/pawn_black.png", 28, 28, this.playerColorsMap.get(PlayerColor.BLACK)));
 
         this.CITIES_COORDINATE = controller.getCitiesCoordinates();
         for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
@@ -177,15 +118,10 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
         for (TreasureType type : TreasureType.values()) {
             String key = type.name();
-            BufferedImage img = readProjectImage("assets/treasureType/" + key + ".jpg");
-            if (img == null) {
-                img = readProjectImage("assets/treasures/" + key + ".png");
-            }
-            if (img != null) {
-                this.treasureSprites.put(key, img);
-            } else {
-                this.treasureSprites.put(key, createTreasureBadge(key));
-            }
+            BufferedImage img = ImageUtils.readProjectImage("assets/treasureType/" + key + ".jpg");
+            
+            if (img != null) this.treasureSprites.put(key, img);
+            else this.treasureSprites.put(key, createTreasureBadge(key));
         }
     }
 
@@ -215,7 +151,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     }
 
     private Image loadOrCreatePlaceholder(String path, int width, int height, Color fallbackColor) {
-        BufferedImage loaded = readProjectImage(path);
+        BufferedImage loaded = ImageUtils.readProjectImage(path);
         if (loaded != null) {
             return loaded;
         }
@@ -407,11 +343,15 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private void drawConstructedYurts(Graphics2D g2d, double scaleX, double scaleY) {
         for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
             String nodeId = entry.getKey();
-            if (controller.nodeHasYurt(nodeId)) {
+            PlayerColor color = controller.getYurtColor(nodeId);
+            if (color != null) {
                 Point pt = entry.getValue();
                 int sx = (int) Math.round(pt.x * scaleX);
                 int sy = (int) Math.round(pt.y * scaleY);
-                g2d.drawImage(this.yurtSprite, sx - 13, sy - 26, 26, 26, this);
+                int r = 12;
+                
+                g2d.setColor(this.playerColorsMap.get(color));
+                g2d.fillOval(sx - r, sy - r, r * 2, r * 2);
             }
         }
     }
@@ -451,13 +391,4 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
     public String getSelectedNodeId() { return this.selectedNodeId; }
     public String getSelectedProvinceId() { return this.selectedProvinceId; }
-
-    public String getPawnLocation(int playerIndex) {
-        return controller.getPlayerNodeId(playerIndex);
-    }
-
-    public void setPawnLocation(int playerIndex, String nodeId) {
-        controller.setPlayerNodeId(playerIndex, nodeId);
-        repaint();
-    }
 }

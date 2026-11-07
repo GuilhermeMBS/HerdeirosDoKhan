@@ -10,8 +10,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+//import java.awt.event.MouseAdapter;
+//import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -105,9 +105,9 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
     }
 
     private Image loadOrCreateCardImage(String title, String subtitle, String path, int width, int height, Color bgColor) {
-        BufferedImage loaded = BoardPanel.readProjectImage(path);
+        BufferedImage loaded = ImageUtils.readProjectImage(path);
         if (loaded == null) {
-            loaded = BoardPanel.readProjectImage("img/conselheiros/" + title + ".jpg");
+            loaded = ImageUtils.readProjectImage("img/conselheiros/" + title + ".jpg");
         }
         if (loaded != null) {
             return loaded;
@@ -145,23 +145,23 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
 
         private CounselorCanvasPanel() {
             setBackground(new Color(230, 218, 195));
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    handleCardClick(e.getX(), e.getY());
-                }
-            });
+//            addMouseListener(new MouseAdapter() {
+//                @Override
+//                public void mousePressed(MouseEvent e) {
+//                    handleCardClick(e.getX(), e.getY());
+//                }
+//            });
         }
 
-        private void handleCardClick(int mouseX, int mouseY) {
-            for (int i = 0; i < openCardBounds.size(); i++) {
-                if (openCardBounds.get(i).contains(mouseX, mouseY)) {
-                    controller.claimOpenCounselor(i);
-                    repaint();
-                    return;
-                }
-            }
-        }
+//        private void handleCardClick(int mouseX, int mouseY) {
+//            for (int i = 0; i < openCardBounds.size(); i++) {
+//                if (openCardBounds.get(i).contains(mouseX, mouseY)) {
+//                    controller.claimOpenCounselor(i);
+//                    repaint();
+//                    return;
+//                }
+//            }
+//        }
 
         @Override
         protected void paintComponent(Graphics g) {
@@ -199,9 +199,6 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
                     g2d.fillRoundRect(x, startY + COUNSELOR_HEIGHT - 34, COUNSELOR_WIDTH, 34, 8, 8);
                     g2d.setColor(new Color(120, 255, 140));
                     g2d.drawString("Claimed: " + owner, x + 10, startY + COUNSELOR_HEIGHT - 12);
-                } else {
-                    g2d.setColor(new Color(60, 45, 30));
-                    g2d.drawString(id, x + 8, startY + COUNSELOR_HEIGHT + 16);
                 }
             }
 
@@ -211,7 +208,7 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
             g2d.setStroke(new BasicStroke(2f));
             g2d.drawLine(secretX - PADDING, 12, secretX - PADDING, startY + COUNSELOR_HEIGHT + 20);
 
-            String activePlayer = controller.getCurrentPlayerName();
+            String activePlayer = controller.getCurrentHeirName();
             String secretName = controller.getCurrentPlayerPrivateCounselorName();
             g2d.setColor(new Color(55, 30, 85));
             g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -221,11 +218,6 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
             if (secretImg != null) {
                 g2d.drawImage(secretImg, secretX, startY, COUNSELOR_WIDTH, COUNSELOR_HEIGHT, this);
             }
-
-            g2d.setFont(new Font("SansSerif", Font.BOLD, 11));
-            g2d.setColor(new Color(45, 30, 75));
-            String summary = controller.getCurrentPlayerPrivateCounselorSummary();
-            g2d.drawString(summary, startX, startY + COUNSELOR_HEIGHT + 36);
 
             g2d.dispose();
         }

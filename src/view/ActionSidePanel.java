@@ -21,11 +21,9 @@ import javax.swing.JPanel;
 
 import controller.Controller;
 import loader.GameStateLoader;
-import model.GameData;
 import model.ObservadoIF;
 import model.ObservadorIF;
 import model.PlayerColor;
-import model.TreasureType;
 
 /**
  * Lateral control panel integrating the Controller, observing match state changes,
@@ -42,9 +40,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final JComboBox<String> cityTreasureSlotCombo;
     private final JComboBox<String> treasureTradeCombo;
     private final JLabel statusFeedbackLabel;
-    private final InventoryDisplayPanel inventoryPanel;
-
-    private int movementsLeft;
+    private final PlayerInventoryPanel inventoryPanel;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
@@ -89,7 +85,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
         add(Box.createVerticalStrut(4));
 
-        this.inventoryPanel = new InventoryDisplayPanel();
+        this.inventoryPanel = new PlayerInventoryPanel();
         add(this.inventoryPanel);
 
         add(Box.createVerticalStrut(4));
@@ -119,13 +115,11 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             saveGameButton
         );
 
-        this.movementsLeft = controller.getMovementsLeft();
         this.controller.registra(this);
     }
 
     @Override
     public void notify(ObservadoIF o) {
-        this.movementsLeft = o.get(GameData.MOVEMENTS_LEFT);
         this.inventoryPanel.repaint();
         repaint();
     }
@@ -225,7 +219,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 if (controller.getGameHasEnded()) {
                     statusFeedbackLabel.setText("MATCH ENDED! Check Scoreboard above.");
                 } else {
-                    statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentPlayerName());
+                    statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentHeirName());
                 }
             }
         });
@@ -236,7 +230,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 boolean saved = stateLoader.saveMatchState(
                     "savegame.properties",
                     boardPanel,
-                    controller.getCurrentPlayerName()
+                    controller.getCurrentHeirName()
                 );
                 statusFeedbackLabel.setText(saved ? "Match saved to savegame.properties" : "Save failed.");
             }
@@ -256,99 +250,9 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         g2d.setColor(pColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
         g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
         g2d.drawString(
-            "Current Turn: " + controller.getCurrentPlayerName() + " (Steps: " + movementsLeft + ")",
+            "Current Turn: " + controller.getCurrentHeirName(),
             14,
             22
         );
-    }
-
-    /**
-     * Custom Java2D panel displaying the active player's tributes, virtual tributes,
-     * plundered treasures, secret counselor status, and live match scoreboard.
-     */
-    private final class InventoryDisplayPanel extends JPanel {
-
-        private static final long serialVersionUID = 1L;
-
-        private InventoryDisplayPanel() {
-            setPreferredSize(new Dimension(340, 265));
-            setBackground(new Color(245, 240, 230));
-            setBorder(BorderFactory.createTitledBorder("Resources, Secret Mission & Scoreboard"));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            g2.setColor(new Color(35, 30, 25));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
-
-            int xLeft = 12;
-            int xRight = 175;
-            int y = 28;
-            int rowStep = 17;
-
-            int hands = controller.getHandsLeft();
-            boolean khanPending = controller.isKhanPending();
-            int totalScore = controller.getCurrentPlayerTotalScore();
-            int yurtsStock = controller.getCurrentPlayerYurtsLeft();
-
-            g2.drawString("Hands Left: " + hands, xLeft, y);
-            g2.drawString("Khan Action: " + (khanPending ? "READY" : "None"), xRight, y);
-            y += rowStep;
-
-            g2.drawString("Total Score: " + totalScore + " pts", xLeft, y);
-            g2.drawString("Yurts in Stock: " + yurtsStock, xRight, y);
-            y += rowStep;
-
-            int coins = controller.getCurrentPlayerCoins();
-            int vCoins = controller.getCurrentPlayerVirtualCoins();
-            int swords = controller.getCurrentPlayerSwords();
-            int vSwords = controller.getCurrentPlayerVirtualSwords();
-            int yurts = controller.getCurrentPlayerYurtTributes();
-            int vYurts = controller.getCurrentPlayerVirtualYurts();
-
-            g2.setColor(new Color(145, 95, 10));
-            g2.drawString("Coins: " + coins + (vCoins > 0 ? " (+" + vCoins + "v)" : ""), xLeft, y);
-            g2.setColor(new Color(165, 35, 35));
-            g2.drawString("Swords: " + swords + (vSwords > 0 ? " (+" + vSwords + "v)" : ""), xRight, y);
-            y += rowStep;
-
-            g2.setColor(new Color(40, 110, 60));
-            g2.drawString("Yurt Tributes: " + yurts + (vYurts > 0 ? " (+" + vYurts + "v)" : ""), xLeft, y);
-            g2.setColor(new Color(55, 30, 85));
-            g2.drawString("Secret: " + controller.getCurrentPlayerPrivateCounselorName(), xRight, y);
-            y += rowStep + 2;
-
-            g2.setColor(new Color(50, 40, 90));
-            g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            String treasuresLine1 = "FUR: " + controller.getCurrentPlayerTreasure(TreasureType.FUR)
-                + " | SILK: " + controller.getCurrentPlayerTreasure(TreasureType.SILK)
-                + " | IRON: " + controller.getCurrentPlayerTreasure(TreasureType.IRON)
-                + " | ANIMAL: " + controller.getCurrentPlayerTreasure(TreasureType.ANIMAL)
-                + " | SPICE: " + controller.getCurrentPlayerTreasure(TreasureType.SPICE);
-            g2.drawString(treasuresLine1, xLeft, y);
-            y += rowStep + 2;
-
-            // Draw Scoreboard section
-            g2.setColor(new Color(160, 145, 125));
-            g2.drawLine(xLeft, y - 10, getWidth() - 12, y - 10);
-
-            g2.setColor(new Color(30, 30, 30));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 11));
-            g2.drawString("Match Scoreboard:", xLeft, y);
-            y += rowStep - 2;
-
-            g2.setFont(new Font("SansSerif", Font.PLAIN, 10));
-            List<String> standings = controller.getScoreboardSummary();
-            for (String line : standings) {
-                g2.drawString(line, xLeft, y);
-                y += 14;
-            }
-
-            g2.dispose();
-        }
     }
 }

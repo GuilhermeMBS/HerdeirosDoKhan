@@ -248,17 +248,17 @@ class Map {
                     nodeArray.get(region.ordinal()).get(trade2).addNeighbor(centralNode);
 
                     connect(Region.RUSSIA, city1 + left, Region.RUSSIA, city2 + top);
-                    connect(Region.RUSSIA, city1 + left, Region.RUSSIA, city2 + right);
-                    connect(Region.RUSSIA, city2 + left, Region.RUSSIA, city3 + top);
-
-                    connect(Region.RUSSIA, city3 + top, Region.RUSSIA, trade1);
-                    connect(Region.RUSSIA, city2 + top, Region.RUSSIA, trade1);
                     connect(Region.RUSSIA, city1 + right, Region.RUSSIA, trade2);
 
-                    connect(Region.RUSSIA, city3 + right, Region.PERSIA, trade1);
+                    connect(Region.RUSSIA, city2 + left, Region.RUSSIA, city3 + top);
+                    connect(Region.RUSSIA, city2 + top, Region.RUSSIA, trade1);
                     connect(Region.RUSSIA, city2 + left, Region.PERSIA, trade1);
-                    connect(Region.RUSSIA, trade2, Region.CHINA, city2 + top);
                     connect(Region.RUSSIA, city2 + right, Region.PERSIA, city1 + top);
+
+                    connect(Region.RUSSIA, city3 + top, Region.RUSSIA, trade1);
+                    connect(Region.RUSSIA, city3 + right, Region.PERSIA, trade1);
+
+                    connect(Region.RUSSIA, trade2, Region.CHINA, city2 + top);
                     break;
                 case PERSIA:
                     nodeArray.get(region.ordinal()).get(city1 + right).addNeighbor(centralNode);
