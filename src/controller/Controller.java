@@ -308,7 +308,6 @@ public class Controller {
      */
     public String getCurrentPlayerPrivateCounselorName() { return data.getPlayerPrivateCounselorName(this.currentPlayer); }
     
-    
     /*
      * ============================================
      * ============== Action methods ==============
@@ -521,6 +520,25 @@ public class Controller {
      * @return
      */
     public List<String> getGameOpenCounselorsIds() { return data.getGameOpenCounselorIds(); }
+    
+    /*
+     * ============================================
+     * ========= Private Counselor method =========
+     * ============================================
+     */
+    
+    /**
+     * 
+     * @return
+     */
+    public List<String> getPrivateCounselorCandidates() { return data.getPrivateCounselorCandidates(); }
+    
+    /**
+     * 
+     * @param name
+     * @return
+     */
+    public boolean choosePrivateCounselor(String name) { return data.choosePrivateCounselor(this.currentPlayer, name); }
     
     /*
      * =============================================

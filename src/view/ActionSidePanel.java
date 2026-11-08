@@ -18,6 +18,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import controller.Controller;
 import loader.GameStateLoader;
@@ -41,6 +42,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final JComboBox<String> treasureTradeCombo;
     private final JLabel statusFeedbackLabel;
     private final PlayerInventoryPanel inventoryPanel;
+    private PrivateCounselorSelectorFrame selectorFrame;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
@@ -116,12 +118,28 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         );
 
         this.controller.registra(this);
+        
+//        SwingUtilities.invokeLater(new Runnable() {
+//        	@Override
+//        	public void run() {
+//        		checkPrivateCounselorSelection();
+//        	}
+//        });
     }
 
     @Override
     public void notify(ObservadoIF o) {
         this.inventoryPanel.repaint();
+//        checkPrivateCounselorSelection();
         repaint();
+    }
+    
+    private void checkPrivateCounselorSelection() {
+    	if (!this.controller.getCurrentPlayerPrivateCounselorName().equalsIgnoreCase("none")) return;
+    	if (this.selectorFrame != null && this.selectorFrame.isShowing()) return;
+    	
+    	this.selectorFrame = new PrivateCounselorSelectorFrame();
+    	this.selectorFrame.setVisible(true);
     }
 
     private Color resolveColor(PlayerColor playerColor) {

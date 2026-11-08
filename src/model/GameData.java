@@ -732,6 +732,40 @@ public class GameData implements ObservadoIF {
             atualiza();
         }
     }
+    
+    /**
+     * 
+     * @param playerInd
+     * @return
+     */
+    public boolean needsPrivateCounselorChoice(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        return players[playerInd].getSecretCard() == null;
+    }
+    
+    /**
+     * 
+     * @param playerInd
+     * @param name
+     * @return
+     */
+    public boolean choosePrivateCounselor(int playerInd, String name) {
+        if (!needsPrivateCounselorChoice(playerInd) || name == null) {
+            return false;
+        }
+        Player p = players[playerInd];
+        for (PrivateCounselor card : p.getOfferedCounselors()) {
+            if (name.equals(card.getName())) {
+                p.setSecretCard(card);
+                evaluatePrivateCounselorProgress(p);
+                atualiza();
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*
      * ============================================
@@ -869,6 +903,15 @@ public class GameData implements ObservadoIF {
      * ========= Private Counselor methods =========
      * =============================================
      */
+    
+    public List<String> getPrivateCounselorCandidates() {
+    	List<PrivateCounselor> options = PrivateCounselor.giveTwoCards();
+    	List<String> names = new ArrayList<>();
+    	for (PrivateCounselor p : options) {
+    		names.add(p.toString());
+    	}
+    	return names;
+    }
     
     /**
      * 
@@ -1112,7 +1155,7 @@ public class GameData implements ObservadoIF {
             return false;
         }
         Player p = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
-        p.setSecretCard(PrivateCounselor.drawOneCard());
+//        p.setSecretCard(PrivateCounselor.drawOneCard());
         players[ind] = p;
         return true;
     }

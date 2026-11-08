@@ -10,7 +10,7 @@ public interface ObservadorIF {
 
     /**
      * Called by the observed object after its state changed.
-     * @param o the observed object, used to read the new state with {@link ObservadoIF#get(int)}
+     * @param o the observed object, used to read the new state with {@link ObservadoIF#get(ObserverEnum)}
      */
     void notify(ObservadoIF o);
 }
