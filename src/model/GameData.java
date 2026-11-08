@@ -28,6 +28,8 @@ public class GameData implements ObservadoIF {
     private final List<String> activeSackCities = new ArrayList<>();
 
     private final List<ObservadorIF> observers = new ArrayList<>();
+    
+    private List<PrivateCounselor> offered = new ArrayList<>();
 
     /*
      * ============================================
@@ -630,6 +632,7 @@ public class GameData implements ObservadoIF {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             checkAutoOpenCounselors(playerInd);
             players[playerInd].endTurn();
+            offered.clear();
         }
     }
 
@@ -756,7 +759,7 @@ public class GameData implements ObservadoIF {
             return false;
         }
         Player p = players[playerInd];
-        for (PrivateCounselor card : p.getOfferedCounselors()) {
+        for (PrivateCounselor card : offered) {
             if (name.equals(card.getName())) {
                 p.setSecretCard(card);
                 evaluatePrivateCounselorProgress(p);
@@ -905,10 +908,10 @@ public class GameData implements ObservadoIF {
      */
     
     public List<String> getPrivateCounselorCandidates() {
-    	List<PrivateCounselor> options = PrivateCounselor.giveTwoCards();
+    	if (offered.isEmpty()) offered  = PrivateCounselor.giveTwoCards();
     	List<String> names = new ArrayList<>();
-    	for (PrivateCounselor p : options) {
-    		names.add(p.toString());
+    	for (PrivateCounselor p : offered) {
+    		names.add(p.getName());
     	}
     	return names;
     }

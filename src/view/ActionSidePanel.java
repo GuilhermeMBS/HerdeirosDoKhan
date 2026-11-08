@@ -119,18 +119,18 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
         this.controller.registra(this);
         
-//        SwingUtilities.invokeLater(new Runnable() {
-//        	@Override
-//        	public void run() {
-//        		checkPrivateCounselorSelection();
-//        	}
-//        });
+        SwingUtilities.invokeLater(new Runnable() {
+        	@Override
+        	public void run() {
+        		checkPrivateCounselorSelection();
+        	}
+        });
     }
 
     @Override
     public void notify(ObservadoIF o) {
         this.inventoryPanel.repaint();
-//        checkPrivateCounselorSelection();
+        checkPrivateCounselorSelection();
         repaint();
     }
     

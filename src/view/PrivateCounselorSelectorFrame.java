@@ -109,6 +109,7 @@ class PrivateCounselorSelectorFrame extends JFrame {
 			g2.setColor(Color.WHITE);
 			g2.setFont(new Font("SansSerif", Font.BOLD, 14));
 			g2.drawString(name, 14, COUNSELOR_HEIGHT / 2);
+			
 			g2.dispose();
 		}
 		

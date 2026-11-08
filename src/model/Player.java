@@ -24,7 +24,6 @@ class Player {
     private final Heir heir;
     private final PlayerBoard board;
     
-    private List<PrivateCounselor> offeredCounselors;
     private PrivateCounselor secretCard;
 
     private final Map<TributeType, Integer> tributes = new HashMap<>();
@@ -88,7 +87,6 @@ class Player {
     PrivateCounselor getSecretCard() { return secretCard; }
     void setSecretCard(PrivateCounselor card) { 
     	this.secretCard = card; 
-    	offeredCounselors = null;
     }
 
     boolean startTurn(ColumnColor column, int pawnIndex) {
@@ -325,7 +323,4 @@ class Player {
 
     int getBonuses() { return bonuses; }
     void registerBonus() { bonuses++; }
-    
-    List<PrivateCounselor> getOfferedCounselors() { return offeredCounselors; }
-    void setOfferedCounselors(List<PrivateCounselor> cards) { this.offeredCounselors = new ArrayList<>(cards); }
 }
