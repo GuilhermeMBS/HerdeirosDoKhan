@@ -50,9 +50,10 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final int TRIBUTE_SIZE = 40;
     private final int TREASURE_SIZE = 24;
 
+    private final HashMap<String, Image> treasureSprites = new HashMap<>();
+
     private final String IMAGE_PATH_START = "assets/cities/";
     private final HashMap<String, Image> citiesImages = new HashMap<>();
-    private final HashMap<String, Image> treasureSprites = new HashMap<>();
     private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
     private final int CITY_SIZE = 70;
     private final int CITY_OFFSET = CITY_SIZE / 2;
@@ -60,6 +61,12 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final Map<PlayerColor, Color> playerColorsMap;
     private final Map<Integer, Image> playerPawnSprites;
 
+    private final Point firstPlayerScoreCoord = new Point(383, 685);
+    private final int gapBetweenScores = 60;
+    private final Point bottomPlayerScoreCoord = new Point(916, 731);
+    private final int scoreSize = 45;
+    private final int maxScoreFirstLine = 9;
+    
     private String selectedNodeId;
     private String selectedProvinceId;
 
@@ -90,7 +97,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
     private void loadGameAssets() {
         this.boardBackgroundImage = loadOrCreatePlaceholder("assets/tabuleiro.jpg", CANVAS_WIDTH, CANVAS_HEIGHT, new Color(222, 205, 175));
-        this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(40, 40, 40));
+        this.khanSprite = loadOrCreatePlaceholder("assets/khan.png", 32, 32, new Color(255, 255, 255));
 
         this.yurtTributeSprite = loadOrCreatePlaceholder("assets/tributeType/YURT.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
         this.coinTributeSprite = loadOrCreatePlaceholder("assets/tributeType/COIN.jpg", TRIBUTE_SIZE, TRIBUTE_SIZE, new Color(218, 165, 32));
@@ -177,6 +184,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             public void mousePressed(MouseEvent event) {
                 int logicalX = (int) Math.round((double) event.getX() * CANVAS_WIDTH / Math.max(1, getWidth()));
                 int logicalY = (int) Math.round((double) event.getY() * CANVAS_HEIGHT / Math.max(1, getHeight()));
+                System.out.println("Clicked at: (" + logicalX + ", " + logicalY + ")");
                 handleBoardClick(logicalX, logicalY);
             }
         });
@@ -221,6 +229,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         drawConstructedYurts(g2d, scaleX, scaleY);
         drawKhanPiece(g2d, scaleX, scaleY);
         drawPlayerPawns(g2d, scaleX, scaleY);
+        drawPlayersScores(g2d, scaleX, scaleY);
 
         g2d.dispose();
     }
@@ -387,6 +396,62 @@ public class BoardPanel extends JPanel implements ObservadorIF {
                 g2d.drawImage(pawnImg, sx + offset - 14, sy - 14, 28, 28, this);
             }
         }
+    }
+    
+    private Point getScoreSlotCenter(int score) {
+    	Point base = this.firstPlayerScoreCoord;
+    	int gap = this.gapBetweenScores;
+    	int slot = score;
+    	
+    	if (score > this.maxScoreFirstLine) {
+    		base = this.bottomPlayerScoreCoord;
+    		gap *= -1;
+    		score -= this.maxScoreFirstLine + 1;
+    	}
+    	
+    	return new Point(base.x + slot * gap - this.scoreSize / 2, base.y - this.scoreSize / 2);
+    }
+    
+    private void drawPlayersScores(Graphics2D g2d, double scaleX, double scaleY) {
+    	int totalPlayers = controller.getTotalPlayers();
+    	int currentPlayer = controller.getCurrentPlayerIndex();
+    	
+    	int totalScore = 0;
+    	
+    	for (int step = 0; step < totalPlayers; step++) {
+    		int i = (step + currentPlayer + 1) % totalPlayers;
+    		
+    		int score = controller.getPlayerVotes(i);
+    		totalScore += score;
+    		
+    		Point c = getScoreSlotCenter(score);
+    		int cx = (int) Math.round(c.x * scaleX);
+    		int cy = (int) Math.round(c.y * scaleY);
+    		
+    		Color fill = this.playerColorsMap.get(controller.getPlayerColor(i));
+    		if (fill == null) fill = Color.GRAY;
+    		
+    		g2d.setColor(fill);
+    		g2d.fillOval(cx, cy, this.scoreSize, this.scoreSize);
+    		
+    		g2d.setColor(Color.BLACK);
+    		g2d.setStroke(new BasicStroke(2f));
+    		
+    		g2d.drawOval(cx, cy, this.scoreSize, this.scoreSize);
+    	}
+    	
+    	Point c = getScoreSlotCenter(totalScore);
+		int cx = (int) Math.round(c.x * scaleX);
+		int cy = (int) Math.round(c.y * scaleY);
+		
+    	g2d.setColor(Color.WHITE);
+		g2d.fillOval(cx, cy, this.scoreSize, this.scoreSize);
+		
+		g2d.setColor(Color.BLACK);
+		g2d.setStroke(new BasicStroke(2f));
+		
+		g2d.drawOval(cx, cy, this.scoreSize, this.scoreSize);
+		
     }
 
     public String getSelectedNodeId() { return this.selectedNodeId; }

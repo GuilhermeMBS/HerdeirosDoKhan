@@ -482,10 +482,10 @@ class Map {
          * Dedicated Khan token coordinates inside the 4 Khan provinces
          * (offset from tribute tokens so the Khan never covers province tributes)
          */
-        khanCoordinates.put(ProvinceId.RUSSIA_YURT1.name(), new int[] {220, 162});
-        khanCoordinates.put(ProvinceId.RUSSIA_COIN1.name(), new int[] {622, 236});
-        khanCoordinates.put(ProvinceId.CHINA_YURT1.name(), new int[] {698, 526});
-        khanCoordinates.put(ProvinceId.PERSIA_COIN1.name(), new int[] {266, 442});
+        khanCoordinates.put(ProvinceId.RUSSIA_YURT1.name(), new int[] {210, 161});
+        khanCoordinates.put(ProvinceId.RUSSIA_COIN1.name(), new int[] {591, 239});
+        khanCoordinates.put(ProvinceId.CHINA_YURT1.name(), new int[] {720, 539});
+        khanCoordinates.put(ProvinceId.PERSIA_COIN1.name(), new int[] {273, 455});
     }
 
     boolean allCityConquered() {

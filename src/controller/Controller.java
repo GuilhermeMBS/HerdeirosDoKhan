@@ -133,6 +133,8 @@ public class Controller {
      * ============================================
      */
     
+    private boolean canEndTurn() { return this.chosenColumn != null && !data.isKhanPending(currentPlayer); }
+    
     /**
      * 
      * @param column
@@ -159,6 +161,8 @@ public class Controller {
         if (this.ended || total == 0) {
             return false;
         }
+        
+        if (!canEndTurn()) return false;
 
         if (endGameConditionsMet() && !this.endRoundToFinalTurn) {
             this.endRoundToFinalTurn = true;
@@ -221,9 +225,10 @@ public class Controller {
     
     /**
      * 
+     * @param playerInd
      * @return
      */
-    public PlayerColor getCurrentPlayerColor() { return data.getPlayerColor(this.currentPlayer); }
+    public PlayerColor getPlayerColor(int playerInd) { return data.getPlayerColor(playerInd); }
     
     /**
      * 
@@ -275,11 +280,13 @@ public class Controller {
      */
     public int getCurrentPlayerTreasure(TreasureType type) { return data.getPlayerTreasure(this.currentPlayer, type); }
     
+    
     /**
      * 
+     * @param playerInd
      * @return
      */
-    public int getCurrentPlayerVotes() { return data.getPlayerVotes(this.currentPlayer); }
+    public int getPlayerVotes(int playerInd) { return data.getPlayerVotes(playerInd); }
         
     /**
      * 

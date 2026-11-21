@@ -29,13 +29,11 @@ enum Heir {
 
     private final ColumnColor khanColumn;
     private final ColumnColor moveColumn;
-//    private final ColumnColor coinColumn;
     private final int pawns;
 
     Heir(ColumnColor khanColumn, ColumnColor moveColumn, ColumnColor coinColumn, int pawns) {
         this.khanColumn = khanColumn;
         this.moveColumn = moveColumn;
-//        this.coinColumn = coinColumn;
         this.pawns = pawns;
     }
 

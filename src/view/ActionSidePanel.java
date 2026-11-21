@@ -233,8 +233,11 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         endTurnButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                controller.endTurn();
-                if (controller.getGameHasEnded()) {
+                if (!controller.endTurn()) {
+                	if (controller.getChosenColumn() == null) statusFeedbackLabel.setText("Choose a column first");
+                	else statusFeedbackLabel.setText("You must move Khan to end the turn");
+                }
+                else if (controller.getGameHasEnded()) {
                     statusFeedbackLabel.setText("MATCH ENDED! Check Scoreboard above.");
                 } else {
                     statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentHeirName());
@@ -261,7 +264,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        PlayerColor pColor = controller.getCurrentPlayerColor();
+        PlayerColor pColor = controller.getPlayerColor(controller.getCurrentPlayerIndex());
         g2d.setColor(resolveColor(pColor));
         g2d.fillRect(0, 0, getWidth(), getHeight());
 

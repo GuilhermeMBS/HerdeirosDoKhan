@@ -122,7 +122,7 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        PlayerColor playerColor = controller.getCurrentPlayerColor();
+        PlayerColor playerColor = controller.getPlayerColor(this.currentPlayer);
         Color color = COLORS.getOrDefault(playerColor, new Color(30, 90, 200));
 
         drawHeader(g2, playerColor, color);
