@@ -7,19 +7,19 @@ package model;
  *
  * @author Vinicius
  */
-public interface ObservadoIF {
+public interface ObservableIF {
 	
 	/**
 	 * Registers an observer, which will be notified of every change.
 	 * @param o
 	 */
-    void add(ObservadorIF o);
+    void add(ObserverIF o);
 
     /**
      * Removes an observer, which will not be notified anymore.
      * @param o
      */
-    void remove(ObservadorIF o);
+    void remove(ObserverIF o);
 
     /**
      * Gives the observers a piece of the observed state.

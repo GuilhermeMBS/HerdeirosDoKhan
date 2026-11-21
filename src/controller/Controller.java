@@ -5,7 +5,7 @@ import java.util.List;
 
 import model.ColumnColor;
 import model.GameData;
-import model.ObservadorIF;
+import model.ObserverIF;
 import model.PlayerColor;
 import model.TreasureType;
 import model.TributeType;
@@ -26,6 +26,14 @@ public class Controller {
     private ColumnColor chosenColumn = null;
     private boolean turnActionStarted = false;
 
+    // Two-step choices: the player first SELECTS (click) and then CONFIRMS (button).
+    // While only selected, nothing in the Model changes.
+    private ColumnColor pendingColumn = null;
+    private String pendingMoveNodeId = null;
+
+    // Final score of each player, filled when the match ends
+    private int[] finalScores = new int[0];
+
     private int totalVotes = 0;
     private int maxVotes = 10;
 
@@ -41,7 +49,7 @@ public class Controller {
         return controller;
     }
 
-    public void registra(ObservadorIF o) {
+    public void register(ObserverIF o) {
         GameData.getData().add(o);
     }
 
@@ -53,6 +61,8 @@ public class Controller {
 
     private boolean startGame(boolean alternativeKarakorum) {
         data = GameData.createData(alternativeKarakorum);
+        // The screens of a previous match (if any) must stop observing the game
+        data.removeAllObservers();
         this.currentPlayer = 0;
         this.finalTurn = false;
         this.endRoundToFinalTurn = false;
@@ -61,6 +71,9 @@ public class Controller {
         this.firstSackCity = true;
         this.chosenColumn = null;
         this.turnActionStarted = false;
+        this.pendingColumn = null;
+        this.pendingMoveNodeId = null;
+        this.finalScores = new int[0];
         return true;
     }
 
@@ -114,6 +127,8 @@ public class Controller {
         data.endTurn(this.currentPlayer);
         this.chosenColumn = null;
         this.turnActionStarted = false;
+        this.pendingColumn = null;
+        this.pendingMoveNodeId = null;
         nextPlayer();
 
         if (this.endRoundToFinalTurn) {
@@ -126,6 +141,90 @@ public class Controller {
         }
 
         return true;
+    }
+
+    /*
+     * ============================================
+     * ====== Select first, confirm after =========
+     * ============================================
+     */
+
+    /**
+     * Marks a column of the player board as selected, without starting the turn yet.
+     * The turn only starts when the player presses "Confirm Column".
+     * @param column the clicked column
+     * @return false (and nothing changes) if a column was already confirmed in this
+     *         turn, the match ended or the column is occupied
+     */
+    public boolean selectColumn(ColumnColor column) {
+        if (this.ended || this.chosenColumn != null || column == null || !isColumnFree(column)) {
+            return false;
+        }
+        this.pendingColumn = column;
+        data.notifyStateRestored();
+        return true;
+    }
+
+    /** @return the selected column waiting for confirmation, or null if there is none */
+    public ColumnColor getPendingColumn() { return this.pendingColumn; }
+
+    /**
+     * Starts the turn with the selected column (the "Confirm Column" button).
+     * @return true if the turn started
+     */
+    public boolean confirmColumn() {
+        if (this.pendingColumn == null) {
+            return false;
+        }
+        ColumnColor column = this.pendingColumn;
+        // Cleared before startTurn because startTurn notifies the observers,
+        // and they must already see that nothing is pending anymore
+        this.pendingColumn = null;
+        if (!startTurn(column, 0)) {
+            this.pendingColumn = column;
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Marks a node of the map as the destination of the next move, without moving yet.
+     * Only nodes the pawn can really reach (enough horses, a free space, a valid path)
+     * are accepted; any other click does nothing.
+     * @param nodeId the clicked node
+     * @return true if the node became the selected destination
+     */
+    public boolean selectMoveDestination(String nodeId) {
+        if (this.ended || this.chosenColumn == null || nodeId == null) {
+            return false;
+        }
+        if (!data.getReachableNodeIds(this.currentPlayer).contains(nodeId)) {
+            return false;
+        }
+        this.pendingMoveNodeId = nodeId;
+        data.notifyStateRestored();
+        return true;
+    }
+
+    /** @return the selected destination waiting for confirmation, or null if there is none */
+    public String getPendingMoveNodeId() { return this.pendingMoveNodeId; }
+
+    /**
+     * Moves the pawn to the selected destination (the "Confirm Move" button).
+     * @return true if the pawn moved
+     */
+    public boolean confirmMove() {
+        if (this.pendingMoveNodeId == null) {
+            return false;
+        }
+        String target = this.pendingMoveNodeId;
+        this.pendingMoveNodeId = null;
+        boolean moved = createMoveAction(target);
+        if (!moved) {
+            // Nothing moved, but the screen must stop showing the old selection
+            data.notifyStateRestored();
+        }
+        return moved;
     }
 
     public List<String> getReachableNodeIds(int playerInd) { return data.getReachableNodeIds(playerInd); }
@@ -265,10 +364,49 @@ public class Controller {
     public boolean isEndRoundToFinalTurn() { return this.endRoundToFinalTurn; }
 
     private void calculatePoints() {
+        this.finalScores = new int[getTotalPlayers()];
         for (int i = 0; i < getTotalPlayers(); i++) {
-            data.calculatePlayerTotalScore(i);
+            this.finalScores[i] = data.calculatePlayerTotalScore(i);
         }
     }
+
+    /*
+     * ============================================
+     * ================ End of match ==============
+     * ============================================
+     */
+
+    /**
+     * @param playerInd index of the player
+     * @return the final score of the player, or 0 if the match has not ended
+     */
+    public int getFinalScore(int playerInd) {
+        if (playerInd < 0 || playerInd >= this.finalScores.length) {
+            return 0;
+        }
+        return this.finalScores[playerInd];
+    }
+
+    /** @return the highest final score of the match */
+    public int getWinningScore() {
+        int best = 0;
+        for (int score : this.finalScores) {
+            best = Math.max(best, score);
+        }
+        return best;
+    }
+
+    /**
+     * @param playerInd index of the player
+     * @return true if the match ended and this player has the highest score
+     *         (when there is a tie, every player with the highest score wins)
+     */
+    public boolean isWinner(int playerInd) {
+        return this.ended && getFinalScore(playerInd) == getWinningScore();
+    }
+
+    public String getPlayerHeirName(int playerInd) { return data.getPlayerHeirName(playerInd); }
+    public PlayerColor getPlayerColor(int playerInd) { return data.getPlayerColor(playerInd); }
 
     public void restoreControllerTurnState(int activePlayerInd, ColumnColor column) {
         if (activePlayerInd >= 0 && activePlayerInd < getTotalPlayers()) {
@@ -276,6 +414,8 @@ public class Controller {
             this.chosenColumn = column;
             this.turnActionStarted = (column != null);
             this.firstSackCity = true;
+            this.pendingColumn = null;
+            this.pendingMoveNodeId = null;
             data.setCurrentPlayer(this.currentPlayer);
         }
     }

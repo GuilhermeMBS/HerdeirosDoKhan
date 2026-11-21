@@ -25,15 +25,15 @@ import javax.swing.JPanel;
 
 import controller.Controller;
 import model.GameData;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 
 /**
  * Displays the 4 Open Counselor cards in play alongside the active player's
  * Private (Secret) Counselor card using Graphics2D.drawImage().
  * Observes match state changes so the secret card and completion badges update automatically.
  */
-class OpenCounselorFrame extends JFrame implements ObservadorIF {
+class OpenCounselorFrame extends JFrame implements ObserverIF {
 
     private static final long serialVersionUID = 1L;
 
@@ -70,7 +70,7 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
         this.canvasPanel = new CounselorCanvasPanel();
         add(this.canvasPanel, BorderLayout.CENTER);
 
-        this.controller.registra(this);
+        this.controller.register(this);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -81,7 +81,7 @@ class OpenCounselorFrame extends JFrame implements ObservadorIF {
     }
 
     @Override
-    public void notify(ObservadoIF o) {
+    public void notify(ObservableIF o) {
         loadActiveCounselorImages();
         this.canvasPanel.repaint();
     }

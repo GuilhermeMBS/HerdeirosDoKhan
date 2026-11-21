@@ -19,8 +19,8 @@ import javax.swing.SwingUtilities;
 
 import controller.Controller;
 import model.ColumnColor;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 import model.ObserverEnum;
 import model.PlayerColor;
 
@@ -28,7 +28,7 @@ import model.PlayerColor;
  * Shows the player board (cartela) of the active player using Graphics2D.drawImage(),
  * stacking acquired upgrade tiles from bottom to top in each column.
  */
-public class PlayerBoardPanel extends JPanel implements ObservadorIF {
+public class PlayerBoardPanel extends JPanel implements ObserverIF {
     private static final long serialVersionUID = 1L;
 
     static final int BOARD_WIDTH = 500;
@@ -75,11 +75,11 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         addMouseListener(new ColumnClickListener(this, controller));
 
         this.currentPlayer = controller.getCurrentPlayerIndex();
-        controller.registra(this);
+        controller.register(this);
     }
 
     @Override
-    public void notify(ObservadoIF o) {
+    public void notify(ObservableIF o) {
         int player = o.get(ObserverEnum.CURRENT_PLAYER);
 
         if (player != this.currentPlayer) {
@@ -137,7 +137,13 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         // Draw activation overlays and column tokens
         for (ColumnColor column : ColumnColor.values()) {
             Rectangle area = areaOf(column);
-            if (column == controller.getChosenColumn()) {
+            if (column == controller.getPendingColumn()) {
+                // Selected but not confirmed yet: dashed outline, no token
+                g2.setColor(color);
+                g2.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    0, new float[] {9f, 6f}, 0));
+                g2.drawRoundRect(area.x, area.y, area.width, area.height, 8, 8);
+            } else if (column == controller.getChosenColumn()) {
                 g2.setColor(color);
                 g2.setStroke(new BasicStroke(3.5f));
                 g2.drawRoundRect(area.x, area.y, area.width, area.height, 8, 8);
@@ -181,7 +187,9 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
 
         String text = "Turn: " + controller.getCurrentHeirName();
         if (controller.getChosenColumn() == null) {
-            text += " - choose a column";
+            text += controller.getPendingColumn() == null
+                ? " - click a column"
+                : " - press Confirm Column";
         }
         if (controller.hasCurrentPlayerFreeUpgradePending()) {
             text += " | FREE WHITE UPGRADE AVAILABLE!";

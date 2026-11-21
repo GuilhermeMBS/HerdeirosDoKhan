@@ -59,6 +59,10 @@ public class MainGameFrame extends JFrame {
         this.playerSheetDialog = new JDialog(this, "Player Action Sheet (Cartela)", false);
         this.playerSheetDialog.setLayout(new BorderLayout());
         this.playerSheetDialog.add(this.playerBoardPanel, BorderLayout.CENTER);
+        // Button under the player board that confirms the selected column
+        JPanel confirmColumnBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+        confirmColumnBar.add(new ConfirmColumnButton());
+        this.playerSheetDialog.add(confirmColumnBar, BorderLayout.SOUTH);
         this.playerSheetDialog.pack();
         this.playerSheetDialog.setLocationRelativeTo(this);
 

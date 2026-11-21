@@ -31,15 +31,15 @@ import javax.swing.SwingConstants;
 
 import controller.Controller;
 import model.GameData;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 import model.TributeType;
 
 /**
  * Non-modal enlarged view of the bottom-left Upgrades Area (4 fixed slots + closed stack).
  * Empty slots expose the Khan refill bonuses (+1 Coin at 2 empty slots, +1 Sword at 4 empty slots).
  */
-class UpgradeMarketFrame extends JFrame implements ObservadorIF {
+class UpgradeMarketFrame extends JFrame implements ObserverIF {
 
     private static final long serialVersionUID = 1L;
 
@@ -117,7 +117,7 @@ class UpgradeMarketFrame extends JFrame implements ObservadorIF {
         southPanel.add(buttonsRow, BorderLayout.SOUTH);
         add(southPanel, BorderLayout.SOUTH);
 
-        this.controller.registra(this);
+        this.controller.register(this);
         refreshControls();
 
         addWindowListener(new WindowAdapter() {
@@ -129,7 +129,7 @@ class UpgradeMarketFrame extends JFrame implements ObservadorIF {
     }
 
     @Override
-    public void notify(ObservadoIF o) {
+    public void notify(ObservableIF o) {
         refreshControls();
     }
 
