@@ -28,7 +28,7 @@ import model.PlayerColor;
 
 /**
  * Lateral control panel integrating the Controller, observing match state changes,
- * and rendering the active player's full inventory, secret counselor status, and scoreboard.
+ * and providing access to board actions, counselors, and the Upgrades Area.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -43,6 +43,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final JLabel statusFeedbackLabel;
     private final PlayerInventoryPanel inventoryPanel;
     private PrivateCounselorSelectorFrame selectorFrame;
+    private UpgradeMarketFrame upgradeMarketFrame;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
@@ -53,7 +54,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(30, 8, 6, 8));
 
-        JPanel actionsPanel = new JPanel(new GridLayout(8, 1, 3, 3));
+        JPanel actionsPanel = new JPanel(new GridLayout(9, 1, 3, 3));
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Board Node & Province Actions"));
 
         JButton harvestButton = new JButton("Harvest Province Tribute");
@@ -66,6 +67,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton = new JButton("Attack City (Plunder Selected Slot)");
         JButton buildYurtButton = new JButton("Build Yurt on Visited Node");
         JButton moveKhanButton = new JButton("Move Khan");
+        JButton openUpgradesButton = new JButton("Upgrades Area (Buy / Free Row)");
         JButton openCounselorButton = new JButton("See Counselors (Open & Secret)");
 
         this.treasureTradeCombo = new JComboBox<>(new String[] {
@@ -80,6 +82,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
         actionsPanel.add(moveKhanButton);
+        actionsPanel.add(openUpgradesButton);
         actionsPanel.add(openCounselorButton);
         actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
@@ -111,6 +114,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             attackCityButton,
             buildYurtButton,
             moveKhanButton,
+            openUpgradesButton,
             openCounselorButton,
             executeTradeButton,
             endTurnButton,
@@ -118,12 +122,12 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         );
 
         this.controller.registra(this);
-        
+
         SwingUtilities.invokeLater(new Runnable() {
-        	@Override
-        	public void run() {
-        		checkPrivateCounselorSelection();
-        	}
+            @Override
+            public void run() {
+                checkPrivateCounselorSelection();
+            }
         });
     }
 
@@ -131,15 +135,18 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     public void notify(ObservadoIF o) {
         this.inventoryPanel.repaint();
         checkPrivateCounselorSelection();
+        if (this.controller.hasCurrentPlayerFreeUpgradePending()) {
+            this.statusFeedbackLabel.setText("Row completed! Open Upgrades Area to claim a FREE White upgrade.");
+        }
         repaint();
     }
-    
+
     private void checkPrivateCounselorSelection() {
-    	if (!this.controller.getCurrentPlayerPrivateCounselorName().equalsIgnoreCase("none")) return;
-    	if (this.selectorFrame != null && this.selectorFrame.isShowing()) return;
-    	
-    	this.selectorFrame = new PrivateCounselorSelectorFrame();
-    	this.selectorFrame.setVisible(true);
+        if (!this.controller.getCurrentPlayerPrivateCounselorName().equalsIgnoreCase("none")) return;
+        if (this.selectorFrame != null && this.selectorFrame.isShowing()) return;
+
+        this.selectorFrame = new PrivateCounselorSelectorFrame();
+        this.selectorFrame.setVisible(true);
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -155,6 +162,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton,
         JButton buildYurtButton,
         JButton moveKhanButton,
+        JButton openUpgradesButton,
         JButton openCounselorButton,
         JButton executeTradeButton,
         JButton endTurnButton,
@@ -207,6 +215,18 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 List<String> provinces = controller.getKhanProvincesIds();
                 KhanFrame khanFrame = new KhanFrame(provinces);
                 khanFrame.setVisible(true);
+            }
+        });
+
+        openUpgradesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (upgradeMarketFrame != null && upgradeMarketFrame.isShowing()) {
+                    upgradeMarketFrame.toFront();
+                    return;
+                }
+                upgradeMarketFrame = new UpgradeMarketFrame();
+                upgradeMarketFrame.setVisible(true);
             }
         });
 

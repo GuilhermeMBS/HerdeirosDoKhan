@@ -23,12 +23,13 @@ class Player {
     private final PlayerColor color;
     private final Heir heir;
     private final PlayerBoard board;
-    
+
     private PrivateCounselor secretCard;
 
     private final Map<TributeType, Integer> tributes = new HashMap<>();
     private final Map<TributeType, Integer> virtualTributes = new HashMap<>();
     private final Map<TreasureType, Integer> treasures = new HashMap<>();
+    private final Map<TreasureType, Integer> virtualTreasures = new HashMap<>();
     private int yurtsLeft = INITIAL_YURTS;
     private int amountYurts = 0;
     private int votes = 0;
@@ -72,6 +73,7 @@ class Player {
         }
         for (TreasureType t : TreasureType.values()) {
             treasures.put(t, 0);
+            virtualTreasures.put(t, 0);
         }
         tributes.put(TributeType.COIN, initialCoins);
     }
@@ -85,9 +87,7 @@ class Player {
     void setColumnOccupied(ColumnColor column, boolean occupied) { board.setOccupied(column, occupied); }
 
     PrivateCounselor getSecretCard() { return secretCard; }
-    void setSecretCard(PrivateCounselor card) { 
-    	this.secretCard = card; 
-    }
+    void setSecretCard(PrivateCounselor card) { this.secretCard = card; }
 
     boolean startTurn(ColumnColor column, int pawnIndex) {
         if (pawnIndex < 0 || pawnIndex >= pawns.size()) {
@@ -106,6 +106,9 @@ class Player {
         virtualTributes.put(TributeType.COIN, c.count(Icon.VIRTUAL_COIN));
         virtualTributes.put(TributeType.SWORD, c.count(Icon.VIRTUAL_SWORD));
         virtualTributes.put(TributeType.YURT, c.count(Icon.VIRTUAL_YURT));
+        for (TreasureType t : TreasureType.values()) {
+            virtualTreasures.put(t, c.countVirtualTreasure(t));
+        }
         return true;
     }
 
@@ -116,6 +119,9 @@ class Player {
         khanPending = false;
         for (TributeType t : TributeType.values()) {
             virtualTributes.put(t, 0);
+        }
+        for (TreasureType t : TreasureType.values()) {
+            virtualTreasures.put(t, 0);
         }
     }
 
@@ -172,7 +178,6 @@ class Player {
         if (start == null || destination == null || destination == start) {
             return null;
         }
-        // The pawn may pass through full nodes, but cannot stop in one.
         if (!destination.hasRoom()) {
             return null;
         }
@@ -232,6 +237,12 @@ class Player {
     int getTributeAmount(TributeType type) { return tributes.get(type); }
     int getVirtualTributeAmount(TributeType type) { return virtualTributes.get(type); }
 
+    void setTributeAmount(TributeType type, int qty) {
+        if (type != null) {
+            tributes.put(type, Math.max(0, qty));
+        }
+    }
+
     void addTribute(TributeType type, int qty) {
         if (qty > 0) {
             tributes.put(type, tributes.get(type) + qty);
@@ -251,6 +262,17 @@ class Player {
     }
 
     int getTreasureAmount(TreasureType type) { return treasures.get(type); }
+    int getVirtualTreasureAmount(TreasureType type) { return virtualTreasures.get(type); }
+
+    int getEffectiveTreasureAmount(TreasureType type) {
+        return treasures.get(type) + virtualTreasures.get(type);
+    }
+
+    void setTreasureAmount(TreasureType type, int qty) {
+        if (type != null) {
+            treasures.put(type, Math.max(0, qty));
+        }
+    }
 
     void addTreasure(TreasureType type, int qty) {
         if (type != null && qty > 0) {
@@ -259,23 +281,35 @@ class Player {
     }
 
     boolean spendTreasure(TreasureType type, int qty) {
-        if (type == null || qty <= 0 || treasures.get(type) < qty) {
+        if (type == null || qty <= 0) {
             return false;
         }
-        treasures.put(type, treasures.get(type) - qty);
+        int virtual = virtualTreasures.get(type);
+        int real = treasures.get(type);
+        if (virtual + real < qty) {
+            return false;
+        }
+        int fromVirtual = Math.min(virtual, qty);
+        virtualTreasures.put(type, virtual - fromVirtual);
+        treasures.put(type, real - (qty - fromVirtual));
         return true;
     }
 
     int getTotalTreasures() {
         int total = 0;
-        for (int qty : treasures.values()) {
-            total += qty;
+        for (TreasureType type : TreasureType.values()) {
+            total += treasures.get(type) + virtualTreasures.get(type);
         }
         return total;
     }
 
     int getYurtsLeft() { return yurtsLeft; }
     int getAmountYurts() { return amountYurts; }
+
+    void setYurtsState(int left, int placed) {
+        this.yurtsLeft = Math.max(0, left);
+        this.amountYurts = Math.max(0, placed);
+    }
 
     boolean payForYurt() {
         if (yurtsLeft == 0) {
@@ -312,6 +346,7 @@ class Player {
     boolean receiveFreeUpgrade(Upgrade upgrade) { return board.receiveFreeUpgrade(upgrade); }
 
     int getVotes() { return votes; }
+    void setVotes(int votes) { this.votes = Math.max(0, votes); }
     void addVotes(int qty) {
         if (qty > 0) {
             votes += qty;
@@ -319,8 +354,10 @@ class Player {
     }
 
     int getConqueredCities() { return conqueredCities; }
+    void setConqueredCities(int count) { this.conqueredCities = Math.max(0, count); }
     void registerConqueredCity() { conqueredCities++; }
 
     int getBonuses() { return bonuses; }
+    void setBonuses(int count) { this.bonuses = Math.max(0, count); }
     void registerBonus() { bonuses++; }
 }

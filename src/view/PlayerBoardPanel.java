@@ -13,6 +13,7 @@ import java.awt.Window;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -24,12 +25,8 @@ import model.ObserverEnum;
 import model.PlayerColor;
 
 /**
- * Shows the player board (cartela) of the active player using Graphics2D.drawImage().
- * It observes the match: when a column is chosen it is redrawn, and when the
- * turn passes to another player its window is shown, so the new player can
- * choose a column.
- *
- * @author Vinicius
+ * Shows the player board (cartela) of the active player using Graphics2D.drawImage(),
+ * stacking acquired upgrade tiles from bottom to top in each column.
  */
 public class PlayerBoardPanel extends JPanel implements ObservadorIF {
     private static final long serialVersionUID = 1L;
@@ -37,6 +34,8 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
     static final int BOARD_WIDTH = 500;
     static final int BOARD_HEIGHT = 300;
     static final int HEADER = 26;
+
+    private static final String UPGRADE_IMAGE_DIR = "assets/cartoes/cartoes1/";
 
     private static final HashMap<String, String> FILES = new HashMap<>();
     static {
@@ -66,8 +65,8 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
 
     private final Controller controller;
     private final HashMap<String, Image> boardImages = new HashMap<>();
+    private final HashMap<String, Image> upgradeImages = new HashMap<>();
 
-    // Read from the Model every time it notifies a change
     private int currentPlayer;
 
     public PlayerBoardPanel() {
@@ -79,10 +78,6 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         controller.registra(this);
     }
 
-    /**
-     * The state of the match changed. If the turn passed to another player,
-     * the window of the player board is shown; in any case the board is redrawn.
-     */
     @Override
     public void notify(ObservadoIF o) {
         int player = o.get(ObserverEnum.CURRENT_PLAYER);
@@ -121,6 +116,7 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
         PlayerColor playerColor = controller.getCurrentPlayerColor();
         Color color = COLORS.getOrDefault(playerColor, new Color(30, 90, 200));
@@ -132,6 +128,13 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
             g2.drawImage(board, 0, HEADER, null);
         }
 
+        // Draw acquired upgrades from bottom to top above the base actions
+        for (ColumnColor column : ColumnColor.values()) {
+            Rectangle area = areaOf(column);
+            drawColumnUpgrades(g2, column, area);
+        }
+
+        // Draw activation overlays and column tokens
         for (ColumnColor column : ColumnColor.values()) {
             Rectangle area = areaOf(column);
             if (column == controller.getChosenColumn()) {
@@ -147,13 +150,43 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         }
     }
 
+    private void drawColumnUpgrades(Graphics2D g2, ColumnColor column, Rectangle area) {
+        List<String> upgrades = controller.getCurrentPlayerColumnUpgrades(column);
+        if (upgrades == null || upgrades.isEmpty()) {
+            return;
+        }
+
+        int slotSize = 42;
+        int slotX = area.x + (area.width - slotSize) / 2;
+        int topSlotY = area.y + 5;
+        int verticalStep = 48;
+
+        for (int i = 0; i < upgrades.size() && i < 4; i++) {
+            String code = upgrades.get(i);
+            // Index 0 goes to the bottommost slot (just above base actions); index 3 goes to the topmost slot
+            int slotY = topSlotY + ((3 - i) * verticalStep);
+            Image tileImg = getUpgradeImage(code, slotSize);
+            if (tileImg != null) {
+                g2.drawImage(tileImg, slotX, slotY, slotSize, slotSize, null);
+            }
+            g2.setColor(Color.WHITE);
+            g2.setStroke(new BasicStroke(1.2f));
+            g2.drawRect(slotX, slotY, slotSize, slotSize);
+        }
+    }
+
     private void drawHeader(Graphics2D g2, PlayerColor playerColor, Color color) {
         g2.setColor(color);
         g2.fillRect(0, 0, BOARD_WIDTH, HEADER);
 
-        String text = "Vez de " + controller.getCurrentHeirName();
-        if (controller.getChosenColumn() == null) text += " - escolha uma coluna";
-        
+        String text = "Turn: " + controller.getCurrentHeirName();
+        if (controller.getChosenColumn() == null) {
+            text += " - choose a column";
+        }
+        if (controller.hasCurrentPlayerFreeUpgradePending()) {
+            text += " | FREE WHITE UPGRADE AVAILABLE!";
+        }
+
         g2.setColor(playerColor == PlayerColor.YELLOW ? Color.BLACK : Color.WHITE);
         g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         g2.drawString(text, 10, 18);
@@ -170,6 +203,29 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
         g2.drawOval(x, y, size, size);
     }
 
+    private Image getUpgradeImage(String code, int size) {
+        if (!upgradeImages.containsKey(code)) {
+            BufferedImage img = ImageUtils.readProjectImage(UPGRADE_IMAGE_DIR + code + ".jpg");
+            if (img != null) {
+                upgradeImages.put(code, img);
+            } else {
+                BufferedImage fallback = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g = fallback.createGraphics();
+                Color fill = new Color(210, 175, 45);
+                if (code.endsWith("-R")) fill = new Color(185, 50, 50);
+                else if (code.endsWith("-V")) fill = new Color(45, 145, 70);
+                g.setColor(fill);
+                g.fillRect(0, 0, size, size);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
+                g.drawString(code, 3, size / 2 + 4);
+                g.dispose();
+                upgradeImages.put(code, fallback);
+            }
+        }
+        return upgradeImages.get(code);
+    }
+
     private Image getBoardImage(String heirName) {
         if (!boardImages.containsKey(heirName)) {
             boardImages.put(heirName, loadBoardImage(FILES.get(heirName)));
@@ -179,6 +235,9 @@ public class PlayerBoardPanel extends JPanel implements ObservadorIF {
 
     private Image loadBoardImage(String file) {
         BufferedImage image = ImageUtils.readProjectImage(file);
+        if (image == null && file != null && file.startsWith("img/")) {
+            image = ImageUtils.readProjectImage("assets/" + file.substring(4));
+        }
         if (image == null) {
             return null;
         }
