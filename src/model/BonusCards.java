@@ -23,6 +23,7 @@ enum BonusCard {
 	
 	public String getDisplayName() { return name();	}
 	public boolean hasBeenUsed() { return hasBeenUsed == true; }
+	public boolean hasBeenClaimed() { return player != null; }
 	
 	public boolean useBonus() {
 		if (hasBeenUsed == true) return false;

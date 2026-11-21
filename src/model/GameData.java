@@ -951,7 +951,7 @@ public class GameData implements ObservableIF {
         int target = o.getMissionTarget();
         switch (o.getMissionType()) {
             case YURT:
-                return p.getAmountYurts() >= target;
+                return (Player.INITIAL_YURTS - p.getYurtsLeft()) >= target;
             case YURTREGION:
                 EnumMap<Region, Integer> qty = Map.getMap(altKarakorum).getYurtsPerRegion(p);
                 for (Region region : Region.values()) {
@@ -959,7 +959,7 @@ public class GameData implements ObservableIF {
                 }
                 return true;
             case SWORD:
-                return p.getTributeAmount(TributeType.SWORD) >= target;
+                return (p.getTributeAmount(TributeType.SWORD) + p.getVirtualTributeAmount(TributeType.SWORD)) >= target;
             case EACHRESOURCE:
                 for (TreasureType type : TreasureType.values()) {
                     if (p.getTreasureAmount(type) < 1) return false;
@@ -1420,34 +1420,30 @@ public class GameData implements ObservableIF {
     public boolean useBonusCard(String name, int playerInd) {
     	if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) return false;
     	
-    	for (BonusCard card : BonusCard.values()) {
-    		if (card.toString().equalsIgnoreCase(name)) {
-    			if (card.hasBeenUsed()) return false;
-    			switch (card) {
-    			case VOTE:
-    				players[playerInd].addVotes(1);
-    				break;
-    			case SWORDS:
-    				players[playerInd].addTribute(TributeType.SWORD, 2);
-    				break;
-    			case COINS:
-    				players[playerInd].addTribute(TributeType.COIN, 2);
-    				break;
-    			case YURTS:
-    				players[playerInd].addTribute(TributeType.YURT, 2);
-    				break;
-    			case MOVEMENT:
-    				players[playerInd].setMovementsLeft(players[playerInd].getMovementsLeft() + 3);
-    				players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 1);
-    				break;
-    			case HANDS:
-    				players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 2);
-    				break;
-    			default: // TREASURES
-    			}
-    		}
+    	BonusCard card = null;
+    	for (BonusCard c : players[playerInd].getBonuses()) {
+    		if (c.name().equalsIgnoreCase(name)) { card = c; break; }
     	}
-    	return false;
+    	if (card == null || card.hasBeenUsed()) return false;
+    	
+    	switch (card) {
+    	case VOTE: 	players[playerInd].addVotes(1); break;
+    	case SWORDS: players[playerInd].addTribute(TributeType.SWORD, 2); break;
+    	case COINS:	players[playerInd].addTribute(TributeType.COIN, 2); break;
+    	case YURTS:	players[playerInd].addTribute(TributeType.YURT, 2); break;
+    	case MOVEMENT:
+    		players[playerInd].setMovementsLeft(players[playerInd].getMovementsLeft() + 3);
+    		players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 1);
+    		break;
+    	case HANDS:
+    		players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 2);
+    		break;
+    	default: // 
+    	}
+    	
+    	card.useBonus();
+    	notifyObservers();    	
+    	return true;
     }
     
     public String getBonusCardOnPost(String nodeId) {
@@ -1455,9 +1451,20 @@ public class GameData implements ObservableIF {
     	if (!(n instanceof CentralNode || n instanceof DoubleNode)) return null;
     	
     	TradingPost p = (n instanceof CentralNode) ? ((CentralNode) n).getTradingPost() : ((DoubleNode) n).getTradingPost();
-    	return p.getBonusCardName();
+    	
+    	return (p.isBonusAvailable()) ? null : p.getBonusCardName();
     }
     
     public HashMap<String, int[]> getBonusCardCoordinates() { return getMap().getBonusCardCoordinates(); }
+    
+    public List<String> getPlayerUnusedBonusCardNames(int playerInd) {
+    	if (playerInd < 0 || playerInd >= players.length || players == null || players[playerInd] == null) return null;
+    	
+    	List<String> names = new ArrayList<>();
+    	for (BonusCard card : players[playerInd].getBonuses()) {
+    		names.add(card.getDisplayName());
+    	}
+    	return names;
+    }
     
 }

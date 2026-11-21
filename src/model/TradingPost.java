@@ -90,10 +90,13 @@ class TradingPost {
         if (!this.card.hasBeenUsed()) {
             this.card.assignPlayer(p);
             p.addBonusCard(card);
+            this.bonusAvailable = false;
             return true;
         }
         return false;
     }
+    
+    public boolean isBonusAvailable() { return this.card.hasBeenClaimed(); }
     
     public String getBonusCardName() { return card.getDisplayName(); }
 

@@ -43,7 +43,6 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
     private final GameStateLoader stateLoader;
 
     private final JComboBox<String> cityTreasureSlotCombo;
-    private final JComboBox<String> treasureTradeCombo;
     private final JButton saveGameButton;
     private final JLabel statusFeedbackLabel;
     private final PlayerInventoryPanel inventoryPanel;
@@ -75,13 +74,8 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
         JButton moveKhanButton = new JButton("Move Khan");
         JButton openUpgradesButton = new JButton("Upgrades Area (Buy / Free Row)");
         JButton openCounselorButton = new JButton("See Counselors (Open & Secret)");
-
-        this.treasureTradeCombo = new JComboBox<>(new String[] {
-            "FUR + SILK (Counselor)",
-            "FUR + IRON + ANIMAL (Karakorum Default)",
-            "IRON + SILK + SPICE (Karakorum Alt)"
-        });
         JButton executeTradeButton = new JButton("Execute Trade at Post");
+        JButton openBonusCards = new JButton("See Bonus Cards");
 
         actionsPanel.add(harvestButton);
         actionsPanel.add(this.cityTreasureSlotCombo);
@@ -90,8 +84,8 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
         actionsPanel.add(moveKhanButton);
         actionsPanel.add(openUpgradesButton);
         actionsPanel.add(openCounselorButton);
-        actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
+        actionsPanel.add(openBonusCards);
         add(actionsPanel);
 
         add(Box.createVerticalStrut(4));
@@ -124,6 +118,7 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
             openUpgradesButton,
             openCounselorButton,
             executeTradeButton,
+            openBonusCards,
             endTurnButton
         );
 
@@ -221,6 +216,7 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
         JButton openUpgradesButton,
         JButton openCounselorButton,
         JButton executeTradeButton,
+        JButton openBonusCards,
         JButton endTurnButton
     ) {
         harvestButton.addActionListener(new ActionListener() {
@@ -307,6 +303,14 @@ public class ActionSidePanel extends JPanel implements ObserverIF {
                 }
                 updateSaveButtonState();
             }
+        });
+        
+        openBonusCards.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		BonusCardFrame bonuses = new BonusCardFrame();
+        		bonuses.setVisible(true);
+        	}
         });
 
         endTurnButton.addActionListener(new ActionListener() {

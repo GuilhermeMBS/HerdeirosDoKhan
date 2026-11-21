@@ -62,7 +62,7 @@ public class BoardPanel extends JPanel implements ObserverIF {
     private final Map<Integer, Image> playerPawnSprites;
 
     private final Point firstPlayerScoreCoord = new Point(383, 685);
-    private final int gapBetweenScores = 60;
+    private final int gapBetweenScores = 70;
     private final Point bottomPlayerScoreCoord = new Point(916, 731);
     private final int scoreSize = 45;
     private final int maxScoreFirstLine = 9;
@@ -465,7 +465,7 @@ public class BoardPanel extends JPanel implements ObserverIF {
     	if (score > this.maxScoreFirstLine) {
     		base = this.bottomPlayerScoreCoord;
     		gap *= -1;
-    		score -= this.maxScoreFirstLine + 1;
+    		score -= this.maxScoreFirstLine;
     	}
     	
     	return new Point(base.x + slot * gap - this.scoreSize / 2, base.y - this.scoreSize / 2);

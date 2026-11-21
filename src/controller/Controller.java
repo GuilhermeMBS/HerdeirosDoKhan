@@ -407,6 +407,8 @@ public class Controller {
     public String getBonusCardName(String nodeId) { return data.getBonusCardOnPost(nodeId); }
     public HashMap<String, String> getBonusCardImgPath() { return data.getBonusCardImgPath(); }
     public HashMap<String, int[]> getBonusCardCoordinates() { return data.getBonusCardCoordinates(); }
+    public List<String> getCurrentPlayerBonusCards() { return data.getPlayerUnusedBonusCardNames(currentPlayer); }
+    public boolean useBonusCard(String name) { return data.useBonusCard(name, currentPlayer); }
 
     /*
      * ============================================
@@ -444,7 +446,6 @@ public class Controller {
     }
 
     public String getPlayerHeirName(int playerInd) { return data.getPlayerHeirName(playerInd); }
-    public PlayerColor getPlayerColor(int playerInd) { return data.getPlayerColor(playerInd); }
 
     public void restoreControllerTurnState(int activePlayerInd, ColumnColor column) {
         if (activePlayerInd >= 0 && activePlayerInd < getTotalPlayers()) {
