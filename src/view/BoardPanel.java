@@ -22,8 +22,8 @@ import java.util.Set;
 import javax.swing.JPanel;
 
 import controller.Controller;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 import model.PlayerColor;
 import model.TreasureType;
 
@@ -32,7 +32,7 @@ import model.TreasureType;
  * turn path highlights, constructed yurts, province tributes, active cities with
  * their plunderable treasures, and Genghis Khan.
  */
-public class BoardPanel extends JPanel implements ObservadorIF {
+public class BoardPanel extends JPanel implements ObserverIF {
 
     private static final long serialVersionUID = 1L;
     public static final int CANVAS_WIDTH = 980;
@@ -90,11 +90,11 @@ public class BoardPanel extends JPanel implements ObservadorIF {
 
         loadGameAssets();
         registerMouseClickHandler();
-        this.controller.registra(this);
+        this.controller.register(this);
     }
 
     @Override
-    public void notify(ObservadoIF o) {
+    public void notify(ObservableIF o) {
         String currentPawnNode = this.controller.getPlayerNodeId(this.controller.getCurrentPlayerIndex());
         List<String> turnPath = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
         if (this.selectedNodeId == null || !turnPath.contains(this.selectedNodeId)) {
@@ -210,7 +210,10 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             this.selectedNodeId = clickedNode;
             List<String> visitedInTurn = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
             if (!visitedInTurn.contains(clickedNode)) {
-                this.controller.createMoveAction(clickedNode);
+                // The pawn does not move yet: the node only becomes the selected destination
+                // (if it is reachable) and the move happens on "Confirm Move".
+                // Clicking an unreachable node does nothing.
+                this.controller.selectMoveDestination(clickedNode);
             }
             repaint();
             return;
@@ -299,6 +302,8 @@ public class BoardPanel extends JPanel implements ObservadorIF {
             }
         }
 
+        drawPendingMoveDestination(g2d, scaleX, scaleY);
+
         if (this.selectedProvinceId != null) {
             Point pt = BoardGeometry.getProvinceCoordinates(this.selectedProvinceId);
             if (pt != null) {
@@ -310,6 +315,27 @@ public class BoardPanel extends JPanel implements ObservadorIF {
                 g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
             }
         }
+    }
+
+    /**
+     * Draws a thick orange ring on the destination selected by the player,
+     * which is waiting for the "Confirm Move" button.
+     */
+    private void drawPendingMoveDestination(Graphics2D g2d, double scaleX, double scaleY) {
+        String pendingNode = this.controller.getPendingMoveNodeId();
+        if (pendingNode == null) {
+            return;
+        }
+        Point pt = BoardGeometry.getNodeCoordinates(pendingNode);
+        if (pt == null) {
+            return;
+        }
+        int sx = (int) Math.round(pt.x * scaleX);
+        int sy = (int) Math.round(pt.y * scaleY);
+        int r = 20;
+        g2d.setColor(new Color(255, 140, 0, 240));
+        g2d.setStroke(new BasicStroke(4.5f));
+        g2d.drawOval(sx - r, sy - r, r * 2, r * 2);
     }
 
     private void drawProvinceTributes(Graphics2D g2d, double scaleX, double scaleY) {

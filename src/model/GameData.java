@@ -16,7 +16,7 @@ import java.util.Set;
  * Also acts as the observed subject in the Observer pattern, notifying
  * registered views whenever the match state changes.
  */
-public class GameData implements ObservadoIF {
+public class GameData implements ObservableIF {
 
     private static boolean altKarakorum = false;
     private Player[] players = null;
@@ -28,7 +28,7 @@ public class GameData implements ObservadoIF {
     private final List<String> activeSackCities = new ArrayList<>();
     private final UpgradeMarket upgradeMarket = new UpgradeMarket();
 
-    private final List<ObservadorIF> observers = new ArrayList<>();
+    private final List<ObserverIF> observers = new ArrayList<>();
     private List<PrivateCounselor> offered = new ArrayList<>();
 
     private static GameData data = null;
@@ -53,15 +53,23 @@ public class GameData implements ObservadoIF {
     }
 
     @Override
-    public void add(ObservadorIF o) {
+    public void add(ObserverIF o) {
         if (o != null && !observers.contains(o)) {
             observers.add(o);
         }
     }
 
     @Override
-    public void remove(ObservadorIF o) {
+    public void remove(ObserverIF o) {
         observers.remove(o);
+    }
+
+    /**
+     * Removes every observer. Used when a new match starts, so the screens of the
+     * previous match (already closed) stop being notified.
+     */
+    public void removeAllObservers() {
+        observers.clear();
     }
 
     @Override
@@ -79,8 +87,8 @@ public class GameData implements ObservadoIF {
     }
 
     private void notifyObservers() {
-        List<ObservadorIF> snapshot = new ArrayList<>(observers);
-        ListIterator<ObservadorIF> li = snapshot.listIterator();
+        List<ObserverIF> snapshot = new ArrayList<>(observers);
+        ListIterator<ObserverIF> li = snapshot.listIterator();
         while (li.hasNext()) {
             li.next().notify(this);
         }

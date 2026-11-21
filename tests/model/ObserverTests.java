@@ -18,12 +18,12 @@ import org.junit.Test;
 public class ObserverTests {
 
 	/** Fake screen that counts the notifications and reads the state back. */
-	private static class FakeScreen implements ObservadorIF {
+	private static class FakeScreen implements ObserverIF {
 		int notifications = 0;
 		int movementsLeft = -1;
 
 		@Override
-		public void notify(ObservadoIF o) {
+		public void notify(ObservableIF o) {
 			notifications++;
 			movementsLeft = o.get(ObserverEnum.MOVEMENTS_LEFT);
 		}

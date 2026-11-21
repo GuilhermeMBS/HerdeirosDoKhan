@@ -6,11 +6,11 @@ package model;
  *
  * @author Vinicius
  */
-public interface ObservadorIF {
+public interface ObserverIF {
 
     /**
      * Called by the observed object after its state changed.
-     * @param o the observed object, used to read the new state with {@link ObservadoIF#get(ObserverEnum)}
+     * @param o the observed object, used to read the new state with {@link ObservableIF#get(ObserverEnum)}
      */
-    void notify(ObservadoIF o);
+    void notify(ObservableIF o);
 }

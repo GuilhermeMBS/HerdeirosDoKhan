@@ -7,9 +7,10 @@ import controller.Controller;
 import model.ColumnColor;
 
 /**
- * Handles the clicks on the player board: a click on a free column starts
- * the turn with it. A click on an occupied column, outside the columns or
- * after a column was already chosen in this turn does nothing.
+ * Handles the clicks on the player board: a click on a free column only SELECTS it
+ * (the turn starts when the player presses "Confirm Column"). A click on an occupied
+ * column, outside the columns or after a column was already confirmed does nothing.
+ * Clicking another free column changes the selection.
  *
  * @author Vinicius
  */
@@ -32,9 +33,8 @@ class ColumnClickListener extends MouseAdapter {
         if (column == null) {
             return;
         }
-        // Pawn 0 for now; choosing Altani's 2nd pawn will be done on the map.
-        // If the column can be chosen, the Model notifies the panel (Observer),
-        // which redraws itself; otherwise nothing happens.
-        controller.startTurn(column, 0);
+        // If the column can be selected, the observers are notified and the panel
+        // redraws itself showing the selection; otherwise nothing happens.
+        controller.selectColumn(column);
     }
 }

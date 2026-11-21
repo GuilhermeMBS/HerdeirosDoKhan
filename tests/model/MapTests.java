@@ -58,8 +58,8 @@ public class MapTests {
 	public void testAllCityConquered() {		
 		assertFalse(map.allCityConquered());
 		
-		for (City cidades : cityArray) {
-			conquerCity(cidades, p);
+		for (City city : cityArray) {
+			conquerCity(city, p);
 		}
 		
 		assertTrue(map.allCityConquered());

@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.Map;
 
 import controller.Controller;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 import model.TreasureType;
 import model.TributePosition;
 import model.TributeType;
 
-class PlayerInventoryPanel extends JPanel implements ObservadorIF {
+class PlayerInventoryPanel extends JPanel implements ObserverIF {
 	private static final long serialVersionUID = 1L;
 	
 	private static final int COLUMNS = 3;
@@ -309,7 +309,7 @@ class PlayerInventoryPanel extends JPanel implements ObservadorIF {
 	 */
 	
 	@Override
-	public void notify(ObservadoIF o) {
+	public void notify(ObservableIF o) {
 		this.repaint();
 	}
 }

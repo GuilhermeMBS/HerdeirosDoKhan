@@ -25,8 +25,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import controller.Controller;
 import loader.GameStateLoader;
-import model.ObservadoIF;
-import model.ObservadorIF;
+import model.ObservableIF;
+import model.ObserverIF;
 import model.PlayerColor;
 
 /**
@@ -34,7 +34,7 @@ import model.PlayerColor;
  * enforcing turn-boundary save button rules via JFileChooser, and providing access
  * to board actions, counselors, and the Upgrades Area.
  */
-public class ActionSidePanel extends JPanel implements ObservadorIF {
+public class ActionSidePanel extends JPanel implements ObserverIF {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +49,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     private final PlayerInventoryPanel inventoryPanel;
     private PrivateCounselorSelectorFrame selectorFrame;
     private UpgradeMarketFrame upgradeMarketFrame;
+    private WinnerFrame winnerFrame;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
@@ -100,11 +101,12 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
         add(Box.createVerticalStrut(4));
 
-        JPanel systemPanel = new JPanel(new GridLayout(2, 1, 3, 3));
+        JPanel systemPanel = new JPanel(new GridLayout(3, 1, 3, 3));
         systemPanel.setBorder(BorderFactory.createTitledBorder("Turn & Match State"));
 
         JButton endTurnButton = new JButton("Next Player Turn");
         this.saveGameButton = new JButton("Save Match (.txt)");
+        systemPanel.add(new ConfirmMoveButton());
         systemPanel.add(endTurnButton);
         systemPanel.add(this.saveGameButton);
         add(systemPanel);
@@ -126,7 +128,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         );
 
         updateSaveButtonState();
-        this.controller.registra(this);
+        this.controller.register(this);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -137,7 +139,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     }
 
     @Override
-    public void notify(ObservadoIF o) {
+    public void notify(ObservableIF o) {
         this.inventoryPanel.repaint();
         updateSaveButtonState();
         checkPrivateCounselorSelection();
@@ -192,6 +194,15 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         this.statusFeedbackLabel.setText(
             saved ? "Match saved to " + targetFile.getName() : "Failed to save match file."
         );
+    }
+
+    /** Opens the end of match screen (only once). */
+    private void showWinnerScreen() {
+        if (this.winnerFrame != null) {
+            return;
+        }
+        this.winnerFrame = new WinnerFrame();
+        this.winnerFrame.setVisible(true);
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -306,7 +317,8 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 	else statusFeedbackLabel.setText("You must move Khan to end the turn");
                 }
                 else if (controller.getGameHasEnded()) {
-                    statusFeedbackLabel.setText("MATCH ENDED! Check Scoreboard above.");
+                    statusFeedbackLabel.setText("MATCH ENDED!");
+                    showWinnerScreen();
                 } else {
                     statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentHeirName());
                 }
