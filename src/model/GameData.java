@@ -17,7 +17,7 @@ import java.util.Set;
  * registered views whenever the match state changes.
  */
 public class GameData implements ObservadoIF {
-	
+
     private static boolean altKarakorum = false;
     private Player[] players = null;
     private static ArrayList<OpenCounselor> openCounselorCards = null;
@@ -26,17 +26,11 @@ public class GameData implements ObservadoIF {
 
     private final List<String> remainingCityDeck = new ArrayList<>();
     private final List<String> activeSackCities = new ArrayList<>();
+    private final UpgradeMarket upgradeMarket = new UpgradeMarket();
 
     private final List<ObservadorIF> observers = new ArrayList<>();
-    
     private List<PrivateCounselor> offered = new ArrayList<>();
 
-    /*
-     * ============================================
-     * ================ Singleton ================
-     * ============================================
-     */
-    
     private static GameData data = null;
 
     private GameData(boolean alt) {
@@ -44,11 +38,6 @@ public class GameData implements ObservadoIF {
         Map.resetMap(altKarakorum);
     }
 
-    /**
-     * 
-     * @param alt
-     * @return
-     */
     public static GameData createData(boolean alt) {
         if (data == null) {
             data = new GameData(alt);
@@ -56,22 +45,12 @@ public class GameData implements ObservadoIF {
         return data;
     }
 
-    /**
-     * 
-     * @return
-     */
     public static GameData getData() {
         if (data == null) {
             data = new GameData(false);
         }
         return data;
     }
-    
-    /*
-     * ============================================
-     * ============= Observed methods =============
-     * ============================================
-     */
 
     @Override
     public void add(ObservadorIF o) {
@@ -99,31 +78,26 @@ public class GameData implements ObservadoIF {
         }
     }
 
-    private void atualiza() {
+    private void notifyObservers() {
         List<ObservadorIF> snapshot = new ArrayList<>(observers);
         ListIterator<ObservadorIF> li = snapshot.listIterator();
         while (li.hasNext()) {
             li.next().notify(this);
         }
     }
-    
-    /*
-     * ============================================
-     * ================ Map method ================
-     * ============================================
-     */
-    
-    /*
-     * ============= Auxiliary methods =============
-     */
+
+    public void notifyStateRestored() {
+        notifyObservers();
+    }
+
     private Map getMap() {
         return Map.getMap(altKarakorum);
     }
-    
+
     private Node nodeById(String id) {
         return getMap().getNodeById(id);
     }
-    
+
     private Province provinceById(String id) {
         if (id == null) {
             return null;
@@ -134,40 +108,63 @@ public class GameData implements ObservadoIF {
             return null;
         }
     }
-    
+
+    private int findCityIndexFlexible(String rawName) {
+        if (rawName == null) {
+            return -1;
+        }
+        int exact = getMap().getCityInd(rawName);
+        if (exact >= 0) {
+            return exact;
+        }
+        String asciiTarget = toAsciiName(rawName);
+        for (int i = 0; i < getMap().getAmountCity(); i++) {
+            City c = getMap().getCity(i);
+            if (c != null && toAsciiName(c.getName()).equalsIgnoreCase(asciiTarget)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static String toAsciiName(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text
+            .replace("\u00E3", "a")
+            .replace("\u00E1", "a")
+            .replace("\u00E2", "a")
+            .replace("\u00E9", "e")
+            .replace("\u00EA", "e")
+            .replace("\u00ED", "i")
+            .replace("\u00F3", "o")
+            .replace("\u00F4", "o")
+            .replace("\u00FA", "u")
+            .replace("\u00E7", "c")
+            .replace("\u00C3", "A")
+            .replace("\u00C1", "A")
+            .replace("\u00C9", "E")
+            .replace("\u00CD", "I")
+            .replace("\u00D3", "O")
+            .replace("\u00DA", "U")
+            .replace("\u00C7", "C");
+    }
+
     /*
-     * =============== Node methods ===============
+     * =============== Node & Yurt methods ===============
      */
-    
-    /**
-     * 
-     * @return
-     */
+
     public List<String> getAllNodeIds() { return getMap().getAllNodeIds(); }
-    
-    /**
-     * 
-     * @return
-     */
     public HashMap<String, int[]> getNodeCoordinates() { return getMap().getNodeCoordinates(); }
-    
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+
     public String getPlayerNodeId(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return "CENTRAL";
         }
         return getMap().getNodeId(players[playerInd].getCurrentNode());
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @param nodeId
-     */
+
     public void setPlayerNodeId(int playerInd, String nodeId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return;
@@ -180,15 +177,46 @@ public class GameData implements ObservadoIF {
             }
             target.enterNode();
             players[playerInd].moveTo(target);
-            atualiza();
+            notifyObservers();
         }
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+
+    public List<Integer> getNodeYurtOwnerIndices(String nodeId) {
+        List<Integer> owners = new ArrayList<>();
+        Node node = nodeById(nodeId);
+        if (node == null || players == null) {
+            return owners;
+        }
+        if (node instanceof CommonNode) {
+            for (Player owner : ((CommonNode) node).getYurtOwners()) {
+                for (int i = 0; i < players.length; i++) {
+                    if (players[i] == owner) {
+                        owners.add(i);
+                        break;
+                    }
+                }
+            }
+        } else if (node instanceof CentralNode) {
+            for (int i = 0; i < players.length; i++) {
+                if (players[i] != null && node.hasYurtOf(players[i])) {
+                    owners.add(i);
+                    break;
+                }
+            }
+        }
+        return owners;
+    }
+
+    public void restoreNodeYurt(String nodeId, int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        Node node = nodeById(nodeId);
+        if (node != null) {
+            node.buildYurt(players[playerInd]);
+        }
+    }
+
     public List<String> getTurnPathNodeIds(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return Collections.emptyList();
@@ -203,11 +231,6 @@ public class GameData implements ObservadoIF {
         return pathIds;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeIds
-     */
     public void setTurnPathNodeIds(int playerInd, List<String> nodeIds) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return;
@@ -222,14 +245,9 @@ public class GameData implements ObservadoIF {
             }
         }
         players[playerInd].setTurnPath(nodes);
-        atualiza();
+        notifyObservers();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
     public List<String> getReachableNodeIds(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return Collections.emptyList();
@@ -244,21 +262,13 @@ public class GameData implements ObservadoIF {
         }
         return reachable;
     }
-    
+
     /*
      * ============= Province methods =============
      */
-    
-    /**
-     * 
-     * @return
-     */
+
     public int getAmountProvinces() { return getMap().getAmountProvinces(); }
-    
-    /**
-     * 
-     * @return
-     */
+
     public List<String> getAllProvinceIds() {
         List<String> ids = new ArrayList<>();
         for (ProvinceId id : ProvinceId.values()) {
@@ -266,50 +276,28 @@ public class GameData implements ObservadoIF {
         }
         return ids;
     }
-    
-    /**
-     * 
-     * @return
-     */
+
     public HashMap<String, int[]> getProvinceCoordinates() { return getMap().getProvinceCoordinates(); }
-    
-    /**
-     * 
-     * @param provinceId
-     * @return
-     */
+
     public int getProvinceResourceCount(String provinceId) {
         Province p = provinceById(provinceId);
         return p != null ? p.resourceCount : 0;
     }
-    
-    /**
-     * 
-     * @param provinceId
-     * @param qty
-     */
+
     public void setProvinceResourceCount(String provinceId, int qty) {
         Province p = provinceById(provinceId);
         if (p != null) {
             p.resourceCount = Math.max(0, Math.min(3, qty));
-            atualiza();
+            notifyObservers();
         }
     }
-    
+
     /*
      * =============== Khan methods ===============
      */
-    
-    /**
-     * 
-     * @return
-     */
+
     public boolean isKhanAtUpgradeArea() { return getMap().getKhan().isAtUpgradesArea(); }
 
-    /**
-     * 
-     * @return
-     */
     public List<String> getKhanProvincesIds() {
         List<String> ret = new ArrayList<>();
         ret.add(ProvinceId.RUSSIA_YURT1.toString());
@@ -318,11 +306,7 @@ public class GameData implements ObservadoIF {
         ret.add(ProvinceId.PERSIA_COIN1.toString());
         return ret;
     }
-    
-    /**
-     * 
-     * @return
-     */
+
     public String getKhanProvinceId() {
         Province current = getMap().getKhan().currentProvince;
         if (current == null) {
@@ -336,49 +320,22 @@ public class GameData implements ObservadoIF {
         return null;
     }
 
-    /**
-     * 
-     * @param atUpgrades
-     * @param provinceId
-     */
     public void restoreKhanState(boolean atUpgrades, String provinceId) {
         Province target = atUpgrades ? null : provinceById(provinceId);
         getMap().getKhan().restoreLocation(atUpgrades, target);
-        atualiza();
+        notifyObservers();
     }
-    
-    /**
-     * 
-     * @return
-     */
+
     public HashMap<String, int[]> getKhanCoordinates() { return getMap().getKhanCoordinates(); }
-    
+
     /*
      * =============== City methods ===============
      */
-    
-    /**
-     * 
-     * @return
-     */
+
     public boolean areAllCityConquered() { return getMap().allCityConquered(); }
-    
-    /**
-     * 
-     * @return
-     */
     public int getAmountCity() { return getMap().getAmountCity(); }
-    
-    /**
-     * 
-     * @return
-     */
     public HashMap<String, int[]> getCitiesCoordinates() { return getMap().getCitiesCoordinates(); }
 
-    /**
-     * 
-     * @return
-     */
     public List<String> getCityNames() {
         HashMap<String, int[]> map = this.getCitiesCoordinates();
         List<String> ret = new ArrayList<>();
@@ -388,19 +345,14 @@ public class GameData implements ObservadoIF {
         return ret;
     }
 
-    /**
-     * 
-     * @return
-     */
     public List<String> getCitiesToSack() { return Collections.unmodifiableList(this.activeSackCities); }
 
-    /**
-     * 
-     * @param cityName
-     * @return
-     */
+    public List<String> getRemainingCityDeck() {
+        return Collections.unmodifiableList(this.remainingCityDeck);
+    }
+
     public List<String> getCityTreasures(String cityName) {
-        int cityInd = getMap().getCityInd(cityName);
+        int cityInd = findCityIndexFlexible(cityName);
         if (cityInd < 0) {
             return Collections.emptyList();
         }
@@ -415,17 +367,58 @@ public class GameData implements ObservadoIF {
         return list;
     }
 
-    /**
-     * 
-     * @param nodeId
-     * @return
-     */
     public String getCityNameForNode(String nodeId) {
         Node n = nodeById(nodeId);
         if (n instanceof SingleNode) {
             return ((SingleNode) n).getCityName();
         }
         return null;
+    }
+
+    public void restoreCitiesState(
+        List<String> activeNames,
+        List<String> deckNames,
+        java.util.Map<String, List<String>> activeCityTreasures
+    ) {
+        this.activeSackCities.clear();
+        this.remainingCityDeck.clear();
+
+        if (activeNames != null) {
+            for (String rawName : activeNames) {
+                int ind = findCityIndexFlexible(rawName);
+                if (ind >= 0) {
+                    City city = getMap().getCity(ind);
+                    if (city != null) {
+                        city.activateSacking();
+                        List<String> savedTreasures = activeCityTreasures != null
+                            ? activeCityTreasures.get(toAsciiName(city.getName()))
+                            : null;
+                        if (savedTreasures != null) {
+                            city.getResourcesInternal().clear();
+                            for (String tName : savedTreasures) {
+                                try {
+                                    city.getResourcesInternal().add(TreasureType.valueOf(tName.trim().toUpperCase()));
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                        }
+                        this.activeSackCities.add(city.getName());
+                    }
+                }
+            }
+        }
+
+        if (deckNames != null) {
+            for (String rawName : deckNames) {
+                int ind = findCityIndexFlexible(rawName);
+                if (ind >= 0) {
+                    City city = getMap().getCity(ind);
+                    if (city != null) {
+                        this.remainingCityDeck.add(city.getName());
+                    }
+                }
+            }
+        }
     }
 
     private void revealNextCityIfAvailable() {
@@ -440,57 +433,157 @@ public class GameData implements ObservadoIF {
             }
         }
     }
-    
-    /*
-     * =============== Map methods ===============
-     */
-    
-    /**
-     * 
-     * @return
-     */
+
     public boolean isAlternativeKarakorum() { return altKarakorum; }
 
-    /**
-     * 
-     * @param nodeId
-     * @return
-     */
     public PlayerColor getyurtColor(String nodeId) {
-    	Node node = nodeById(nodeId);
-    	for (Player p : players) {
-    		if (node.hasYurtOf(p)) return p.getColor();
-    	}
-    	return null;
+        Node node = nodeById(nodeId);
+        if (node == null || players == null) {
+            return null;
+        }
+        for (Player p : players) {
+            if (p != null && node.hasYurtOf(p)) {
+                return p.getColor();
+            }
+        }
+        return null;
     }
-    
+
+    /*
+     * ============================================
+     * ============== Upgrade methods =============
+     * ============================================
+     */
+
+    public List<String> getAvailableUpgradeCodes() {
+        return this.upgradeMarket.getAvailableUpgradeCodes();
+    }
+
+    public int getUpgradeDeckSize() {
+        return this.upgradeMarket.getDeckSize();
+    }
+
+    public List<String> getPlayerColumnUpgrades(int playerInd, ColumnColor column) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || column == null) {
+            return Collections.emptyList();
+        }
+        return players[playerInd].getBoard().getColumnUpgradeCodes(column);
+    }
+
+    public boolean hasFreeUpgradePending(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        return players[playerInd].hasFreeUpgradePending();
+    }
+
+    public int getFreeUpgradesPendingCount(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getBoard().getFreeUpgradesPendingCount();
+    }
+
+    public int getPlayerRewardedRows(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getBoard().getRewardedRows();
+    }
+
+    public boolean buyUpgradeFromMarket(int playerInd, int slotIndex) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        Player p = players[playerInd];
+        Upgrade candidate = this.upgradeMarket.peekAvailable(slotIndex);
+        if (candidate == null) {
+            return false;
+        }
+        if (!p.buyUpgrade(candidate.getColor(), candidate)) {
+            return false;
+        }
+        this.upgradeMarket.takeAvailable(slotIndex);
+        checkAutoOpenCounselors(playerInd);
+        notifyObservers();
+        return true;
+    }
+
+    public boolean claimFreeUpgradeFromMarket(int playerInd, int slotIndex) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        Player p = players[playerInd];
+        if (!p.hasFreeUpgradePending()) {
+            return false;
+        }
+        Upgrade candidate = this.upgradeMarket.peekAvailable(slotIndex);
+        if (candidate == null) {
+            return false;
+        }
+        if (!p.receiveFreeUpgrade(candidate)) {
+            return false;
+        }
+        this.upgradeMarket.takeAvailable(slotIndex);
+        checkAutoOpenCounselors(playerInd);
+        notifyObservers();
+        return true;
+    }
+
+    public boolean claimFreeUpgradeFromDeck(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return false;
+        }
+        Player p = players[playerInd];
+        if (!p.hasFreeUpgradePending()) {
+            return false;
+        }
+        if (p.getBoard().getColumn(ColumnColor.WHITE).getUpgradeCount() >= Column.MAX_UPGRADES) {
+            return false;
+        }
+        Upgrade drawn = this.upgradeMarket.drawFromDeck();
+        if (drawn == null) {
+            return false;
+        }
+        if (!p.receiveFreeUpgrade(drawn)) {
+            return false;
+        }
+        checkAutoOpenCounselors(playerInd);
+        notifyObservers();
+        return true;
+    }
+
+    public void restoreAvailableUpgrades(List<String> codes) {
+        this.upgradeMarket.restoreAvailableByCodes(codes);
+    }
+
+    public void restorePlayerColumnUpgrades(int playerInd, ColumnColor column, List<String> codes) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || column == null) {
+            return;
+        }
+        players[playerInd].getBoard().restoreColumnUpgrades(column, codes);
+    }
+
+    public void restorePlayerRewardedRows(int playerInd, int rewardedRows) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        players[playerInd].getBoard().setRewardedRows(rewardedRows);
+    }
+
     /*
      * ============================================
      * ============== Player methods ==============
      * ============================================
      */
 
-    /**
-     * 
-     * @param playerInd
-     */
     public void setCurrentPlayer(int playerInd) {
         currentPlayer = playerInd;
-        atualiza();
+        notifyObservers();
     }
-    
-    /**
-     * 
-     * @return
-     */
+
     public int getPlayerCount() { return players == null ? 0 : players.length; }
-    
-    /**
-     * Computes the complete score breakdown for a given player:
-     * base votes (trades + open counselors) + first-trade bonuses + conquered cities + private counselor points.
-     * @param playerInd
-     * @return
-     */
+
     public int calculatePlayerTotalScore(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;
@@ -500,24 +593,14 @@ public class GameData implements ObservadoIF {
         int privatePts = p.getSecretCard() != null ? p.getSecretCard().gainPoints() : 0;
         return p.getVotes() + p.getBonuses() + p.getConqueredCities() + privatePts;
     }
-    
-    /**
-     * 
-     * @param ind
-     * @return
-     */
+
     public PlayerColor getPlayerColor(int ind) {
         if (players == null || ind < 0 || ind >= players.length || players[ind] == null) {
             return PlayerColor.BLUE;
         }
         return players[ind].getColor();
     }
-    
-    /**
-     * 
-     * @param ind
-     * @return
-     */
+
     public String getPlayerHeirName(int ind) {
         if (players == null || ind < 0 || ind >= players.length || players[ind] == null) {
             return Heir.TOLUI.getDisplayName();
@@ -525,11 +608,6 @@ public class GameData implements ObservadoIF {
         return players[ind].getHeir().getDisplayName();
     }
 
-    /**
-     * 
-     * @param ind
-     * @return
-     */
     public String getPlayerName(int ind) {
         if (players == null || ind < 0 || ind >= players.length || players[ind] == null) {
             return "Tolui";
@@ -537,11 +615,6 @@ public class GameData implements ObservadoIF {
         return players[ind].getName();
     }
 
-    /**
-     * 
-     * @param name
-     * @return
-     */
     public int getPlayerInd(String name) {
         if (players == null || name == null) {
             return -1;
@@ -553,40 +626,52 @@ public class GameData implements ObservadoIF {
         }
         return -1;
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @param type
-     * @return
-     */
+
     public int[] getPlayerTributeAmount(int playerInd, TributeType type) {
-    	if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) return null;
-    	
-    	int[] ret = new int[2];
-    	ret[TributePosition.TRIBUTE.ordinal()] = players[playerInd].getTributeAmount(type);
-    	ret[TributePosition.VIRTUAL.ordinal()] = players[playerInd].getVirtualTributeAmount(type);
-    	return ret;
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return null;
+        }
+        int[] ret = new int[2];
+        ret[TributePosition.TRIBUTE.ordinal()] = players[playerInd].getTributeAmount(type);
+        ret[TributePosition.VIRTUAL.ordinal()] = players[playerInd].getVirtualTributeAmount(type);
+        return ret;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param type
-     * @return
-     */
+    public int getPlayerTributeRaw(int playerInd, TributeType type) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return 0;
+        }
+        return players[playerInd].getTributeAmount(type);
+    }
+
+    public void setPlayerTributeRaw(int playerInd, TributeType type, int qty) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return;
+        }
+        players[playerInd].setTributeAmount(type, qty);
+    }
+
     public int getPlayerTreasure(int playerInd, TreasureType type) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return 0;
+        }
+        return players[playerInd].getEffectiveTreasureAmount(type);
+    }
+
+    public int getPlayerTreasureRaw(int playerInd, TreasureType type) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
             return 0;
         }
         return players[playerInd].getTreasureAmount(type);
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+    public void setPlayerTreasureRaw(int playerInd, TreasureType type, int qty) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null || type == null) {
+            return;
+        }
+        players[playerInd].setTreasureAmount(type, qty);
+    }
+
     public int getPlayerYurtsLeft(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;
@@ -594,25 +679,62 @@ public class GameData implements ObservadoIF {
         return players[playerInd].getYurtsLeft();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+    public int getPlayerAmountYurts(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getAmountYurts();
+    }
+
+    public void setPlayerYurtsState(int playerInd, int left, int placed) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        players[playerInd].setYurtsState(left, placed);
+    }
+
     public int getPlayerVotes(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;
         }
         return players[playerInd].getVotes();
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @param column
-     * @param pawnIndex
-     * @return
-     */
+
+    public void setPlayerVotes(int playerInd, int votes) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        players[playerInd].setVotes(votes);
+    }
+
+    public int getPlayerConqueredCities(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getConqueredCities();
+    }
+
+    public void setPlayerConqueredCities(int playerInd, int count) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        players[playerInd].setConqueredCities(count);
+    }
+
+    public int getPlayerBonuses(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        return players[playerInd].getBonuses();
+    }
+
+    public void setPlayerBonuses(int playerInd, int count) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        players[playerInd].setBonuses(count);
+    }
+
     public boolean startTurn(int playerInd, ColumnColor column, int pawnIndex) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -620,14 +742,10 @@ public class GameData implements ObservadoIF {
         if (!players[playerInd].startTurn(column, pawnIndex)) {
             return false;
         }
-        atualiza();
+        notifyObservers();
         return true;
     }
 
-    /**
-     * 
-     * @param playerInd
-     */
     public void endTurn(int playerInd) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             checkAutoOpenCounselors(playerInd);
@@ -636,12 +754,6 @@ public class GameData implements ObservadoIF {
         }
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param column
-     * @return
-     */
     public boolean isColumnFree(int playerInd, ColumnColor column) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return true;
@@ -649,11 +761,6 @@ public class GameData implements ObservadoIF {
         return players[playerInd].canActivate(column);
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
     public int getMovementsLeft(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;
@@ -661,23 +768,13 @@ public class GameData implements ObservadoIF {
         return players[playerInd].getMovementsLeft();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param steps
-     */
     public void setMovementsLeft(int playerInd, int steps) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             players[playerInd].setMovementsLeft(steps);
-            atualiza();
+            notifyObservers();
         }
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
     public int getHandsLeft(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return 0;
@@ -685,23 +782,13 @@ public class GameData implements ObservadoIF {
         return players[playerInd].getHandsLeft();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param hands
-     */
     public void setHandsLeft(int playerInd, int hands) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             players[playerInd].setHandsLeft(hands);
-            atualiza();
+            notifyObservers();
         }
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
     public boolean isKhanPending(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -709,65 +796,60 @@ public class GameData implements ObservadoIF {
         return players[playerInd].mustUseKhan();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param pending
-     */
     public void setKhanPending(int playerInd, boolean pending) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             players[playerInd].setKhanPending(pending);
-            atualiza();
+            notifyObservers();
         }
     }
 
-    /**
-     * Marks a column of a player's board as occupied or free.
-     * Used by the save loader to restore which columns were already used.
-     *
-     * @param playerInd index of the player
-     * @param column the column to change
-     * @param occupied true if the column was in use when the match was saved
-     */
     public void setColumnOccupied(int playerInd, ColumnColor column, boolean occupied) {
         if (players != null && playerInd >= 0 && playerInd < players.length && players[playerInd] != null) {
             players[playerInd].setColumnOccupied(column, occupied);
-            atualiza();
         }
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+
     public boolean needsPrivateCounselorChoice(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
         return players[playerInd].getSecretCard() == null;
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @param name
-     * @return
-     */
+
     public boolean choosePrivateCounselor(int playerInd, String name) {
         if (!needsPrivateCounselorChoice(playerInd) || name == null) {
             return false;
         }
         Player p = players[playerInd];
         for (PrivateCounselor card : offered) {
-            if (name.equals(card.getName())) {
+            if (name.equalsIgnoreCase(card.getName())) {
                 p.setSecretCard(card);
+                offered.clear();
                 evaluatePrivateCounselorProgress(p);
-                atualiza();
+                notifyObservers();
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Restores a player's Secret Counselor card directly when loading a saved match.
+     */
+    public void restorePrivateCounselor(int playerInd, String cardName) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return;
+        }
+        offered.clear();
+        if (cardName == null || cardName.trim().isEmpty() || "NONE".equalsIgnoreCase(cardName.trim())) {
+            players[playerInd].setSecretCard(null);
+            return;
+        }
+        PrivateCounselor card = PrivateCounselor.takeCardByName(cardName);
+        if (card != null) {
+            players[playerInd].setSecretCard(card);
+            evaluatePrivateCounselorProgress(players[playerInd]);
+        }
     }
 
     /*
@@ -776,38 +858,20 @@ public class GameData implements ObservadoIF {
      * ============================================
      */
 
-    /**
-     * 
-     * @return
-     */
     public static boolean createOpenCounselors() {
         if (openCounselorCards == null) {
             openCounselorCards = OpenCounselor.giveCardsInGame();
         }
         return true;
     }
-    
-    /**
-     * 
-     * @return
-     */
+
     public List<String> getOpenCounselorsId() { return OpenCounselor.getAllOpenCounselorsIds(); }
-    
-    /**
-     * 
-     * @return
-     */
+
     public List<String> getGameOpenCounselorIds() {
         createOpenCounselors();
         return OpenCounselor.getOpenCounselorsIdGame();
     }
-    
-    /**
-     * 
-     * @param ind
-     * @param playerInd
-     * @return
-     */
+
     public boolean setOpenCounselorDone(int ind, int playerInd) {
         createOpenCounselors();
         if (openCounselorCards == null || ind < 0 || ind >= openCounselorCards.size()) {
@@ -823,17 +887,12 @@ public class GameData implements ObservadoIF {
         }
         if (card.playerHasCompleted(p)) {
             p.addVotes(1);
-            atualiza();
+            notifyObservers();
             return true;
         }
         return false;
     }
-    
-    /**
-     * 
-     * @param cardInd
-     * @return
-     */
+
     public String getOpenCounselorOwnerName(int cardInd) {
         createOpenCounselors();
         if (openCounselorCards == null || cardInd < 0 || cardInd >= openCounselorCards.size()) {
@@ -900,27 +959,24 @@ public class GameData implements ObservadoIF {
                 return false;
         }
     }
-    
+
     /*
      * =============================================
      * ========= Private Counselor methods =========
      * =============================================
      */
-    
+
     public List<String> getPrivateCounselorCandidates() {
-    	if (offered.isEmpty()) offered  = PrivateCounselor.giveTwoCards();
-    	List<String> names = new ArrayList<>();
-    	for (PrivateCounselor p : offered) {
-    		names.add(p.getName());
-    	}
-    	return names;
+        if (offered.isEmpty()) {
+            offered = PrivateCounselor.giveTwoCards();
+        }
+        List<String> names = new ArrayList<>();
+        for (PrivateCounselor p : offered) {
+            names.add(p.getName());
+        }
+        return names;
     }
-    
-    /**
-     * 
-     * @param playerInd
-     * @return
-     */
+
     public String getPlayerPrivateCounselorName(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return "None";
@@ -1076,35 +1132,12 @@ public class GameData implements ObservadoIF {
         secret.updateProgress(progress);
     }
 
-//    public String getPlayerPrivateCounselorSummary(int playerInd) {
-//        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
-//            return "";
-//        }
-//        Player p = players[playerInd];
-//        PrivateCounselor card = p.getSecretCard();
-//        if (card == null) {
-//            return "No Private Counselor";
-//        }
-//        evaluatePrivateCounselorProgress(p);
-//        int progress = computePrivateMissionMetric(p, card.getMissionType());
-//        int[] targets = card.getTierTargets();
-//        return card.getName() + " (" + card.getMissionType().name() + ") - Progress: " + progress
-//            + " [Tiers: " + targets[0] + " / " + targets[1] + " / " + targets[2] + "]"
-//            + " (+" + card.gainPoints() + " pts)";
-//    }
-
     /*
      * ============================================
      * ============ Game Start methods ============
      * ============================================
      */
-    
-    /**
-     * 
-     * @param heirNames
-     * @param alt
-     * @return
-     */
+
     public boolean setupMatch(List<String> heirNames, boolean alt) {
         altKarakorum = alt;
         Resource.resetResources();
@@ -1112,6 +1145,8 @@ public class GameData implements ObservadoIF {
         PrivateCounselor.resetDeck();
         openCounselorCards = OpenCounselor.giveCardsInGame();
         Map.resetMap(altKarakorum);
+        this.upgradeMarket.resetMarket();
+        this.offered.clear();
         players = null;
 
         if (!createArrayPlayers(heirNames.size())) {
@@ -1128,15 +1163,10 @@ public class GameData implements ObservadoIF {
         revealNextCityIfAvailable();
 
         currentPlayer = 0;
-        atualiza();
+        notifyObservers();
         return true;
     }
 
-    /**
-     * 
-     * @param qtyPlayers
-     * @return
-     */
     public boolean createArrayPlayers(int qtyPlayers) {
         if (qtyPlayers < 2 || qtyPlayers > 5) {
             return false;
@@ -1145,20 +1175,11 @@ public class GameData implements ObservadoIF {
         return true;
     }
 
-    /**
-     * 
-     * @param ind
-     * @param color
-     * @param heirName
-     * @param amountCoins
-     * @return
-     */
     public boolean assignPlayer(int ind, PlayerColor color, String heirName, int amountCoins) {
         if (players == null || ind < 0 || ind >= players.length) {
             return false;
         }
         Player p = new Player(color, Heir.fromName(heirName), getMap().getCentralNode(), amountCoins);
-//        p.setSecretCard(PrivateCounselor.drawOneCard());
         players[ind] = p;
         return true;
     }
@@ -1169,12 +1190,6 @@ public class GameData implements ObservadoIF {
      * ===========================================
      */
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeId
-     * @return
-     */
     public boolean MovePawn(int playerInd, String nodeId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -1187,12 +1202,6 @@ public class GameData implements ObservadoIF {
         return doAction();
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeId
-     * @return
-     */
     public boolean placeYurtOnNode(int playerInd, String nodeId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -1206,18 +1215,11 @@ public class GameData implements ObservadoIF {
         boolean success = doAction();
         if (success) {
             checkAutoOpenCounselors(playerInd);
-            atualiza();
+            notifyObservers();
         }
         return success;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeId
-     * @param provinceId
-     * @return
-     */
     public boolean harvestProvinceResource(int playerInd, String nodeId, String provinceId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -1248,25 +1250,17 @@ public class GameData implements ObservadoIF {
         boolean success = doAction();
         if (success) {
             checkAutoOpenCounselors(playerInd);
-            atualiza();
+            notifyObservers();
         }
         return success;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeOrCityName
-     * @param treasureInd
-     * @param qtySword
-     * @return
-     */
     public boolean attackCityForTreasure(int playerInd, String nodeOrCityName, int treasureInd, int qtySword) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
         Player p = players[playerInd];
-        int cityInd = getMap().getCityInd(nodeOrCityName);
+        int cityInd = findCityIndexFlexible(nodeOrCityName);
         Node actionNode = p.getCurrentNode();
 
         if (cityInd < 0) {
@@ -1303,38 +1297,39 @@ public class GameData implements ObservadoIF {
                 revealNextCityIfAvailable();
             }
             checkAutoOpenCounselors(playerInd);
-            atualiza();
+            notifyObservers();
         }
         return success;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param provinceId
-     * @return
-     */
     public boolean moveKhan(int playerInd, String provinceId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
         }
-        Province p = "UPGRADES".equalsIgnoreCase(provinceId) ? null : provinceById(provinceId);
-        if (!"UPGRADES".equalsIgnoreCase(provinceId) && p == null) {
+        boolean toUpgrades = "UPGRADES".equalsIgnoreCase(provinceId);
+        Province p = toUpgrades ? null : provinceById(provinceId);
+        if (!toUpgrades && p == null) {
             return false;
         }
         Node currentNode = players[playerInd].getCurrentNode() != null
             ? players[playerInd].getCurrentNode()
             : getMap().getCentralNode();
         newKhanAction(playerInd, currentNode, p);
-        return doAction();
+        boolean success = doAction();
+        if (success && toUpgrades) {
+            int emptySlots = this.upgradeMarket.refreshMarket();
+            if (emptySlots >= 2) {
+                players[playerInd].addTribute(TributeType.COIN, 1);
+            }
+            if (emptySlots >= 4) {
+                players[playerInd].addTribute(TributeType.SWORD, 1);
+            }
+            checkAutoOpenCounselors(playerInd);
+            notifyObservers();
+        }
+        return success;
     }
 
-    /**
-     * 
-     * @param playerInd
-     * @param nodeId
-     * @return
-     */
     public boolean executeTrade(int playerInd, String nodeId) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return false;
@@ -1360,7 +1355,7 @@ public class GameData implements ObservadoIF {
         boolean success = doAction();
         if (success) {
             checkAutoOpenCounselors(playerInd);
-            atualiza();
+            notifyObservers();
         }
         return success;
     }
@@ -1382,7 +1377,7 @@ public class GameData implements ObservadoIF {
         if (action == null || action.doAction() != DebugReturn.SUCCESS) {
             return false;
         }
-        atualiza();
+        notifyObservers();
         return true;
     }
 }

@@ -31,6 +31,11 @@ class PlayerBoard {
         return all;
     }
 
+    List<String> getColumnUpgradeCodes(ColumnColor color) {
+        Column col = columns.get(color);
+        return col != null ? col.getUpgradeCodes() : new ArrayList<String>();
+    }
+
     int getTotalUpgradeCount() {
         int total = 0;
         for (ColumnColor c : ColumnColor.values()) {
@@ -58,10 +63,7 @@ class PlayerBoard {
     }
 
     /**
-     * Forces a column to be occupied or free. Used only when loading a saved match.
-     *
-     * @param color the column to change
-     * @param occupied true to occupy it, false to free it
+     * Forces a column to be occupied or free. Used when loading a saved match.
      */
     void setOccupied(ColumnColor color, boolean occupied) {
         if (occupied) {
@@ -86,6 +88,30 @@ class PlayerBoard {
             return false;
         }
         return columns.get(color).addUpgrade(upgrade);
+    }
+
+    void restoreColumnUpgrades(ColumnColor color, List<String> codes) {
+        Column col = columns.get(color);
+        if (col == null) {
+            return;
+        }
+        col.clearUpgrades();
+        if (codes != null) {
+            for (String code : codes) {
+                Upgrade u = UpgradeMarket.createByCode(code);
+                if (u != null) {
+                    col.restoreUpgrade(u);
+                }
+            }
+        }
+    }
+
+    int getRewardedRows() {
+        return rewardedRows;
+    }
+
+    void setRewardedRows(int rows) {
+        this.rewardedRows = Math.max(0, Math.min(Column.MAX_UPGRADES, rows));
     }
 
     int completeRows() {
@@ -114,6 +140,10 @@ class PlayerBoard {
 
     boolean hasFreeUpgradePending() {
         return completeRows() > rewardedRows;
+    }
+
+    int getFreeUpgradesPendingCount() {
+        return Math.max(0, completeRows() - rewardedRows);
     }
 
     boolean receiveFreeUpgrade(Upgrade upgrade) {

@@ -35,8 +35,16 @@ class Column {
         return Collections.unmodifiableList(upgrades);
     }
 
+    List<String> getUpgradeCodes() {
+        List<String> codes = new ArrayList<>();
+        for (Upgrade u : upgrades) {
+            codes.add(u.getCode());
+        }
+        return codes;
+    }
+
     boolean canReceive(Upgrade upgrade) {
-        if (upgrades.size() >= MAX_UPGRADES) {
+        if (upgrade == null || upgrades.size() >= MAX_UPGRADES) {
             return false;
         }
         return isWhite() || upgrade.getColor() == color;
@@ -51,6 +59,22 @@ class Column {
         return true;
     }
 
+    /**
+     * Restores an upgrade when loading a saved match so it is immediately usable.
+     */
+    boolean restoreUpgrade(Upgrade upgrade) {
+        if (!canReceive(upgrade)) {
+            return false;
+        }
+        upgrades.add(upgrade);
+        return true;
+    }
+
+    void clearUpgrades() {
+        upgrades.clear();
+        boughtThisTurn.clear();
+    }
+
     int count(Icon icon) {
         int total = 0;
         for (Icon i : baseActions) {
@@ -60,6 +84,21 @@ class Column {
         }
         for (Upgrade u : upgrades) {
             if (u.getIcon() == icon && !boughtThisTurn.contains(u)) {
+                total += u.getAmount();
+            }
+        }
+        return total;
+    }
+
+    int countVirtualTreasure(TreasureType type) {
+        if (type == null) {
+            return 0;
+        }
+        int total = 0;
+        for (Upgrade u : upgrades) {
+            if (u.getIcon() == Icon.VIRTUAL_TREASURE
+                && u.getVirtualTreasure() == type
+                && !boughtThisTurn.contains(u)) {
                 total += u.getAmount();
             }
         }

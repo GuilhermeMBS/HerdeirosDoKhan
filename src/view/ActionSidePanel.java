@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -16,9 +17,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import controller.Controller;
 import loader.GameStateLoader;
@@ -28,7 +31,8 @@ import model.PlayerColor;
 
 /**
  * Lateral control panel integrating the Controller, observing match state changes,
- * and rendering the active player's full inventory, secret counselor status, and scoreboard.
+ * enforcing turn-boundary save button rules via JFileChooser, and providing access
+ * to board actions, counselors, and the Upgrades Area.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -40,9 +44,11 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
     private final JComboBox<String> cityTreasureSlotCombo;
     private final JComboBox<String> treasureTradeCombo;
+    private final JButton saveGameButton;
     private final JLabel statusFeedbackLabel;
     private final PlayerInventoryPanel inventoryPanel;
     private PrivateCounselorSelectorFrame selectorFrame;
+    private UpgradeMarketFrame upgradeMarketFrame;
 
     public ActionSidePanel(BoardPanel boardPanel, GameStateLoader stateLoader) {
         this.controller = Controller.getController();
@@ -53,7 +59,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(30, 8, 6, 8));
 
-        JPanel actionsPanel = new JPanel(new GridLayout(8, 1, 3, 3));
+        JPanel actionsPanel = new JPanel(new GridLayout(9, 1, 3, 3));
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Board Node & Province Actions"));
 
         JButton harvestButton = new JButton("Harvest Province Tribute");
@@ -66,6 +72,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton = new JButton("Attack City (Plunder Selected Slot)");
         JButton buildYurtButton = new JButton("Build Yurt on Visited Node");
         JButton moveKhanButton = new JButton("Move Khan");
+        JButton openUpgradesButton = new JButton("Upgrades Area (Buy / Free Row)");
         JButton openCounselorButton = new JButton("See Counselors (Open & Secret)");
 
         this.treasureTradeCombo = new JComboBox<>(new String[] {
@@ -80,6 +87,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         actionsPanel.add(attackCityButton);
         actionsPanel.add(buildYurtButton);
         actionsPanel.add(moveKhanButton);
+        actionsPanel.add(openUpgradesButton);
         actionsPanel.add(openCounselorButton);
         actionsPanel.add(this.treasureTradeCombo);
         actionsPanel.add(executeTradeButton);
@@ -96,12 +104,12 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         systemPanel.setBorder(BorderFactory.createTitledBorder("Turn & Match State"));
 
         JButton endTurnButton = new JButton("Next Player Turn");
-        JButton saveGameButton = new JButton("Save Current Match");
+        this.saveGameButton = new JButton("Save Match (.txt)");
         systemPanel.add(endTurnButton);
-        systemPanel.add(saveGameButton);
+        systemPanel.add(this.saveGameButton);
         add(systemPanel);
 
-        this.statusFeedbackLabel = new JLabel("Click a column on the sheet to move.");
+        this.statusFeedbackLabel = new JLabel("Save is available before starting your turn.");
         this.statusFeedbackLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         this.statusFeedbackLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         add(this.statusFeedbackLabel);
@@ -111,35 +119,79 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             attackCityButton,
             buildYurtButton,
             moveKhanButton,
+            openUpgradesButton,
             openCounselorButton,
             executeTradeButton,
-            endTurnButton,
-            saveGameButton
+            endTurnButton
         );
 
+        updateSaveButtonState();
         this.controller.registra(this);
-        
+
         SwingUtilities.invokeLater(new Runnable() {
-        	@Override
-        	public void run() {
-        		checkPrivateCounselorSelection();
-        	}
+            @Override
+            public void run() {
+                checkPrivateCounselorSelection();
+            }
         });
     }
 
     @Override
     public void notify(ObservadoIF o) {
         this.inventoryPanel.repaint();
+        updateSaveButtonState();
         checkPrivateCounselorSelection();
+        if (this.controller.hasCurrentPlayerFreeUpgradePending()) {
+            this.statusFeedbackLabel.setText("Row completed! Open Upgrades Area to claim a FREE White upgrade.");
+        }
         repaint();
     }
-    
+
+    private void updateSaveButtonState() {
+        this.saveGameButton.setEnabled(this.controller.canSaveMatch());
+    }
+
     private void checkPrivateCounselorSelection() {
-    	if (!this.controller.getCurrentPlayerPrivateCounselorName().equalsIgnoreCase("none")) return;
-    	if (this.selectorFrame != null && this.selectorFrame.isShowing()) return;
-    	
-    	this.selectorFrame = new PrivateCounselorSelectorFrame();
-    	this.selectorFrame.setVisible(true);
+        String currentSecret = this.controller.getCurrentPlayerPrivateCounselorName();
+        if (currentSecret != null && !currentSecret.equalsIgnoreCase("none")) {
+            return;
+        }
+        if (this.selectorFrame != null && this.selectorFrame.isShowing()) {
+            return;
+        }
+        this.selectorFrame = new PrivateCounselorSelectorFrame();
+        this.selectorFrame.setVisible(true);
+    }
+
+    private void handleSaveMatch() {
+        if (!this.controller.canSaveMatch()) {
+            updateSaveButtonState();
+            this.statusFeedbackLabel.setText("Saving is only allowed before starting your turn.");
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Match State (.txt)");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files (*.txt)", "txt"));
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        int decision = fileChooser.showSaveDialog(this);
+        if (decision != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File targetFile = fileChooser.getSelectedFile();
+        if (targetFile == null) {
+            return;
+        }
+        if (!targetFile.getName().toLowerCase().endsWith(".txt")) {
+            targetFile = new File(targetFile.getParentFile(), targetFile.getName() + ".txt");
+        }
+
+        boolean saved = this.stateLoader.saveMatchState(targetFile);
+        this.statusFeedbackLabel.setText(
+            saved ? "Match saved to " + targetFile.getName() : "Failed to save match file."
+        );
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -155,10 +207,10 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton attackCityButton,
         JButton buildYurtButton,
         JButton moveKhanButton,
+        JButton openUpgradesButton,
         JButton openCounselorButton,
         JButton executeTradeButton,
-        JButton endTurnButton,
-        JButton saveGameButton
+        JButton endTurnButton
     ) {
         harvestButton.addActionListener(new ActionListener() {
             @Override
@@ -173,6 +225,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Cannot harvest from " + targetProvince);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -186,6 +239,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Cannot plunder slot " + (slotIndex + 1) + " at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -198,6 +252,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Yurt construction rejected at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -207,6 +262,18 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 List<String> provinces = controller.getKhanProvincesIds();
                 KhanFrame khanFrame = new KhanFrame(provinces);
                 khanFrame.setVisible(true);
+            }
+        });
+
+        openUpgradesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (upgradeMarketFrame != null && upgradeMarketFrame.isShowing()) {
+                    upgradeMarketFrame.toFront();
+                    return;
+                }
+                upgradeMarketFrame = new UpgradeMarketFrame();
+                upgradeMarketFrame.setVisible(true);
             }
         });
 
@@ -227,6 +294,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Trade rejected at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -242,18 +310,14 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentHeirName());
                 }
+                updateSaveButtonState();
             }
         });
 
-        saveGameButton.addActionListener(new ActionListener() {
+        this.saveGameButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean saved = stateLoader.saveMatchState(
-                    "savegame.properties",
-                    boardPanel,
-                    controller.getCurrentHeirName()
-                );
-                statusFeedbackLabel.setText(saved ? "Match saved to savegame.properties" : "Save failed.");
+                handleSaveMatch();
             }
         });
     }
