@@ -12,7 +12,7 @@ import model.TributeType;
 
 /**
  * Coordinates match setup, turn life cycle, counselor claims, upgrades, scoring,
- * and player actions between View and Model.
+ * save availability rules, and player actions between View and Model.
  */
 public class Controller {
 
@@ -24,6 +24,7 @@ public class Controller {
 
     private boolean firstSackCity = true;
     private ColumnColor chosenColumn = null;
+    private boolean turnActionStarted = false;
 
     private int totalVotes = 0;
     private int maxVotes = 10;
@@ -59,6 +60,7 @@ public class Controller {
         this.totalVotes = 0;
         this.firstSackCity = true;
         this.chosenColumn = null;
+        this.turnActionStarted = false;
         return true;
     }
 
@@ -76,14 +78,26 @@ public class Controller {
         return data.assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
     }
 
+    /**
+     * Saving is only permitted immediately before the active player starts their turn
+     * (i.e., before choosing a column or taking any turn action).
+     */
+    public boolean canSaveMatch() {
+        return !this.ended && this.chosenColumn == null && !this.turnActionStarted;
+    }
+
     public boolean startTurn(ColumnColor column, int pawnIndex) {
         if (this.chosenColumn != null) {
             return false;
         }
+        // Set turn flags before notifying observers so the Save button disables immediately
+        this.chosenColumn = column;
+        this.turnActionStarted = true;
         if (!data.startTurn(this.currentPlayer, column, pawnIndex)) {
+            this.chosenColumn = null;
+            this.turnActionStarted = false;
             return false;
         }
-        this.chosenColumn = column;
         return true;
     }
 
@@ -99,6 +113,7 @@ public class Controller {
 
         data.endTurn(this.currentPlayer);
         this.chosenColumn = null;
+        this.turnActionStarted = false;
         nextPlayer();
 
         if (this.endRoundToFinalTurn) {
@@ -145,8 +160,21 @@ public class Controller {
     public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(this.currentPlayer, column); }
     public String getCurrentPlayerPrivateCounselorName() { return data.getPlayerPrivateCounselorName(this.currentPlayer); }
 
-    public boolean createMoveAction(String nodeId) { return data.MovePawn(this.currentPlayer, nodeId); }
-    public boolean createYurtAction(String nodeId) { return data.placeYurtOnNode(this.currentPlayer, nodeId); }
+    public boolean createMoveAction(String nodeId) {
+        boolean moved = data.MovePawn(this.currentPlayer, nodeId);
+        if (moved) {
+            this.turnActionStarted = true;
+        }
+        return moved;
+    }
+
+    public boolean createYurtAction(String nodeId) {
+        boolean built = data.placeYurtOnNode(this.currentPlayer, nodeId);
+        if (built) {
+            this.turnActionStarted = true;
+        }
+        return built;
+    }
 
     public boolean createSackAction(String cityOrNodeId, int indTreasure) {
         if (indTreasure < 0 || indTreasure > 3) {
@@ -156,20 +184,32 @@ public class Controller {
         boolean success = data.attackCityForTreasure(this.currentPlayer, cityOrNodeId, indTreasure, swordCost);
         if (success) {
             this.firstSackCity = false;
+            this.turnActionStarted = true;
         }
         return success;
     }
 
-    public boolean createKhanAction(String provinceId) { return data.moveKhan(this.currentPlayer, provinceId); }
+    public boolean createKhanAction(String provinceId) {
+        boolean moved = data.moveKhan(this.currentPlayer, provinceId);
+        if (moved) {
+            this.turnActionStarted = true;
+        }
+        return moved;
+    }
 
     public boolean createTributeAction(String provinceId) {
-        return data.harvestProvinceResource(this.currentPlayer, data.getPlayerNodeId(currentPlayer), provinceId);
+        boolean harvested = data.harvestProvinceResource(this.currentPlayer, data.getPlayerNodeId(currentPlayer), provinceId);
+        if (harvested) {
+            this.turnActionStarted = true;
+        }
+        return harvested;
     }
 
     public boolean createTradeAction(String nodeId) {
         boolean traded = data.executeTrade(this.currentPlayer, nodeId);
         if (traded) {
             this.totalVotes++;
+            this.turnActionStarted = true;
         }
         return traded;
     }
@@ -189,24 +229,40 @@ public class Controller {
     public int getCurrentPlayerFreeUpgradesPendingCount() { return data.getFreeUpgradesPendingCount(this.currentPlayer); }
 
     public boolean buyUpgradeFromMarket(int slotIndex) {
-        return data.buyUpgradeFromMarket(this.currentPlayer, slotIndex);
+        boolean bought = data.buyUpgradeFromMarket(this.currentPlayer, slotIndex);
+        if (bought) {
+            this.turnActionStarted = true;
+            data.notifyStateRestored();
+        }
+        return bought;
     }
 
     public boolean claimFreeUpgradeFromMarket(int slotIndex) {
-        return data.claimFreeUpgradeFromMarket(this.currentPlayer, slotIndex);
+        boolean claimed = data.claimFreeUpgradeFromMarket(this.currentPlayer, slotIndex);
+        if (claimed) {
+            this.turnActionStarted = true;
+            data.notifyStateRestored();
+        }
+        return claimed;
     }
 
     public boolean claimFreeUpgradeFromDeck() {
-        return data.claimFreeUpgradeFromDeck(this.currentPlayer);
+        boolean claimed = data.claimFreeUpgradeFromDeck(this.currentPlayer);
+        if (claimed) {
+            this.turnActionStarted = true;
+            data.notifyStateRestored();
+        }
+        return claimed;
     }
 
     /*
      * ============================================
-     * ============== Points methods ==============
+     * ============== Points & Load ===============
      * ============================================
      */
 
     public int getTotalVotes() { return this.totalVotes; }
+    public boolean isEndRoundToFinalTurn() { return this.endRoundToFinalTurn; }
 
     private void calculatePoints() {
         for (int i = 0; i < getTotalPlayers(); i++) {
@@ -218,8 +274,17 @@ public class Controller {
         if (activePlayerInd >= 0 && activePlayerInd < getTotalPlayers()) {
             this.currentPlayer = activePlayerInd;
             this.chosenColumn = column;
+            this.turnActionStarted = (column != null);
+            this.firstSackCity = true;
             data.setCurrentPlayer(this.currentPlayer);
         }
+    }
+
+    public void restoreMatchLifecycle(int savedTotalVotes, boolean savedEndRound, boolean savedFinalTurn) {
+        this.totalVotes = Math.max(0, savedTotalVotes);
+        this.endRoundToFinalTurn = savedEndRound;
+        this.finalTurn = savedFinalTurn;
+        this.ended = false;
     }
 
     public int getProvinceResourceCount(String provinceId) { return data.getProvinceResourceCount(provinceId); }

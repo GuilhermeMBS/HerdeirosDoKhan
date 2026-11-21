@@ -108,6 +108,23 @@ class PrivateCounselor extends Card {
         return cards.remove(0);
     }
 
+    /**
+     * Removes and returns a specific counselor card from the deck by name.
+     * Used when restoring a saved match so already-assigned cards are not dealt again.
+     */
+    static PrivateCounselor takeCardByName(String cardName) {
+        if (cardName == null || cardName.trim().isEmpty()) {
+            return null;
+        }
+        String normalized = cardName.trim();
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i).getName().equalsIgnoreCase(normalized)) {
+                return cards.remove(i);
+            }
+        }
+        return null;
+    }
+
     boolean setFinished(Mission m) {
         if (m != null && !m.hasFinishedMission()) {
             m.setFinished();

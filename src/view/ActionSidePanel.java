@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -16,9 +17,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import controller.Controller;
 import loader.GameStateLoader;
@@ -28,7 +31,8 @@ import model.PlayerColor;
 
 /**
  * Lateral control panel integrating the Controller, observing match state changes,
- * and providing access to board actions, counselors, and the Upgrades Area.
+ * enforcing turn-boundary save button rules via JFileChooser, and providing access
+ * to board actions, counselors, and the Upgrades Area.
  */
 public class ActionSidePanel extends JPanel implements ObservadorIF {
 
@@ -40,6 +44,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
 
     private final JComboBox<String> cityTreasureSlotCombo;
     private final JComboBox<String> treasureTradeCombo;
+    private final JButton saveGameButton;
     private final JLabel statusFeedbackLabel;
     private final PlayerInventoryPanel inventoryPanel;
     private PrivateCounselorSelectorFrame selectorFrame;
@@ -99,12 +104,12 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         systemPanel.setBorder(BorderFactory.createTitledBorder("Turn & Match State"));
 
         JButton endTurnButton = new JButton("Next Player Turn");
-        JButton saveGameButton = new JButton("Save Current Match");
+        this.saveGameButton = new JButton("Save Match (.txt)");
         systemPanel.add(endTurnButton);
-        systemPanel.add(saveGameButton);
+        systemPanel.add(this.saveGameButton);
         add(systemPanel);
 
-        this.statusFeedbackLabel = new JLabel("Click a column on the sheet to move.");
+        this.statusFeedbackLabel = new JLabel("Save is available before starting your turn.");
         this.statusFeedbackLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         this.statusFeedbackLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         add(this.statusFeedbackLabel);
@@ -117,10 +122,10 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             openUpgradesButton,
             openCounselorButton,
             executeTradeButton,
-            endTurnButton,
-            saveGameButton
+            endTurnButton
         );
 
+        updateSaveButtonState();
         this.controller.registra(this);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -134,6 +139,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
     @Override
     public void notify(ObservadoIF o) {
         this.inventoryPanel.repaint();
+        updateSaveButtonState();
         checkPrivateCounselorSelection();
         if (this.controller.hasCurrentPlayerFreeUpgradePending()) {
             this.statusFeedbackLabel.setText("Row completed! Open Upgrades Area to claim a FREE White upgrade.");
@@ -141,12 +147,51 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         repaint();
     }
 
-    private void checkPrivateCounselorSelection() {
-        if (!this.controller.getCurrentPlayerPrivateCounselorName().equalsIgnoreCase("none")) return;
-        if (this.selectorFrame != null && this.selectorFrame.isShowing()) return;
+    private void updateSaveButtonState() {
+        this.saveGameButton.setEnabled(this.controller.canSaveMatch());
+    }
 
+    private void checkPrivateCounselorSelection() {
+        String currentSecret = this.controller.getCurrentPlayerPrivateCounselorName();
+        if (currentSecret != null && !currentSecret.equalsIgnoreCase("none")) {
+            return;
+        }
+        if (this.selectorFrame != null && this.selectorFrame.isShowing()) {
+            return;
+        }
         this.selectorFrame = new PrivateCounselorSelectorFrame();
         this.selectorFrame.setVisible(true);
+    }
+
+    private void handleSaveMatch() {
+        if (!this.controller.canSaveMatch()) {
+            updateSaveButtonState();
+            this.statusFeedbackLabel.setText("Saving is only allowed before starting your turn.");
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Match State (.txt)");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files (*.txt)", "txt"));
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        int decision = fileChooser.showSaveDialog(this);
+        if (decision != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File targetFile = fileChooser.getSelectedFile();
+        if (targetFile == null) {
+            return;
+        }
+        if (!targetFile.getName().toLowerCase().endsWith(".txt")) {
+            targetFile = new File(targetFile.getParentFile(), targetFile.getName() + ".txt");
+        }
+
+        boolean saved = this.stateLoader.saveMatchState(targetFile);
+        this.statusFeedbackLabel.setText(
+            saved ? "Match saved to " + targetFile.getName() : "Failed to save match file."
+        );
     }
 
     private Color resolveColor(PlayerColor playerColor) {
@@ -165,8 +210,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
         JButton openUpgradesButton,
         JButton openCounselorButton,
         JButton executeTradeButton,
-        JButton endTurnButton,
-        JButton saveGameButton
+        JButton endTurnButton
     ) {
         harvestButton.addActionListener(new ActionListener() {
             @Override
@@ -181,6 +225,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Cannot harvest from " + targetProvince);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -194,6 +239,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Cannot plunder slot " + (slotIndex + 1) + " at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -206,6 +252,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Yurt construction rejected at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -247,6 +294,7 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
                 } else {
                     statusFeedbackLabel.setText("Trade rejected at " + nodeId);
                 }
+                updateSaveButtonState();
             }
         });
 
@@ -255,22 +303,18 @@ public class ActionSidePanel extends JPanel implements ObservadorIF {
             public void actionPerformed(ActionEvent e) {
                 controller.endTurn();
                 if (controller.getGameHasEnded()) {
-                    statusFeedbackLabel.setText("MATCH ENDED! Check Scoreboard above.");
+                    statusFeedbackLabel.setText("MATCH ENDED!");
                 } else {
                     statusFeedbackLabel.setText("Turn passed to " + controller.getCurrentHeirName());
                 }
+                updateSaveButtonState();
             }
         });
 
-        saveGameButton.addActionListener(new ActionListener() {
+        this.saveGameButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean saved = stateLoader.saveMatchState(
-                    "savegame.properties",
-                    boardPanel,
-                    controller.getCurrentHeirName()
-                );
-                statusFeedbackLabel.setText(saved ? "Match saved to savegame.properties" : "Save failed.");
+                handleSaveMatch();
             }
         });
     }
