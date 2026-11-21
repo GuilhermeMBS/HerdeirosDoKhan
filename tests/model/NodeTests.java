@@ -16,6 +16,8 @@ public class NodeTests {
     private Player playerTolui;
     private Player playerBatu;
     private Player playerOgedei;
+    
+    private final BonusCard card = BonusCard.COINS; // Mock
 
     @Before
     public void setUp() {
@@ -30,7 +32,7 @@ public class NodeTests {
             new TreasureRequirements(TreasureType.FUR, 1)
         };
 
-        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements, 0));
+        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, requirements, 0, card));
 
         assertTrue("First pawn should enter", node.enterNode());
         assertTrue("Second pawn should enter", node.enterNode());
@@ -42,7 +44,7 @@ public class NodeTests {
 
     @Test
     public void testDoubleNodeYurtLimit() {
-        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, new TreasureRequirements[0], 0));
+        DoubleNode node = new DoubleNode("Persia", new TradingPost(1, new TreasureRequirements[0], 0, card));
 
         assertTrue("First yurt constructed", node.buildYurt(this.playerBatu));
         assertTrue("Second yurt constructed", node.buildYurt(this.playerOgedei));
@@ -98,18 +100,18 @@ public class NodeTests {
         TreasureRequirements[] requirements = {
             new TreasureRequirements(TreasureType.FUR, 2)
         };
-        TradingPost post = new TradingPost(1, requirements, 0);
+        TradingPost post = new TradingPost(1, requirements, 0, card);
 
         TreasureRequirements[] insufficientOffer = {
             new TreasureRequirements(TreasureType.FUR, 1),
             new TreasureRequirements(TreasureType.ANIMAL, 5)
         };
-        assertFalse("Insufficient requested type should fail transaction", post.processDelivery(insufficientOffer));
+        assertFalse("Insufficient requested type should fail transaction", post.processDelivery(insufficientOffer, playerTolui));
 
         TreasureRequirements[] validOffer = {
             new TreasureRequirements(TreasureType.FUR, 2)
         };
-        assertTrue("Exact match should clear transaction", post.processDelivery(validOffer));
+        assertTrue("Exact match should clear transaction", post.processDelivery(validOffer, playerTolui));
     }
 
     @Test

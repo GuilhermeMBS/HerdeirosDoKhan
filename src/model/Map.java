@@ -47,10 +47,12 @@ class Map {
     private final HashMap<String, int[]> provinceCoordinates = new HashMap<>();
     private final HashMap<String, int[]> khanCoordinates = new HashMap<>();
     private final HashMap<String, int[]> cityCoordinates = new HashMap<>();
+    private final HashMap<String, int[]> bonusCardCoordinates = new HashMap<>();
 
     private static Map map = null;
 
     private Map(boolean alternativeKarakorum) {
+    	BonusCard.resetDeck();
         createCities();
         createProvinces();
         initializeNodes(alternativeKarakorum);
@@ -167,29 +169,32 @@ class Map {
                     regionNodes.add(new SingleNode(region.toString(), sharedCity));
                 }
             }
-
+            
             switch (region) {
                 case RUSSIA:
                     regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
                         new TreasureRequirements(TreasureType.SILK, 2)
-                    }, 0)));
+                    }, 0, BonusCard.getOneCard())));
+                    
                     regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
                         new TreasureRequirements(TreasureType.IRON, 2)
-                    }, 0)));
+                    }, 0, BonusCard.getOneCard())));
                     break;
                 case CHINA:
                     regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
                         new TreasureRequirements(TreasureType.ANIMAL, 2)
-                    }, 0)));
-                    regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {}, 3)));
+                    }, 0, BonusCard.getOneCard())));
+                    
+                    regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {}, 3, BonusCard.getOneCard())));
                     break;
                 case PERSIA:
                     regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
                         new TreasureRequirements(TreasureType.FUR, 2)
-                    }, 0)));
+                    }, 0, BonusCard.getOneCard())));
+                    
                     regionNodes.add(new DoubleNode(region.toString(), new TradingPost(1, new TreasureRequirements[] {
                         new TreasureRequirements(TreasureType.SPICE, 2)
-                    }, 0)));
+                    }, 0, BonusCard.getOneCard())));
                     break;
                 default:
                     break;
@@ -486,6 +491,20 @@ class Map {
         khanCoordinates.put(ProvinceId.RUSSIA_COIN1.name(), new int[] {591, 239});
         khanCoordinates.put(ProvinceId.CHINA_YURT1.name(), new int[] {720, 539});
         khanCoordinates.put(ProvinceId.PERSIA_COIN1.name(), new int[] {273, 455});
+        
+        /*
+         * Bonus cards (drawn above each trading post)
+         */
+        bonusCardCoordinates.put("CENTRAL", new int[] {489, 365});
+
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(russia).get(trade1)), new int[] {466, 44});
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(russia).get(trade2)), new int[] {818, 78});
+
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(china).get(trade1)), new int[] {929, 443});
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(china).get(trade2)), new int[] {571, 626});
+
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(persia).get(trade1)), new int[] {78, 272});
+        bonusCardCoordinates.put(getNodeId(nodeArray.get(persia).get(trade2)), new int[] {242, 550});
     }
 
     boolean allCityConquered() {
@@ -634,4 +653,5 @@ class Map {
     HashMap<String, int[]> getProvinceCoordinates() { return provinceCoordinates; }
     HashMap<String, int[]> getKhanCoordinates() { return khanCoordinates; }
     HashMap<String, int[]> getCitiesCoordinates() { return cityCoordinates; }
+    HashMap<String, int[]> getBonusCardCoordinates() { return bonusCardCoordinates; }
 }

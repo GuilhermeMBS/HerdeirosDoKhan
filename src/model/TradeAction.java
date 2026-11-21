@@ -42,9 +42,7 @@ class TradeAction implements GameAction {
         }
 
         p.addVotes(this.post.voteCount);
-        if (this.post.claimBonus()) {
-            p.registerBonus();
-        }
+        this.post.claimBonus(p);
 
         return DebugReturn.SUCCESS;
     }

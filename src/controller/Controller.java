@@ -303,6 +303,10 @@ public class Controller {
             data.calculatePlayerTotalScore(i);
         }
     }
+    
+    public String getBonusCardName(String nodeId) { return data.getBonusCardOnPost(nodeId); }
+    public HashMap<String, String> getBonusCardImgPath() { return data.getBonusCardImgPath(); }
+    public HashMap<String, int[]> getBonusCardCoordinates() { return data.getBonusCardCoordinates(); }
 
     public void restoreControllerTurnState(int activePlayerInd, ColumnColor column) {
         if (activePlayerInd >= 0 && activePlayerInd < getTotalPlayers()) {

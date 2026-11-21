@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 enum BonusCard {
@@ -51,5 +52,19 @@ enum BonusCard {
 		}
 		
 		return imgFilePath;
+	}
+	
+	private static final ArrayList<BonusCard> cards = new ArrayList<>();
+	
+	public static void resetDeck() {
+		cards.clear();
+		for (BonusCard card : BonusCard.values()) cards.add(card);
+		Collections.shuffle(cards);
+	}
+	
+	static { resetDeck(); }
+	
+	public static BonusCard getOneCard() { 
+		return cards.remove(0); 
 	}
 }

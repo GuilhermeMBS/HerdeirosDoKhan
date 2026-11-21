@@ -17,7 +17,7 @@ public class PlayerTests {
 	public void initializeVariables() {
 		karakorum = new CentralNode(false);
 		nodeA = new SingleNode("CHINA", "Pequim");
-		nodeB = new DoubleNode("CHINA", new TradingPost(1, new TreasureRequirements[6], 0));
+		nodeB = new DoubleNode("CHINA", new TradingPost(1, new TreasureRequirements[6], 0, BonusCard.COINS));
 		tolui = new Player(PlayerColor.BLUE, Heir.TOLUI, karakorum, 2);
 	}
 

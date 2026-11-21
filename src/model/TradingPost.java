@@ -12,6 +12,8 @@ class TradingPost {
     protected int upgrade; 
     private final TreasureRequirements[] requiredTreasures;
     private final int anyAmount;
+    
+    private final BonusCard card;
 
     /**
      * Constructs a trade contract.
@@ -20,12 +22,13 @@ class TradingPost {
      * @param treasures       Specific typified requirements (e.g., 2 SILK).
      * @param anyTreasureCost The baseline cost in non-specific treasures (the "ANY" modifier).
      */
-    TradingPost(int votes, TreasureRequirements[] treasures, int anyTreasureCost) {
+    TradingPost(int votes, TreasureRequirements[] treasures, int anyTreasureCost, BonusCard card) {
         this.voteCount = votes;
         this.bonusAvailable = true; 
         this.upgrade = -1; 
         this.requiredTreasures = treasures;
         this.anyAmount = anyTreasureCost;
+        this.card = card;
     }
     
     /**
@@ -34,8 +37,11 @@ class TradingPost {
      * @param offeredTreasures The array of treasures tendered by the player.
      * @return true if the offer matches or exceeds the threshold.
      */
-    boolean processDelivery(TreasureRequirements[] offeredTreasures) {
-        return validateTransaction(offeredTreasures);
+    boolean processDelivery(TreasureRequirements[] offeredTreasures, Player p) {
+    	if (validateTransaction(offeredTreasures) == false) return false;
+    	
+    	if (!this.card.hasBeenUsed()) claimBonus(p);
+        return true;
     }
 
     /**
@@ -80,23 +86,26 @@ class TradingPost {
      * 
      * @return true if the bonus was successfully claimed.
      */
-    boolean claimBonus() {
-        if (this.bonusAvailable) {
-            this.bonusAvailable = false;
+    boolean claimBonus(Player p) {
+        if (!this.card.hasBeenUsed()) {
+            this.card.assignPlayer(p);
+            p.addBonusCard(card);
             return true;
         }
         return false;
     }
+    
+    public String getBonusCardName() { return card.getDisplayName(); }
 
-    void setUpgrade(int upgradeId) {
-        this.upgrade = upgradeId;
-    }
+//    void setUpgrade(int upgradeId) {
+//        this.upgrade = upgradeId;
+//    }
 
-    int claimUpgrade() {
-        int currentUpgrade = this.upgrade;
-        this.upgrade = -1;
-        return currentUpgrade;
-    }
+//    int claimUpgrade() {
+//        int currentUpgrade = this.upgrade;
+//        this.upgrade = -1;
+//        return currentUpgrade;
+//    }
     
     public TreasureRequirements[] getRequirements() {
         return this.requiredTreasures;

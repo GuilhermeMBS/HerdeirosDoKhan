@@ -133,7 +133,7 @@ public class GameStateLoader {
                 writeKeyValue(writer, prefix + "amountYurts", String.valueOf(data.getPlayerAmountYurts(i)));
                 writeKeyValue(writer, prefix + "votes", String.valueOf(data.getPlayerVotes(i)));
                 writeKeyValue(writer, prefix + "conqueredCities", String.valueOf(data.getPlayerConqueredCities(i)));
-                writeKeyValue(writer, prefix + "bonuses", String.valueOf(data.getPlayerBonuses(i)));
+                writeKeyValue(writer, prefix + "bonusCard", String.valueOf(data.getPlayerBonusCardNames(i)));
                 writeKeyValue(writer, prefix + "rewardedRows", String.valueOf(data.getPlayerRewardedRows(i)));
 
                 for (ColumnColor color : ColumnColor.values()) {
@@ -250,7 +250,7 @@ public class GameStateLoader {
 
             data.setPlayerVotes(i, parseInt(values.get(prefix + "votes"), 0));
             data.setPlayerConqueredCities(i, parseInt(values.get(prefix + "conqueredCities"), 0));
-            data.setPlayerBonuses(i, parseInt(values.get(prefix + "bonuses"), 0));
+            data.restorePlayerBonusCard(i, splitStrings(values.get(prefix + "bonusCard")));
 
             for (ColumnColor color : ColumnColor.values()) {
                 boolean occupied = Boolean.parseBoolean(values.getOrDefault(prefix + "column." + color.name() + ".occupied", "false"));

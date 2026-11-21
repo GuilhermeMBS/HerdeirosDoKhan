@@ -34,7 +34,7 @@ class Player {
     private int amountYurts = 0;
     private int votes = 0;
     private int conqueredCities = 0;
-    private int bonuses = 0;
+    private ArrayList<BonusCard> bonuses = new ArrayList<>();
 
     private final List<Pawn> pawns = new ArrayList<>();
     private Pawn activePawn;
@@ -357,7 +357,7 @@ class Player {
     void setConqueredCities(int count) { this.conqueredCities = Math.max(0, count); }
     void registerConqueredCity() { conqueredCities++; }
 
-    int getBonuses() { return bonuses; }
-    void setBonuses(int count) { this.bonuses = Math.max(0, count); }
-    void registerBonus() { bonuses++; }
+    ArrayList<BonusCard> getBonuses() { return bonuses; }
+    void setBonusCard(ArrayList<BonusCard> cards) { this.bonuses = cards; }
+    void addBonusCard(BonusCard card) { this.bonuses.add(card); }
 }

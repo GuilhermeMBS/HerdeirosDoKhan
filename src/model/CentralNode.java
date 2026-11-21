@@ -27,7 +27,7 @@ class CentralNode extends Node {
             };
         }
 
-        this.tradingPost = new TradingPost(2, karakorumRequirements, 0);
+        this.tradingPost = new TradingPost(2, karakorumRequirements, 0, BonusCard.getOneCard());
         this.toluiYurt = null;
     }
 

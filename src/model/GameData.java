@@ -591,7 +591,7 @@ public class GameData implements ObservadoIF {
         Player p = players[playerInd];
         evaluatePrivateCounselorProgress(p);
         int privatePts = p.getSecretCard() != null ? p.getSecretCard().gainPoints() : 0;
-        return p.getVotes() + p.getBonuses() + p.getConqueredCities() + privatePts;
+        return p.getVotes() + p.getConqueredCities() + privatePts;
     }
 
     public PlayerColor getPlayerColor(int ind) {
@@ -721,18 +721,35 @@ public class GameData implements ObservadoIF {
         players[playerInd].setConqueredCities(count);
     }
 
-    public int getPlayerBonuses(int playerInd) {
-        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
-            return 0;
-        }
-        return players[playerInd].getBonuses();
+//    public int getPlayerBonuses(int playerInd) {
+//        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+//            return 0;
+//        }
+//        return players[playerInd].getBonuses();
+//    }
+    
+    public List<String> getPlayerBonusCardNames(int playerInd) {
+    	if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) return null;
+    	
+    	List<String> names = new ArrayList<>();
+    	for (BonusCard card : players[playerInd].getBonuses()) names.add(card.getDisplayName());
+    	return names;
     }
 
-    public void setPlayerBonuses(int playerInd, int count) {
+    public void restorePlayerBonusCard(int playerInd, List<String> names) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return;
         }
-        players[playerInd].setBonuses(count);
+        
+        ArrayList<BonusCard> cards = new ArrayList<>();
+        for (String name : names) {
+        	try {
+        		cards.add(BonusCard.valueOf(name));
+        	} catch (IllegalArgumentException ignored) {
+        		
+        	}
+        }
+        players[playerInd].setBonusCard(cards);
     }
 
     public boolean startTurn(int playerInd, ColumnColor column, int pawnIndex) {
@@ -1380,4 +1397,59 @@ public class GameData implements ObservadoIF {
         notifyObservers();
         return true;
     }
+    
+    /*
+     * ===========================================
+     * =============== Bonus Cards ===============
+     * ===========================================
+     */
+    
+    public HashMap<String, String> getBonusCardImgPath() {
+    	HashMap<String, String> tmp = BonusCard.getImagePath();
+    	return tmp;
+    }
+    
+    public boolean useBonusCard(String name, int playerInd) {
+    	if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) return false;
+    	
+    	for (BonusCard card : BonusCard.values()) {
+    		if (card.toString().equalsIgnoreCase(name)) {
+    			if (card.hasBeenUsed()) return false;
+    			switch (card) {
+    			case VOTE:
+    				players[playerInd].addVotes(1);
+    				break;
+    			case SWORDS:
+    				players[playerInd].addTribute(TributeType.SWORD, 2);
+    				break;
+    			case COINS:
+    				players[playerInd].addTribute(TributeType.COIN, 2);
+    				break;
+    			case YURTS:
+    				players[playerInd].addTribute(TributeType.YURT, 2);
+    				break;
+    			case MOVEMENT:
+    				players[playerInd].setMovementsLeft(players[playerInd].getMovementsLeft() + 3);
+    				players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 1);
+    				break;
+    			case HANDS:
+    				players[playerInd].setHandsLeft(players[playerInd].getHandsLeft() + 2);
+    				break;
+    			default: // TREASURES
+    			}
+    		}
+    	}
+    	return false;
+    }
+    
+    public String getBonusCardOnPost(String nodeId) {
+    	Node n = this.nodeById(nodeId);
+    	if (!(n instanceof CentralNode || n instanceof DoubleNode)) return null;
+    	
+    	TradingPost p = (n instanceof CentralNode) ? ((CentralNode) n).getTradingPost() : ((DoubleNode) n).getTradingPost();
+    	return p.getBonusCardName();
+    }
+    
+    public HashMap<String, int[]> getBonusCardCoordinates() { return getMap().getBonusCardCoordinates(); }
+    
 }

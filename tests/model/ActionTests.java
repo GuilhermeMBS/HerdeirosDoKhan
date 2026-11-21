@@ -152,7 +152,7 @@ public class ActionTests {
 	public void testDoTradeAction() {
 		trade = new TradingPost(1, new TreasureRequirements[] {
 				new TreasureRequirements(TreasureType.ANIMAL, 2)
-		}, 0);
+		}, 0, BonusCard.COINS);
 		
 		p.startTurn(ColumnColor.YELLOW, 0);
 		p.addTreasure(TreasureType.FUR, 3);
@@ -166,7 +166,7 @@ public class ActionTests {
 		
 		trade = new TradingPost(1, new TreasureRequirements[] {
 				new TreasureRequirements(TreasureType.ANIMAL, 2)
-		}, 10);
+		}, 10, BonusCard.COINS);
 		createTradeAction();
 		assertEquals(DebugReturn.MISSING_RESOURCE, action.doAction());
 	}

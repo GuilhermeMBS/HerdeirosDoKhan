@@ -67,6 +67,11 @@ public class BoardPanel extends JPanel implements ObservadorIF {
     private final int scoreSize = 45;
     private final int maxScoreFirstLine = 9;
     
+    private final HashMap<String, String> bonusCardpathImg;
+    private final HashMap<String, Image> bonusCardImg = new HashMap<>();
+    private final HashMap<String, int[]> bonusCardCoordinates;
+    private final int bonusCardSize = 60;
+    
     private String selectedNodeId;
     private String selectedProvinceId;
 
@@ -76,6 +81,9 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.playerPawnSprites = new HashMap<>();
         this.selectedNodeId = "CENTRAL";
         this.selectedProvinceId = "RUSSIA_YURT1";
+        
+        this.bonusCardpathImg = controller.getBonusCardImgPath();
+        this.bonusCardCoordinates = controller.getBonusCardCoordinates();
 
         setPreferredSize(new Dimension(CANVAS_WIDTH, 600));
         setBackground(new Color(230, 218, 195));
@@ -114,6 +122,12 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         this.playerPawnSprites.put(2, loadOrCreatePlaceholder("assets/pawn_green.png", 28, 28, this.playerColorsMap.get(PlayerColor.GREEN)));
         this.playerPawnSprites.put(3, loadOrCreatePlaceholder("assets/pawn_yellow.png", 28, 28, this.playerColorsMap.get(PlayerColor.YELLOW)));
         this.playerPawnSprites.put(4, loadOrCreatePlaceholder("assets/pawn_black.png", 28, 28, this.playerColorsMap.get(PlayerColor.BLACK)));
+        
+        for (Map.Entry<String, String> entry : this.bonusCardpathImg.entrySet()) {
+        	String bonusCard = entry.getKey();
+        	String path = entry.getValue();
+        	this.bonusCardImg.put(bonusCard, loadOrCreatePlaceholder(path, this.bonusCardSize, this.bonusCardSize, new Color(125, 125, 125)));
+        }
 
         this.CITIES_COORDINATE = controller.getCitiesCoordinates();
         for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
@@ -227,6 +241,7 @@ public class BoardPanel extends JPanel implements ObservadorIF {
         drawProvinceTributes(g2d, scaleX, scaleY);
         drawCitiesForSack(g2d, scaleX, scaleY);
         drawConstructedYurts(g2d, scaleX, scaleY);
+        drawBonusCard(g2d, scaleX, scaleY);
         drawKhanPiece(g2d, scaleX, scaleY);
         drawPlayerPawns(g2d, scaleX, scaleY);
         drawPlayersScores(g2d, scaleX, scaleY);
@@ -363,6 +378,24 @@ public class BoardPanel extends JPanel implements ObservadorIF {
                 g2d.fillOval(sx - r, sy - r, r * 2, r * 2);
             }
         }
+    }
+    
+    private void drawBonusCard(Graphics2D g2d, double scaleX, double scaleY) {
+    	for (Map.Entry<String, Point> entry : BoardGeometry.getAllNodeCoordinates().entrySet()) {
+    		String card = controller.getBonusCardName(entry.getKey());
+    		if (card == null) continue;
+    		
+    		Image img = this.bonusCardImg.get(card);
+    		int[] pos = this.bonusCardCoordinates.get(entry.getKey());
+    		
+    		if (img == null || pos == null) continue;
+    		
+    		Point pt = new Point(pos[0], pos[1]);
+    		int sx = (int) Math.round(pt.x * scaleX);
+    		int sy = (int) Math.round(pt.y * scaleY);
+    		
+    		g2d.drawImage(img, sx - this.bonusCardSize / 2, sy - this.bonusCardSize / 2, this.bonusCardSize, this.bonusCardSize, this);
+    	}
     }
 
     private void drawKhanPiece(Graphics2D g2d, double scaleX, double scaleY) {
