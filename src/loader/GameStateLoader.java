@@ -110,6 +110,13 @@ public class GameStateLoader {
                     writeKeyValue(writer, "yurt." + nodeId, joinStrings(ownerStrs));
                 }
             }
+            
+            for (String nodeId : data.getAllNodeIds()) {
+            	String card = data.getPostBonusCardName(nodeId);
+            	if (card != null) {
+            		writeKeyValue(writer, "postBonus." + nodeId, card);
+            	}
+            }
 
             // Save each player's complete state
             for (int i = 0; i < totalPlayers; i++) {
@@ -134,6 +141,7 @@ public class GameStateLoader {
                 writeKeyValue(writer, prefix + "votes", String.valueOf(data.getPlayerVotes(i)));
                 writeKeyValue(writer, prefix + "conqueredCities", String.valueOf(data.getPlayerConqueredCities(i)));
                 writeKeyValue(writer, prefix + "bonusCard", String.valueOf(data.getPlayerBonusCardNames(i)));
+                writeKeyValue(writer, prefix + "bonusCardUsed", String.valueOf(data.getPlayerUsedBonusCardNames(i)));
                 writeKeyValue(writer, prefix + "rewardedRows", String.valueOf(data.getPlayerRewardedRows(i)));
 
                 for (ColumnColor color : ColumnColor.values()) {
@@ -218,6 +226,10 @@ public class GameStateLoader {
         }
 
         GameData data = GameData.getData();
+        
+        for (String nodeId : data.getAllNodeIds()) {
+        	data.restorePostBonusCard(nodeId, values.get("postBonus." + nodeId));
+        }
 
         // Restore player states (including Secret Counselors BEFORE any UI observer checks them)
         for (int i = 0; i < totalPlayers; i++) {
@@ -250,7 +262,9 @@ public class GameStateLoader {
 
             data.setPlayerVotes(i, parseInt(values.get(prefix + "votes"), 0));
             data.setPlayerConqueredCities(i, parseInt(values.get(prefix + "conqueredCities"), 0));
-            data.restorePlayerBonusCard(i, splitStrings(values.get(prefix + "bonusCard")));
+            data.restorePlayerBonusCard(i, 
+            		splitStrings(values.get(prefix + "bonusCard")),
+            		splitStrings(values.get(prefix + "bonusCardUsed")));
 
             for (ColumnColor color : ColumnColor.values()) {
                 boolean occupied = Boolean.parseBoolean(values.getOrDefault(prefix + "column." + color.name() + ".occupied", "false"));

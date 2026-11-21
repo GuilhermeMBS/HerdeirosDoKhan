@@ -475,6 +475,7 @@ public class Controller {
     public HashMap<String, int[]> getProvinceCoordinates() { return data.getProvinceCoordinates(); }
     public HashMap<String, int[]> getKhanCoordinates() { return data.getKhanCoordinates(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return data.getCitiesCoordinates(); }
+    public HashMap<String, String> getCitiesImgPath() { return data.getCitiesImgPath(); }
     public List<String> getCitiesToSack() { return data.getCitiesToSack(); }
     public List<String> getCityTreasures(String cityName) { return data.getCityTreasures(cityName); }
     public String getCityNameForNode(String nodeId) { return data.getCityNameForNode(nodeId); }

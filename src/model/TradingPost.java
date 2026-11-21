@@ -13,7 +13,7 @@ class TradingPost {
     private final TreasureRequirements[] requiredTreasures;
     private final int anyAmount;
     
-    private final BonusCard card;
+    private BonusCard card;
 
     /**
      * Constructs a trade contract.
@@ -97,26 +97,11 @@ class TradingPost {
     }
     
     public boolean isBonusAvailable() { return this.card.hasBeenClaimed(); }
-    
     public String getBonusCardName() { return card.getDisplayName(); }
-
-//    void setUpgrade(int upgradeId) {
-//        this.upgrade = upgradeId;
-//    }
-
-//    int claimUpgrade() {
-//        int currentUpgrade = this.upgrade;
-//        this.upgrade = -1;
-//        return currentUpgrade;
-//    }
+    public TreasureRequirements[] getRequirements() { return this.requiredTreasures; }
+    public int getAnyTreasureCost() { return this.anyAmount; }
     
-    public TreasureRequirements[] getRequirements() {
-        return this.requiredTreasures;
-    }
-    
-    public int getAnyTreasureCost() {
-        return this.anyAmount;
-    }
+    public void setCard(BonusCard card) { this.card = card; }
 }
 
 /**

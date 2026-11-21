@@ -270,6 +270,28 @@ public class GameData implements ObservableIF {
         }
         return reachable;
     }
+    
+    private TradingPost tradingPostAt(String nodeId) {
+    	Node n = nodeById(nodeId);
+    	if (n instanceof CentralNode) return ((CentralNode) n).getTradingPost();
+    	if (n instanceof DoubleNode) return ((DoubleNode) n).getTradingPost();
+    	
+    	return null;
+    }
+    
+    public String getPostBonusCardName(String nodeId) {
+    	TradingPost post = tradingPostAt(nodeId);
+    	return post == null ? null : post.getBonusCardName();
+    }
+    
+    public void restorePostBonusCard(String nodeId, String cardName) {
+    	TradingPost post = tradingPostAt(nodeId);
+    	if (post == null || cardName == null) return;
+    	
+    	try {
+    		post.setCard(BonusCard.valueOf(cardName));
+    	} catch (IllegalArgumentException ignores) { }
+    }
 
     /*
      * ============= Province methods =============
@@ -343,6 +365,7 @@ public class GameData implements ObservableIF {
     public boolean areAllCityConquered() { return getMap().allCityConquered(); }
     public int getAmountCity() { return getMap().getAmountCity(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return getMap().getCitiesCoordinates(); }
+    public HashMap<String, String> getCitiesImgPath() { return getMap().getCityImgPath(); }
 
     public List<String> getCityNames() {
         HashMap<String, int[]> map = this.getCitiesCoordinates();
@@ -743,8 +766,18 @@ public class GameData implements ObservableIF {
     	for (BonusCard card : players[playerInd].getBonuses()) names.add(card.getDisplayName());
     	return names;
     }
+    
+    public List<String> getPlayerUsedBonusCardNames(int playerInd) {
+    	if (playerInd < 0 || playerInd >= players.length || players == null || players[playerInd] == null) return null;
+    	
+    	List<String> names = new ArrayList<String>();
+    	for (BonusCard card : players[playerInd].getBonuses()) {
+    		if (card.hasBeenUsed()) names.add(card.getDisplayName());
+    	}
+    	return names;
+    }
 
-    public void restorePlayerBonusCard(int playerInd, List<String> names) {
+    public void restorePlayerBonusCard(int playerInd, List<String> names, List<String> usedNames) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
             return;
         }
@@ -752,10 +785,11 @@ public class GameData implements ObservableIF {
         ArrayList<BonusCard> cards = new ArrayList<>();
         for (String name : names) {
         	try {
-        		cards.add(BonusCard.valueOf(name));
-        	} catch (IllegalArgumentException ignored) {
-        		
-        	}
+        		BonusCard card = BonusCard.valueOf(name);
+        		card.assignPlayer(players[playerInd]);
+        		if (usedNames.contains(name)) card.useBonus();
+        		cards.add(card);
+        	} catch (IllegalArgumentException ignored) { }
         }
         players[playerInd].setBonusCard(cards);
     }
@@ -1462,9 +1496,8 @@ public class GameData implements ObservableIF {
     	
     	List<String> names = new ArrayList<>();
     	for (BonusCard card : players[playerInd].getBonuses()) {
-    		names.add(card.getDisplayName());
+    		if (!card.hasBeenUsed()) names.add(card.getDisplayName());
     	}
     	return names;
-    }
-    
+    }    
 }

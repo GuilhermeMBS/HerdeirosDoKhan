@@ -52,7 +52,6 @@ public class BoardPanel extends JPanel implements ObserverIF {
 
     private final HashMap<String, Image> treasureSprites = new HashMap<>();
 
-    private final String IMAGE_PATH_START = "assets/cities/";
     private final HashMap<String, Image> citiesImages = new HashMap<>();
     private HashMap<String, int[]> CITIES_COORDINATE = new HashMap<>();
     private final int CITY_SIZE = 70;
@@ -130,11 +129,9 @@ public class BoardPanel extends JPanel implements ObserverIF {
         }
 
         this.CITIES_COORDINATE = controller.getCitiesCoordinates();
-        for (Map.Entry<String, int[]> entry : CITIES_COORDINATE.entrySet()) {
-            String name = entry.getKey();
-            String path = this.IMAGE_PATH_START + name + ".jpg";
-            Image img = loadOrCreatePlaceholder(path, this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
-            this.citiesImages.put(name, img);
+        for (Map.Entry<String, String> entry : controller.getCitiesImgPath().entrySet()) {
+            Image img = loadOrCreatePlaceholder(entry.getValue(), this.CITY_SIZE, this.CITY_SIZE, new Color(40, 40, 40));
+            this.citiesImages.put(entry.getKey(), img);
         }
 
         for (TreasureType type : TreasureType.values()) {

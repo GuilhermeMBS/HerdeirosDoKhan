@@ -48,6 +48,8 @@ class Map {
     private final HashMap<String, int[]> khanCoordinates = new HashMap<>();
     private final HashMap<String, int[]> cityCoordinates = new HashMap<>();
     private final HashMap<String, int[]> bonusCardCoordinates = new HashMap<>();
+    
+    private final HashMap<String, String> cityImgPath = new HashMap<>();
 
     private static Map map = null;
 
@@ -101,20 +103,37 @@ class Map {
             }
         }
 
+        final String pathCityImg = "assets/cities/";
+        
         // Russia cities coordinates
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY3), new int[] {103, 101});
+        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY3) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY2), new int[] {360, 166});
+        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY2) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY1), new int[] {584, 109});
+        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY1) + ".jpg");
 
         // China cities coordinates
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY3), new int[] {831, 576});
+        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY3) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY2), new int[] {867, 219});
+        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY2) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY1), new int[] {700, 389});
+        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY1) + ".jpg");
 
         // Persia cities coordinates
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY3), new int[] {84, 446});
+        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY3) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY2), new int[] {429, 539});
+        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY2) + ".jpg");
+        
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY1), new int[] {271, 363});
+        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY1) + ".jpg");
     }
 
     private void createProvinces() {
@@ -654,4 +673,5 @@ class Map {
     HashMap<String, int[]> getKhanCoordinates() { return khanCoordinates; }
     HashMap<String, int[]> getCitiesCoordinates() { return cityCoordinates; }
     HashMap<String, int[]> getBonusCardCoordinates() { return bonusCardCoordinates; }
+    HashMap<String, String> getCityImgPath() { return this.cityImgPath; }
 }
