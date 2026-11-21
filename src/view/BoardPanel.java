@@ -12,6 +12,7 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,11 +61,13 @@ public class BoardPanel extends JPanel implements ObserverIF {
     private final Map<PlayerColor, Color> playerColorsMap;
     private final Map<Integer, Image> playerPawnSprites;
 
-    private final Point firstPlayerScoreCoord = new Point(383, 685);
-    private final int gapBetweenScores = 70;
-    private final Point bottomPlayerScoreCoord = new Point(916, 731);
+    // Vote track, measured on the board image (980 x 760 coordinates)
+    private final Point2D.Double firstPlayerScoreCoord = new Point2D.Double(385, 685);  // space 1
+    private final double gapBetweenScores = 62.5;
+    private final Point2D.Double bottomPlayerScoreCoord = new Point2D.Double(915, 728); // space 11
     private final int scoreSize = 45;
-    private final int maxScoreFirstLine = 9;
+    private final int maxScoreFirstLine = 10;
+    private final int lastScoreSpace = 17;
     
     private final HashMap<String, String> bonusCardpathImg;
     private final HashMap<String, Image> bonusCardImg = new HashMap<>();
@@ -454,60 +457,75 @@ public class BoardPanel extends JPanel implements ObserverIF {
         }
     }
     
-    private Point getScoreSlotCenter(int score) {
-    	Point base = this.firstPlayerScoreCoord;
-    	int gap = this.gapBetweenScores;
-    	int slot = score;
-    	
-    	if (score > this.maxScoreFirstLine) {
-    		base = this.bottomPlayerScoreCoord;
-    		gap *= -1;
-    		score -= this.maxScoreFirstLine;
-    	}
-    	
-    	return new Point(base.x + slot * gap - this.scoreSize / 2, base.y - this.scoreSize / 2);
+    /**
+     * Finds the center of the vote track space for a number of votes, in board
+     * coordinates (980 x 760). The track is an "S": votes 1 to 10 go from left to
+     * right on the top row, and votes 11 to 17 come back from right to left on the
+     * bottom row (the 2/3/4/5-player icons sit on spaces 10, 14, 16 and 17).
+     * @param votes number of votes
+     * @return the center of the space, or null for 0 votes (the marker stays off the track)
+     */
+    private Point2D.Double getScoreSlotCenter(int votes) {
+        if (votes <= 0) {
+            return null;
+        }
+        int space = Math.min(votes, this.lastScoreSpace);
+        if (space <= this.maxScoreFirstLine) {
+            // Top row: space 1 is the first circle, then one gap to the right per vote
+            return new Point2D.Double(
+                this.firstPlayerScoreCoord.x + (space - 1) * this.gapBetweenScores,
+                this.firstPlayerScoreCoord.y);
+        }
+        // Bottom row: space 11 is the rightmost circle, then one gap to the LEFT per vote
+        int stepsOnBottomRow = space - (this.maxScoreFirstLine + 1);
+        return new Point2D.Double(
+            this.bottomPlayerScoreCoord.x - stepsOnBottomRow * this.gapBetweenScores,
+            this.bottomPlayerScoreCoord.y);
     }
-    
+
+    /**
+     * Draws one marker (a circle) on the vote track. The position and the size
+     * follow the window zoom, so the marker always stays inside its space.
+     */
+    private void drawScoreMarker(Graphics2D g2d, int votes, Color fill, double scaleX, double scaleY) {
+        Point2D.Double center = getScoreSlotCenter(votes);
+        if (center == null) {
+            return;
+        }
+        int width = (int) Math.round(this.scoreSize * scaleX);
+        int height = (int) Math.round(this.scoreSize * scaleY);
+        int x = (int) Math.round(center.x * scaleX) - width / 2;
+        int y = (int) Math.round(center.y * scaleY) - height / 2;
+
+        g2d.setColor(fill);
+        g2d.fillOval(x, y, width, height);
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(2f));
+        g2d.drawOval(x, y, width, height);
+    }
+
+    /**
+     * Draws the vote track: one colored marker per player and a white marker
+     * with the sum of all votes (the one that shows when the match will end).
+     */
     private void drawPlayersScores(Graphics2D g2d, double scaleX, double scaleY) {
-    	int totalPlayers = controller.getTotalPlayers();
-    	int currentPlayer = controller.getCurrentPlayerIndex();
-    	
-    	int totalScore = 0;
-    	
-    	for (int step = 0; step < totalPlayers; step++) {
-    		int i = (step + currentPlayer + 1) % totalPlayers;
-    		
-    		int score = controller.getPlayerVotes(i);
-    		totalScore += score;
-    		
-    		Point c = getScoreSlotCenter(score);
-    		int cx = (int) Math.round(c.x * scaleX);
-    		int cy = (int) Math.round(c.y * scaleY);
-    		
-    		Color fill = this.playerColorsMap.get(controller.getPlayerColor(i));
-    		if (fill == null) fill = Color.GRAY;
-    		
-    		g2d.setColor(fill);
-    		g2d.fillOval(cx, cy, this.scoreSize, this.scoreSize);
-    		
-    		g2d.setColor(Color.BLACK);
-    		g2d.setStroke(new BasicStroke(2f));
-    		
-    		g2d.drawOval(cx, cy, this.scoreSize, this.scoreSize);
-    	}
-    	
-    	Point c = getScoreSlotCenter(totalScore);
-		int cx = (int) Math.round(c.x * scaleX);
-		int cy = (int) Math.round(c.y * scaleY);
-		
-    	g2d.setColor(Color.WHITE);
-		g2d.fillOval(cx, cy, this.scoreSize, this.scoreSize);
-		
-		g2d.setColor(Color.BLACK);
-		g2d.setStroke(new BasicStroke(2f));
-		
-		g2d.drawOval(cx, cy, this.scoreSize, this.scoreSize);
-		
+        int totalPlayers = controller.getTotalPlayers();
+        int currentPlayer = controller.getCurrentPlayerIndex();
+
+        int totalScore = 0;
+
+        for (int step = 0; step < totalPlayers; step++) {
+            int i = (step + currentPlayer + 1) % totalPlayers;
+
+            int score = controller.getPlayerVotes(i);
+            totalScore += score;
+
+            Color fill = this.playerColorsMap.get(controller.getPlayerColor(i));
+            if (fill == null) fill = Color.GRAY;
+            drawScoreMarker(g2d, score, fill, scaleX, scaleY);
+        }
+
+        drawScoreMarker(g2d, totalScore, Color.WHITE, scaleX, scaleY);
     }
 
     public String getSelectedNodeId() { return this.selectedNodeId; }
