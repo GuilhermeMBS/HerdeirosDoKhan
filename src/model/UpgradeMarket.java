@@ -5,18 +5,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Manages the global supply of upgrade tiles and the 4 fixed slots
+ * Manages the global supply of upgrade tiles and the fixed slots
  * of the Upgrades Area on the bottom-left of the board.
  * Bought upgrades leave empty (null) slots until Genghis Khan visits
- * the Upgrades Area to grant empty-slot bonuses and refill all 4 slots.
+ * the Upgrades Area to grant empty-slot bonuses and refill only the empty slots.
  */
 class UpgradeMarket {
-    static final int OFFER_CAPACITY = 4;
+    static final int OFFER_CAPACITY = 5;
     static final String EMPTY_SLOT_CODE = "EMPTY";
 
     private final List<Upgrade> deck = new ArrayList<>();
     private final List<Upgrade> slots = new ArrayList<>();
-    private final List<Upgrade> discard = new ArrayList<>();
 
     UpgradeMarket() {
         resetMarket();
@@ -25,7 +24,6 @@ class UpgradeMarket {
     void resetMarket() {
         deck.clear();
         slots.clear();
-        discard.clear();
 
         // Standard action upgrades across RED (-R), GREEN (-V), and YELLOW (-A)
         addCopies("CAV-R", 3);
@@ -72,7 +70,7 @@ class UpgradeMarket {
     }
 
     /**
-     * Returns a fixed-size list of 4 slot codes, using "EMPTY" for purchased slots.
+     * Returns a fixed-size list of slot codes, using "EMPTY" for purchased slots.
      */
     List<String> getAvailableUpgradeCodes() {
         List<String> codes = new ArrayList<>(OFFER_CAPACITY);
@@ -116,11 +114,6 @@ class UpgradeMarket {
     }
 
     Upgrade drawFromDeck() {
-        if (deck.isEmpty() && !discard.isEmpty()) {
-            deck.addAll(discard);
-            discard.clear();
-            Collections.shuffle(deck);
-        }
         if (deck.isEmpty()) {
             return null;
         }
@@ -129,24 +122,22 @@ class UpgradeMarket {
 
     /**
      * Triggered when Genghis Khan moves to the Upgrades Area:
-     * counts empty slots prior to refill, discards remaining face-up tiles,
-     * and refills all 4 slots from the deck.
+     * counts empty slots prior to refill, preserves all remaining upgrades,
+     * and refills only the empty (null) slots from the deck.
      *
      * @return the number of empty slots before the refill (used to grant Coin/Sword bonuses)
      */
     int refreshMarket() {
         int emptyBeforeRefill = countEmptySlots();
 
-        for (int i = 0; i < slots.size(); i++) {
-            Upgrade remaining = slots.get(i);
-            if (remaining != null) {
-                discard.add(remaining);
-            }
+        while (slots.size() < OFFER_CAPACITY) {
+            slots.add(null);
         }
 
-        slots.clear();
         for (int i = 0; i < OFFER_CAPACITY; i++) {
-            slots.add(drawFromDeck());
+            if (slots.get(i) == null) {
+                slots.set(i, drawFromDeck());
+            }
         }
 
         return emptyBeforeRefill;

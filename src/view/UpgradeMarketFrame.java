@@ -66,7 +66,7 @@ class UpgradeMarketFrame extends JFrame implements ObserverIF {
         this.marketSlotBounds = new ArrayList<>();
         this.deckBounds = new Rectangle();
 
-        int frameWidth = (5 * TILE_WIDTH) + (7 * PADDING) + 30;
+        int frameWidth = (6 * TILE_WIDTH) + (8 * PADDING) + 30;
         int frameHeight = TILE_HEIGHT + 210;
 
         setSize(new Dimension(frameWidth, frameHeight));

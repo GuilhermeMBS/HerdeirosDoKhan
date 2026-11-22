@@ -27,7 +27,7 @@ class Province {
         return false;
     }
 
-    void addResource() { this.resourceCount = Math.max(3, this.resourceCount + 1); }
+    void addResource() { this.resourceCount = Math.min(3, this.resourceCount + 1); }
 
     TributeType getTributeType() { return this.tributeType; }
 
