@@ -126,7 +126,11 @@ public class GameStateLoader {
                 String secretName = data.getPlayerPrivateCounselorName(i);
                 writeKeyValue(writer, prefix + "secretCounselor", secretName != null ? toPureAscii(secretName) : "None");
 
-                writeKeyValue(writer, prefix + "node", data.getPlayerNodeId(i));
+                // "node" is pawn 0; "node2" (only written for 2-pawn heirs, like Altani) is pawn 1
+                writeKeyValue(writer, prefix + "node", data.getPawnNodeId(i, 0));
+                if (data.getPawnCount(i) > 1) {
+                    writeKeyValue(writer, prefix + "node2", data.getPawnNodeId(i, 1));
+                }
                 writeKeyValue(writer, prefix + "turnPath", joinStrings(data.getTurnPathNodeIds(i)));
 
                 for (TributeType trib : TributeType.values()) {
@@ -239,7 +243,12 @@ public class GameStateLoader {
             data.restorePrivateCounselor(i, secretName);
 
             String pawnNode = values.getOrDefault(prefix + "node", "CENTRAL");
-            controller.setPlayerNodeId(i, pawnNode);
+            data.setPawnNodeId(i, 0, pawnNode);
+            // Old saves have no "node2": the second pawn then stays where it is (the start)
+            String secondPawnNode = values.get(prefix + "node2");
+            if (secondPawnNode != null && data.getPawnCount(i) > 1) {
+                data.setPawnNodeId(i, 1, secondPawnNode);
+            }
 
             List<String> turnPath = splitStrings(values.get(prefix + "turnPath"));
             if (turnPath.isEmpty()) {

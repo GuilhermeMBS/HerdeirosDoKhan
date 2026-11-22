@@ -207,6 +207,20 @@ public class BoardPanel extends JPanel implements ObserverIF {
     private void handleBoardClick(int mouseX, int mouseY) {
         String clickedNode = BoardGeometry.findNodeAt(mouseX, mouseY);
         if (clickedNode != null) {
+            // Clicking on one of the player's own pawns picks it for the turn
+            // (only works before the column is confirmed; otherwise the Controller ignores it)
+            int current = this.controller.getCurrentPlayerIndex();
+            // The search starts at the pawn after the selected one, so that clicking a node
+            // with both pawns (like the start) alternates between them
+            int count = this.controller.getPawnCount(current);
+            for (int step = 1; step <= count; step++) {
+                int pawnIdx = (this.controller.getSelectedPawn() + step) % count;
+                if (clickedNode.equals(this.controller.getPawnNodeId(current, pawnIdx))
+                        && this.controller.selectPawn(pawnIdx)) {
+                    repaint();
+                    return;
+                }
+            }
             this.selectedNodeId = clickedNode;
             List<String> visitedInTurn = this.controller.getTurnPathNodeIds(this.controller.getCurrentPlayerIndex());
             if (!visitedInTurn.contains(clickedNode)) {
@@ -444,15 +458,28 @@ public class BoardPanel extends JPanel implements ObserverIF {
     private void drawPlayerPawns(Graphics2D g2d, double scaleX, double scaleY) {
         int totalPlayers = Math.max(2, this.controller.getTotalPlayers());
         for (int playerIdx = 0; playerIdx < totalPlayers; playerIdx++) {
-            String nodeId = controller.getPlayerNodeId(playerIdx);
-            Point nodeCenter = BoardGeometry.getNodeCoordinates(nodeId);
             Image pawnImg = this.playerPawnSprites.get(playerIdx);
+            int pawnCount = controller.getPawnCount(playerIdx);
+            for (int pawnIdx = 0; pawnIdx < pawnCount; pawnIdx++) {
+                String nodeId = controller.getPawnNodeId(playerIdx, pawnIdx);
+                Point nodeCenter = BoardGeometry.getNodeCoordinates(nodeId);
 
-            if (nodeCenter != null && pawnImg != null) {
-                int sx = (int) Math.round(nodeCenter.x * scaleX);
-                int sy = (int) Math.round(nodeCenter.y * scaleY);
-                int offset = (playerIdx * 10) - 10;
-                g2d.drawImage(pawnImg, sx + offset - 14, sy - 14, 28, 28, this);
+                if (nodeCenter != null && pawnImg != null) {
+                    int sx = (int) Math.round(nodeCenter.x * scaleX);
+                    int sy = (int) Math.round(nodeCenter.y * scaleY);
+                    int offset = (playerIdx * 10) - 10;
+                    // The second pawn is drawn a bit lower so it does not hide the first one
+                    int offsetY = pawnIdx * 12;
+                    g2d.drawImage(pawnImg, sx + offset - 14, sy + offsetY - 14, 28, 28, this);
+
+                    // Ring around the pawn that plays (or will play) this turn
+                    if (pawnCount > 1 && playerIdx == controller.getCurrentPlayerIndex()
+                            && pawnIdx == controller.getSelectedPawn()) {
+                        g2d.setColor(Color.WHITE);
+                        g2d.setStroke(new BasicStroke(3f));
+                        g2d.drawOval(sx + offset - 17, sy + offsetY - 17, 34, 34);
+                    }
+                }
             }
         }
     }
