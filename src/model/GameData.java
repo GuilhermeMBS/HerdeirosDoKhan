@@ -173,22 +173,6 @@ public class GameData implements ObservableIF {
         return getMap().getNodeId(players[playerInd].getCurrentNode());
     }
 
-    public void setPlayerNodeId(int playerInd, String nodeId) {
-        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
-            return;
-        }
-        Node target = nodeById(nodeId);
-        if (target != null) {
-            Node current = players[playerInd].getCurrentNode();
-            if (current != null) {
-                current.leaveNode();
-            }
-            target.enterNode();
-            players[playerInd].moveTo(target);
-            notifyObservers();
-        }
-    }
-
     /** How many pawns the player has (Altani has 2, the others have 1). */
     public int getPawnCount(int playerInd) {
         if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
@@ -339,9 +323,7 @@ public class GameData implements ObservableIF {
     /*
      * ============= Province methods =============
      */
-
-    public int getAmountProvinces() { return getMap().getAmountProvinces(); }
-
+    
     public List<String> getAllProvinceIds() {
         List<String> ids = new ArrayList<>();
         for (ProvinceId id : ProvinceId.values()) {
@@ -406,7 +388,6 @@ public class GameData implements ObservableIF {
      */
 
     public boolean areAllCityConquered() { return getMap().allCityConquered(); }
-    public int getAmountCity() { return getMap().getAmountCity(); }
     public HashMap<String, int[]> getCitiesCoordinates() { return getMap().getCitiesCoordinates(); }
     public HashMap<String, String> getCitiesImgPath() { return getMap().getCityImgPath(); }
 
@@ -439,14 +420,6 @@ public class GameData implements ObservableIF {
             list.add(t.name());
         }
         return list;
-    }
-
-    public String getCityNameForNode(String nodeId) {
-        Node n = nodeById(nodeId);
-        if (n instanceof SingleNode) {
-            return ((SingleNode) n).getCityName();
-        }
-        return null;
     }
 
     public void restoreCitiesState(
@@ -680,25 +653,6 @@ public class GameData implements ObservableIF {
             return Heir.TOLUI.getDisplayName();
         }
         return players[ind].getHeir().getDisplayName();
-    }
-
-    public String getPlayerName(int ind) {
-        if (players == null || ind < 0 || ind >= players.length || players[ind] == null) {
-            return "Tolui";
-        }
-        return players[ind].getName();
-    }
-
-    public int getPlayerInd(String name) {
-        if (players == null || name == null) {
-            return -1;
-        }
-        for (int i = 0; i < players.length; i++) {
-            if (players[i] != null && players[i].getName().equalsIgnoreCase(name)) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     public int[] getPlayerTributeAmount(int playerInd, TributeType type) {
@@ -960,32 +914,9 @@ public class GameData implements ObservableIF {
         return true;
     }
 
-    public List<String> getOpenCounselorsId() { return OpenCounselor.getAllOpenCounselorsIds(); }
-
     public List<String> getGameOpenCounselorIds() {
         createOpenCounselors();
         return OpenCounselor.getOpenCounselorsIdGame();
-    }
-
-    public boolean setOpenCounselorDone(int ind, int playerInd) {
-        createOpenCounselors();
-        if (openCounselorCards == null || ind < 0 || ind >= openCounselorCards.size()) {
-            return false;
-        }
-        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
-            return false;
-        }
-        OpenCounselor card = openCounselorCards.get(ind);
-        Player p = players[playerInd];
-        if (!verifyOpenCounselorCondition(card, p)) {
-            return false;
-        }
-        if (card.playerHasCompleted(p)) {
-            p.addVotes(1);
-            notifyObservers();
-            return true;
-        }
-        return false;
     }
 
     public String getOpenCounselorOwnerName(int cardInd) {

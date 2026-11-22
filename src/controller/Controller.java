@@ -86,13 +86,6 @@ public class Controller {
         else if (playersQty == 4) this.maxVotes = 16;
         else this.maxVotes = 17;
     }
-
-    public boolean setHeirPlayer(int indPlayer, PlayerColor color, String heirName) {
-        if (getTotalPlayers() < 2) {
-            return false;
-        }
-        return data.assignPlayer(indPlayer, color, heirName, (indPlayer >= 2) ? 2 : 1);
-    }
     
     /*
      * ============================================
@@ -317,7 +310,6 @@ public class Controller {
      * @return
      */
     public String getPlayerNodeId(int playerInd) { return data.getPlayerNodeId(playerInd); }
-    public void setPlayerNodeId(int playerInd, String nodeId) { data.setPlayerNodeId(playerInd, nodeId); }
     public boolean isColumnFree(ColumnColor column) { return data.isColumnFree(this.currentPlayer, column); }
     public String getCurrentPlayerPrivateCounselorName() { return data.getPlayerPrivateCounselorName(this.currentPlayer); }
 
@@ -506,10 +498,6 @@ public class Controller {
     public HashMap<String, String> getCitiesImgPath() { return data.getCitiesImgPath(); }
     public List<String> getCitiesToSack() { return data.getCitiesToSack(); }
     public List<String> getCityTreasures(String cityName) { return data.getCityTreasures(cityName); }
-    public String getCityNameForNode(String nodeId) { return data.getCityNameForNode(nodeId); }
-    public List<String> getCitiesNames() { return data.getCityNames(); }
-
-    public List<String> getOpenCounselorsIds() { return data.getOpenCounselorsId(); }
     public List<String> getGameOpenCounselorsIds() { return data.getGameOpenCounselorIds(); }
 
     public List<String> getPrivateCounselorCandidates() { return data.getPrivateCounselorCandidates(); }
