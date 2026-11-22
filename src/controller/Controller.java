@@ -31,6 +31,9 @@ public class Controller {
     private ColumnColor pendingColumn = null;
     private String pendingMoveNodeId = null;
 
+    // Which pawn of the player will play this turn (only Altani has 2); chosen before "Confirm Column"
+    private int selectedPawn = 0;
+
     // Final score of each player, filled when the match ends
     private int[] finalScores = new int[0];
 
@@ -139,6 +142,7 @@ public class Controller {
         this.turnActionStarted = false;
         this.pendingColumn = null;
         this.pendingMoveNodeId = null;
+        this.selectedPawn = 0;
         nextPlayer();
 
         if (this.endRoundToFinalTurn) {
@@ -175,6 +179,30 @@ public class Controller {
         return true;
     }
 
+    /**
+     * Chooses which pawn of the current player will play this turn.
+     * Only allowed before the column is confirmed.
+     * @return false (and nothing changes) if the turn already started or the pawn does not exist
+     */
+    public boolean selectPawn(int pawnIndex) {
+        if (this.ended || this.chosenColumn != null
+                || pawnIndex < 0 || pawnIndex >= data.getPawnCount(this.currentPlayer)) {
+            return false;
+        }
+        this.selectedPawn = pawnIndex;
+        data.notifyStateRestored();
+        return true;
+    }
+
+    /** @return the pawn that plays (or will play) this turn */
+    public int getSelectedPawn() { return this.selectedPawn; }
+
+    /** @return how many pawns the player has */
+    public int getPawnCount(int playerInd) { return data.getPawnCount(playerInd); }
+
+    /** @return node of one specific pawn of the player */
+    public String getPawnNodeId(int playerInd, int pawnIndex) { return data.getPawnNodeId(playerInd, pawnIndex); }
+
     /** @return the selected column waiting for confirmation, or null if there is none */
     public ColumnColor getPendingColumn() { return this.pendingColumn; }
 
@@ -190,7 +218,7 @@ public class Controller {
         // Cleared before startTurn because startTurn notifies the observers,
         // and they must already see that nothing is pending anymore
         this.pendingColumn = null;
-        if (!startTurn(column, 0)) {
+        if (!startTurn(column, this.selectedPawn)) {
             this.pendingColumn = column;
             return false;
         }

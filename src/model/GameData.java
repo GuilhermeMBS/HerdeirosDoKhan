@@ -189,6 +189,41 @@ public class GameData implements ObservableIF {
         }
     }
 
+    /** How many pawns the player has (Altani has 2, the others have 1). */
+    public int getPawnCount(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 1;
+        }
+        return players[playerInd].getPawnCount();
+    }
+
+    /** Node id of one specific pawn of the player. */
+    public String getPawnNodeId(int playerInd, int pawnIndex) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null
+                || pawnIndex < 0 || pawnIndex >= players[playerInd].getPawnCount()) {
+            return "CENTRAL";
+        }
+        return getMap().getNodeId(players[playerInd].getPawn(pawnIndex).getCurrentNode());
+    }
+
+    /** Puts one specific pawn (not only the active one) on the given node. Used when loading a save. */
+    public void setPawnNodeId(int playerInd, int pawnIndex, String nodeId) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null
+                || pawnIndex < 0 || pawnIndex >= players[playerInd].getPawnCount()) {
+            return;
+        }
+        Node target = nodeById(nodeId);
+        if (target != null) {
+            Pawn pawn = players[playerInd].getPawn(pawnIndex);
+            if (pawn.getCurrentNode() != null) {
+                pawn.getCurrentNode().leaveNode();
+            }
+            target.enterNode();
+            pawn.moveTo(target);
+            notifyObservers();
+        }
+    }
+
     public List<Integer> getNodeYurtOwnerIndices(String nodeId) {
         List<Integer> owners = new ArrayList<>();
         Node node = nodeById(nodeId);
