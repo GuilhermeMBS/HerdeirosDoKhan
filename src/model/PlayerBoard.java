@@ -106,13 +106,9 @@ class PlayerBoard {
         }
     }
 
-    int getRewardedRows() {
-        return rewardedRows;
-    }
+    int getRewardedRows() { return rewardedRows; }
 
-    void setRewardedRows(int rows) {
-        this.rewardedRows = Math.max(0, Math.min(Column.MAX_UPGRADES, rows));
-    }
+    void setRewardedRows(int rows) { this.rewardedRows = Math.max(0, Math.min(Column.MAX_UPGRADES, rows)); }
 
     int completeRows() {
         int smallest = Column.MAX_UPGRADES;

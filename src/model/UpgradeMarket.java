@@ -83,9 +83,7 @@ class UpgradeMarket {
         return codes;
     }
 
-    int getDeckSize() {
-        return deck.size();
-    }
+    int getDeckSize() { return deck.size(); }
 
     int countEmptySlots() {
         int empty = 0;

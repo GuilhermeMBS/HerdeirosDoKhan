@@ -53,6 +53,7 @@ class PlayerInventoryPanel extends JPanel implements ObserverIF {
 	private final Map<String, BufferedImage> icons = new HashMap<String, BufferedImage>();
 
 	private static final Map<TributeType, Color> TRIBUTE_COLORS = new HashMap<>();
+	private static final Map<TreasureType, Color> TREASURE_COLORS = new HashMap<>();
 	
 	private static final Color INK = new Color(35, 30, 25);
 	
@@ -79,6 +80,12 @@ class PlayerInventoryPanel extends JPanel implements ObserverIF {
 		TRIBUTE_COLORS.put(TributeType.COIN, new Color(180, 125, 20));
 		TRIBUTE_COLORS.put(TributeType.SWORD, new Color(165, 35, 35));
 		TRIBUTE_COLORS.put(TributeType.YURT, new Color(40, 110, 60));
+
+		TREASURE_COLORS.put(TreasureType.FUR, new Color(120, 120, 140));
+		TREASURE_COLORS.put(TreasureType.SILK, new Color(80, 50, 130));
+		TREASURE_COLORS.put(TreasureType.IRON, new Color(110, 50, 50));
+		TREASURE_COLORS.put(TreasureType.ANIMAL, new Color(45, 85, 55));
+		TREASURE_COLORS.put(TreasureType.SPICE, new Color(200, 100, 40));
 		
 		loadIcons();		
 	}
@@ -149,17 +156,17 @@ class PlayerInventoryPanel extends JPanel implements ObserverIF {
 				)
 			);
 		}
-
-        chips.add(new Chip(TreasureType.FUR.toString(), "Fur", new Color(120, 120, 140),
-                String.valueOf(controller.getCurrentPlayerTreasure(TreasureType.FUR))));
-        chips.add(new Chip(TreasureType.SILK.toString(), "Silk", new Color(80, 50, 130),
-                String.valueOf(controller.getCurrentPlayerTreasure(TreasureType.SILK))));
-        chips.add(new Chip(TreasureType.IRON.toString(), "Iron", new Color(110, 50, 50),
-                String.valueOf(controller.getCurrentPlayerTreasure(TreasureType.IRON))));
-        chips.add(new Chip(TreasureType.ANIMAL.toString(), "Animal", new Color(45, 85, 55),
-                String.valueOf(controller.getCurrentPlayerTreasure(TreasureType.ANIMAL))));
-        chips.add(new Chip(TreasureType.SPICE.toString(), "Spice", new Color(200, 100, 40),
-                String.valueOf(controller.getCurrentPlayerTreasure(TreasureType.SPICE))));
+		
+		for (TreasureType type : TreasureType.values()) {
+			int[] values = controller.getCurrentPlayerTreasure(type);
+			chips.add(new Chip(
+					type.toString(),
+					type.toString().substring(0,1).toUpperCase() + type.toString().substring(1).toLowerCase() + " (virtual in parentheses)",
+					TREASURE_COLORS.get(type),
+					withVirtual(values)
+				)
+			);
+		}
         
         chips.add(new Chip("Khan", "Khan action", new Color(40, 60, 120),
                 controller.isKhanPending() ? "READY" : "-"));

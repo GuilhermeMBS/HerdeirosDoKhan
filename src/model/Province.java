@@ -27,19 +27,11 @@ class Province {
         return false;
     }
 
-    void addResource() {
-        if (this.resourceCount < 3) {
-            this.resourceCount++;
-        }
-    }
+    void addResource() { this.resourceCount = Math.max(3, this.resourceCount + 1); }
 
-    TributeType getTributeType() {
-        return this.tributeType;
-    }
+    TributeType getTributeType() { return this.tributeType; }
 
-    int getResourceCount() {
-        return this.resourceCount;
-    }
+    int getResourceCount() { return this.resourceCount; }
 
     void addKhanNeighbor(Province neighbor) {
         if (neighbor != null && neighbor != this && !this.khanNeighbors.contains(neighbor)) {
@@ -47,7 +39,22 @@ class Province {
         }
     }
 
-    List<Province> getKhanNeighbors() {
-        return Collections.unmodifiableList(this.khanNeighbors);
+    List<Province> getKhanNeighbors() { return Collections.unmodifiableList(this.khanNeighbors); }
+    
+    private static final List<String> provinceIds = new ArrayList<>();
+    static {
+    	for (ProvinceId province : ProvinceId.values()) provinceIds.add(province.name());
     }
+    
+    static List<String> getAllProvinceIds() { return provinceIds; }
+    
+    private static final List<String> khanProvinceIds = new ArrayList<>();
+    static {
+    	khanProvinceIds.add(ProvinceId.RUSSIA_YURT1.name());
+        khanProvinceIds.add(ProvinceId.RUSSIA_COIN1.name());
+        khanProvinceIds.add(ProvinceId.CHINA_YURT1.name());
+        khanProvinceIds.add(ProvinceId.PERSIA_COIN1.name());
+    }
+    
+    static List<String> getKhanProvinceIds() { return khanProvinceIds; }
 }
