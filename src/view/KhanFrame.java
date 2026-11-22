@@ -112,8 +112,4 @@ class KhanFrame extends JFrame {
         }
         return this.destinationButtonGroup.getSelection().getActionCommand();
     }
-
-    public void refreshDisplay() {
-        this.repaint();
-    }
 }

@@ -101,13 +101,6 @@ class PrivateCounselor extends Card {
         return tmp;
     }
 
-    static PrivateCounselor drawOneCard() {
-        if (cards.isEmpty()) {
-            resetDeck();
-        }
-        return cards.remove(0);
-    }
-
     /**
      * Removes and returns a specific counselor card from the deck by name.
      * Used when restoring a saved match so already-assigned cards are not dealt again.
@@ -145,17 +138,7 @@ class PrivateCounselor extends Card {
         }
     }
 
-    PrivateMissionType getMissionType() {
-        return (PrivateMissionType) m1.getMissionType();
-    }
-
-    int[] getTierTargets() {
-        return new int[] {
-            m1.getTargetAmount(),
-            m2.getTargetAmount(),
-            m3.getTargetAmount()
-        };
-    }
+    PrivateMissionType getMissionType() { return (PrivateMissionType) m1.getMissionType(); }
 
     @Override
     public int gainPoints() {
@@ -164,7 +147,5 @@ class PrivateCounselor extends Card {
              + (m3.hasFinishedMission() ? 1 : 0);
     }
 
-    String getName() {
-        return this.name;
-    }
+    String getName() { return this.name; }
 }

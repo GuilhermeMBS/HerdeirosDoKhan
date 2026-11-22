@@ -22,7 +22,6 @@ public class PlayerBoardTests {
 	public void cannotActivateOccupiedColumn() {
 		assertTrue(board.activate(ColumnColor.RED));
 		assertFalse(board.activate(ColumnColor.RED));
-		assertEquals(3, board.availableTokens());
 	}
 
 	/**
@@ -35,10 +34,8 @@ public class PlayerBoardTests {
 		board.activate(ColumnColor.RED);
 		board.activate(ColumnColor.GREEN);
 		board.activate(ColumnColor.YELLOW);
-		assertEquals(1, board.availableTokens());
 
 		assertTrue(board.activate(ColumnColor.WHITE));
-		assertEquals(4, board.availableTokens());
 		assertTrue(board.canActivate(ColumnColor.RED));
 	}
 

@@ -153,7 +153,6 @@ class Player {
 
     int getPawnCount() { return pawns.size(); }
     Pawn getPawn(int index) { return pawns.get(index); }
-    Pawn getActivePawn() { return activePawn; }
     Node getCurrentNode() { return activePawn.getCurrentNode(); }
 
     void moveTo(Node node) { activePawn.moveTo(node); }
@@ -263,10 +262,6 @@ class Player {
 
     int getTreasureAmount(TreasureType type) { return treasures.get(type); }
     int getVirtualTreasureAmount(TreasureType type) { return virtualTreasures.get(type); }
-
-    int getEffectiveTreasureAmount(TreasureType type) {
-        return treasures.get(type) + virtualTreasures.get(type);
-    }
 
     void setTreasureAmount(TreasureType type, int qty) {
         if (type != null) {

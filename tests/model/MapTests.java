@@ -18,15 +18,13 @@ public class MapTests {
 		Resource.resetResources();
 		map = Map.getMap(false);
 		p = new Player();
-		cityArray = map.createCityCopies();
+		cityArray = map.getCityArray();
 		city = cityArray.get(0);
 	}
 	
 
 	@Test
 	public void testMapa() {
-		assertEquals(4, map.getLengthNodeArray()); // 3 regions + central node
-		assertEquals(11, map.getNodePerRegion()); // 11 nodes per region
 		assertEquals(9, map.getAmountCity()); // There are 9 cities in total
 		assertEquals(12, map.getAmountProvinces());
 	}
@@ -48,7 +46,7 @@ public class MapTests {
 		
 		assertNull(city.dominatedBy());
 		
-		map.setCityConquered(city.getName(), p);
+		city.defineDomination(p);
 		
 		assertEquals(p, city.dominatedBy());
 	}

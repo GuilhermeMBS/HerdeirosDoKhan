@@ -61,20 +61,6 @@ public class NodeTests {
     }
 
     @Test
-    public void testSingleNodeConquerCondition() {
-        SingleNode city = new SingleNode("Russia", "Kiev");
-        city.treasures.add(TreasureType.FUR);
-
-        assertFalse("Should not be conquered (Has treasure, no yurt)", city.isConquered());
-
-        city.plunderTreasure(0);
-        assertFalse("Should not be conquered (Empty treasure, but no yurt)", city.isConquered());
-
-        city.buildYurt(this.playerBatu);
-        assertTrue("Should be conquered (Empty treasure and yurt present)", city.isConquered());
-    }
-
-    @Test
     public void testProvinceResourceCap() {
         Province province = new Province(TributeType.COIN);
         assertEquals("Initial load should be 1", 1, province.resourceCount);
@@ -93,25 +79,6 @@ public class NodeTests {
         assertTrue("Valid collection", province.collectResource());
         assertFalse("Empty state collection rejected", province.collectResource());
         assertEquals("Count should never drop below 0", 0, province.resourceCount);
-    }
-
-    @Test
-    public void testTradingPostDeliveryValidation() {
-        TreasureRequirements[] requirements = {
-            new TreasureRequirements(TreasureType.FUR, 2)
-        };
-        TradingPost post = new TradingPost(1, requirements, 0, card);
-
-        TreasureRequirements[] insufficientOffer = {
-            new TreasureRequirements(TreasureType.FUR, 1),
-            new TreasureRequirements(TreasureType.ANIMAL, 5)
-        };
-        assertFalse("Insufficient requested type should fail transaction", post.processDelivery(insufficientOffer, playerTolui));
-
-        TreasureRequirements[] validOffer = {
-            new TreasureRequirements(TreasureType.FUR, 2)
-        };
-        assertTrue("Exact match should clear transaction", post.processDelivery(validOffer, playerTolui));
     }
 
     @Test

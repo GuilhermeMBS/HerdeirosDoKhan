@@ -89,10 +89,6 @@ public class MainGameFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    public BoardPanel getBoardPanel() {
-        return this.boardPanel;
-    }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override

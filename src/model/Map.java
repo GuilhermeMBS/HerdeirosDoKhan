@@ -1,7 +1,6 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -48,8 +47,6 @@ class Map {
     private final HashMap<String, int[]> khanCoordinates = new HashMap<>();
     private final HashMap<String, int[]> cityCoordinates = new HashMap<>();
     private final HashMap<String, int[]> bonusCardCoordinates = new HashMap<>();
-    
-//    private final HashMap<String, String> cityImgPath = new HashMap<>();
 
     private static Map map = null;
 
@@ -78,62 +75,27 @@ class Map {
     }
 
     private void createCities() {
-//        EnumMap<CityPosition, String> map1 = new EnumMap<>(CityPosition.class);
-//        map1.put(CityPosition.CITY1, "Pequim");
-//        map1.put(CityPosition.CITY2, "Kaesong");
-//        map1.put(CityPosition.CITY3, "Cantão");
-//        cities.put(Region.CHINA, map1);
-//
-//        EnumMap<CityPosition, String> map2 = new EnumMap<>(CityPosition.class);
-//        map2.put(CityPosition.CITY1, "Sarai");
-//        map2.put(CityPosition.CITY2, "Moscou");
-//        map2.put(CityPosition.CITY3, "Kiev");
-//        cities.put(Region.RUSSIA, map2);
-//
-//        EnumMap<CityPosition, String> map3 = new EnumMap<>(CityPosition.class);
-//        map3.put(CityPosition.CITY1, "Samarcanda");
-//        map3.put(CityPosition.CITY2, "Cabul");
-//        map3.put(CityPosition.CITY3, "Bagdá");
-//        cities.put(Region.PERSIA, map3);
-
         cityArray.clear();
         for (Region region : Region.values()) {
             for (CityPosition cityPos : CityPosition.values()) {
                 cityArray.add(new City(cities.get(region).get(cityPos)));
             }
         }
-
-//        final String pathCityImg = "assets/cities/";
         
         // Russia cities coordinates
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY3), new int[] {103, 101});
-//        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY3) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY2), new int[] {360, 166});
-//        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY2) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.RUSSIA).get(CityPosition.CITY1), new int[] {584, 109});
-//        cityImgPath.put(cities.get(Region.RUSSIA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.RUSSIA).get(CityPosition.CITY1) + ".jpg");
 
         // China cities coordinates
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY3), new int[] {831, 576});
-//        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY3) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY2), new int[] {867, 219});
-//        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY2) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.CHINA).get(CityPosition.CITY1), new int[] {700, 389});
-//        cityImgPath.put(cities.get(Region.CHINA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.CHINA).get(CityPosition.CITY1) + ".jpg");
 
         // Persia cities coordinates
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY3), new int[] {84, 446});
-//        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY3), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY3) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY2), new int[] {429, 539});
-//        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY2), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY2) + ".jpg");
-        
         cityCoordinates.put(cities.get(Region.PERSIA).get(CityPosition.CITY1), new int[] {271, 363});
-//        cityImgPath.put(cities.get(Region.PERSIA).get(CityPosition.CITY1), pathCityImg + cities.get(Region.PERSIA).get(CityPosition.CITY1) + ".jpg");
     }
 
     private void createProvinces() {
@@ -151,9 +113,7 @@ class Map {
         });
 
         for (TributeType type : TributeType.values()) {
-            for (ProvinceId id : provinceType.get(type)) {
-                provinces.put(id, new Province(type));
-            }
+            for (ProvinceId id : provinceType.get(type)) provinces.put(id, new Province(type));
         }
     }
 
@@ -161,17 +121,14 @@ class Map {
         EnumMap<CityPosition, String> names = this.cities.get(region);
         String[] ret = new String[3];
         int i = 0;
-        for (CityPosition pos : CityPosition.values()) {
-            ret[i++] = names.get(pos);
-        }
+        for (CityPosition pos : CityPosition.values()) ret[i++] = names.get(pos);
+
         return ret;
     }
 
     private City findCityByName(String name) {
         for (City c : cityArray) {
-            if (c.getName().equals(name)) {
-                return c;
-            }
+            if (c.getName().equals(name)) return c;
         }
         return new City(name);
     }
@@ -184,9 +141,7 @@ class Map {
 
             for (int i = 0; i < 3; i++) {
                 City sharedCity = findCityByName(names[i]);
-                for (int j = 0; j < 3; j++) {
-                    regionNodes.add(new SingleNode(region.toString(), sharedCity));
-                }
+                for (int j = 0; j < 3; j++) regionNodes.add(new SingleNode(region.toString(), sharedCity));
             }
             
             switch (region) {
@@ -247,9 +202,7 @@ class Map {
         Node centralNode = nodeArray.get(3).get(0);
 
         for (Region region : Region.values()) {
-            for (int i = 0; i < 3; i++) {
-                connectCityNodes(region, i * 3);
-            }
+            for (int i = 0; i < 3; i++) connectCityNodes(region, i * 3);
 
             switch (region) {
                 case CHINA:
@@ -308,9 +261,7 @@ class Map {
     }
 
     private void connectProvinceToNodes(ProvinceId id, Node... nodes) {
-        for (Node node : nodes) {
-            node.addProvince(provinces.get(id));
-        }
+        for (Node node : nodes) node.addProvince(provinces.get(id));
     }
 
     private void connectNodeProvinces() {
@@ -528,45 +479,14 @@ class Map {
 
     boolean allCityConquered() {
         for (City city : cityArray) {
-            if (city.dominatedBy() == null) {
-                return false;
-            }
+            if (city.dominatedBy() == null) return false;
         }
         return true;
     }
 
-    boolean setCityConquered(String name, Player player) {
-        for (City city : cityArray) {
-            if (city.getName().equals(name) && city.canBeSacked()) {
-                return city.defineDomination(player);
-            }
-        }
-        return false;
-    }
+    int getAmountCity() { return cityArray.size(); }
 
-    int getLengthNodeArray() {
-        return nodeArray.size();
-    }
-
-    int getNodePerRegion() {
-        return nodeArray.get(0).size();
-    }
-
-    int getAmountCity() {
-        return cityArray.size();
-    }
-
-    int getAmountProvinces() {
-        return provinces.size();
-    }
-
-    List<Province> getProvinces() {
-        return Collections.unmodifiableList(new ArrayList<>(provinces.values()));
-    }
-
-    List<City> createCityCopies() {
-        return Collections.unmodifiableList(cityArray);
-    }
+    int getAmountProvinces() { return provinces.size(); }
 
     Node getCentralNode() {
         return nodeArray.get(3).get(0);
@@ -596,14 +516,7 @@ class Map {
         return provinces.get(id);
     }
 
-    Khan getKhan() {
-        return khan;
-    }
-
-    TradingPost getTradingPost(Region region, boolean firstTradePost) {
-        int post = firstTradePost ? trade1 : trade2;
-        return ((DoubleNode) nodeArray.get(region.ordinal()).get(post)).getTradingPost();
-    }
+    Khan getKhan() { return khan; }
 
     EnumMap<Region, Integer> getYurtsPerRegion(Player p) {
         EnumMap<Region, Integer> qty = new EnumMap<>(Region.class);
@@ -628,17 +541,15 @@ class Map {
     }
 
     Node getNodeById(String id) {
-        if (id == null) {
-            return null;
-        }
+        if (id == null) return null;
+        
         if ("CENTRAL".equalsIgnoreCase(id) || "Karakorum".equalsIgnoreCase(id)) {
             return getCentralNode();
         }
 
         int sep = id.lastIndexOf('_');
-        if (sep < 0) {
-            return null;
-        }
+        if (sep < 0) return null;
+        
 
         try {
             Region region = Region.valueOf(id.substring(0, sep).toUpperCase());
@@ -651,17 +562,14 @@ class Map {
     }
 
     String getNodeId(Node node) {
-        if (node == null) {
-            return null;
-        }
+        if (node == null) return null;
+        
         for (int r = 0; r < nodeArray.size(); r++) {
             int i = nodeArray.get(r).indexOf(node);
-            if (i < 0) {
-                continue;
-            }
-            if (r == Region.values().length) {
-                return "CENTRAL";
-            }
+            if (i < 0) continue;
+            
+            if (r == Region.values().length) return "CENTRAL";
+            
             return Region.values()[r].name() + "_" + i;
         }
         return null;
@@ -670,9 +578,7 @@ class Map {
     List<String> getAllNodeIds() {
         List<String> ids = new ArrayList<>();
         for (ArrayList<Node> list : nodeArray) {
-            for (Node n : list) {
-                ids.add(getNodeId(n));
-            }
+            for (Node n : list) ids.add(getNodeId(n));
         }
         return ids;
     }
@@ -682,5 +588,5 @@ class Map {
     HashMap<String, int[]> getKhanCoordinates() { return khanCoordinates; }
     HashMap<String, int[]> getCitiesCoordinates() { return cityCoordinates; }
     HashMap<String, int[]> getBonusCardCoordinates() { return bonusCardCoordinates; }
-//    HashMap<String, String> getCityImgPath() { return this.cityImgPath; }
+    ArrayList<City> getCityArray() { return cityArray; }
 }

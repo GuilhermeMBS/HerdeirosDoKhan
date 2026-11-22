@@ -1,7 +1,6 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -63,14 +62,6 @@ abstract class CommonNode extends Node {
         if (this.currentOccupancy > 0) {
             this.currentOccupancy--;
         }
-    }
-
-    List<Player> getYurtOwners() {
-        return Collections.unmodifiableList(this.yurtOwners);
-    }
-
-    String getRegion() {
-        return this.region;
     }
 
     abstract int getMaxCapacity();

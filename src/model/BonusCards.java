@@ -42,8 +42,6 @@ enum BonusCard {
 		for (BonusCard card : BonusCard.values()) bonusCardsName.add(card.toString());
 	}
 	
-	public static ArrayList<String> getCardsName() { return bonusCardsName; }
-	
 	private static HashMap<String, String> imgFilePath = new HashMap<>();
 	
 	public static HashMap<String, String> getImagePath() {

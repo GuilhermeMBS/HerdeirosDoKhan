@@ -73,16 +73,6 @@ class PlayerBoard {
         }
     }
 
-    int availableTokens() {
-        int occupied = 0;
-        for (Column c : columns.values()) {
-            if (c.isOccupied()) {
-                occupied++;
-            }
-        }
-        return ACTIVATION_TOKENS - occupied;
-    }
-
     boolean addUpgrade(ColumnColor color, Upgrade upgrade) {
         if (color == ColumnColor.WHITE) {
             return false;

@@ -51,26 +51,6 @@ public class ActionTests {
 	}
 
 	@Test
-	public void testSetAction() {
-		createMovementAction();
-		assertTrue(action.setAction(new YurtAction()));
-	}
-
-	@Test
-	public void testSetNode() {
-		createMovementAction();
-		Node b = new SingleNode("c", "d");
-		assertTrue(action.setNode(b));
-	}
-
-	@Test
-	public void testSetPlayer() {
-		createMovementAction();
-		Player b = new Player();
-		assertTrue(action.setPlayer(b));
-	}
-
-	@Test
 	public void testDoActionMovement() {
 		// Karakorum -> node -> node2
 		Node node2 = new SingleNode("c", "d");

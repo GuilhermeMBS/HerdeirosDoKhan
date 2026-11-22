@@ -14,21 +14,6 @@ class Action {
         this.action = action;
     }
 
-    boolean setAction(GameAction type) {
-        this.action = type;
-        return true;
-    }
-
-    boolean setNode(Node no) {
-        this.node = no;
-        return true;
-    }
-
-    boolean setPlayer(Player jog) {
-        this.player = jog;
-        return true;
-    }
-
     private void resetInfo() {
         this.node = null;
         this.action = null;
