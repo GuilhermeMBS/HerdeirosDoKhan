@@ -293,6 +293,14 @@ public class GameData implements ObservableIF {
     	} catch (IllegalArgumentException ignores) { }
     }
 
+    public boolean getPostBonusState(String nodeId) { return tradingPostAt(nodeId).isBonusAvailable(); }
+    public void restorePostBonusAvailable(String nodeId, boolean state) { 
+    	TradingPost post = tradingPostAt(nodeId);
+    	if (post == null) return;
+    	
+    	post.setBonusAvailable(state); 
+    }
+    
     /*
      * ============= Province methods =============
      */
@@ -751,13 +759,6 @@ public class GameData implements ObservableIF {
         }
         players[playerInd].setConqueredCities(count);
     }
-
-//    public int getPlayerBonuses(int playerInd) {
-//        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
-//            return 0;
-//        }
-//        return players[playerInd].getBonuses();
-//    }
     
     public List<String> getPlayerBonusCardNames(int playerInd) {
     	if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) return null;
@@ -1490,6 +1491,7 @@ public class GameData implements ObservableIF {
     }
     
     public HashMap<String, int[]> getBonusCardCoordinates() { return getMap().getBonusCardCoordinates(); }
+    
     
     public List<String> getPlayerUnusedBonusCardNames(int playerInd) {
     	if (playerInd < 0 || playerInd >= players.length || players == null || players[playerInd] == null) return null;

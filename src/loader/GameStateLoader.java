@@ -115,6 +115,7 @@ public class GameStateLoader {
             	String card = data.getPostBonusCardName(nodeId);
             	if (card != null) {
             		writeKeyValue(writer, "postBonus." + nodeId, card);
+            		writeKeyValue(writer, "postBonusAvailable." + nodeId, String.valueOf(data.getPostBonusState(nodeId)));
             	}
             }
 
@@ -140,8 +141,8 @@ public class GameStateLoader {
                 writeKeyValue(writer, prefix + "amountYurts", String.valueOf(data.getPlayerAmountYurts(i)));
                 writeKeyValue(writer, prefix + "votes", String.valueOf(data.getPlayerVotes(i)));
                 writeKeyValue(writer, prefix + "conqueredCities", String.valueOf(data.getPlayerConqueredCities(i)));
-                writeKeyValue(writer, prefix + "bonusCard", String.valueOf(data.getPlayerBonusCardNames(i)));
-                writeKeyValue(writer, prefix + "bonusCardUsed", String.valueOf(data.getPlayerUsedBonusCardNames(i)));
+                writeKeyValue(writer, prefix + "bonusCard", joinStrings(data.getPlayerBonusCardNames(i)));
+                writeKeyValue(writer, prefix + "bonusCardUsed", joinStrings(data.getPlayerUsedBonusCardNames(i)));
                 writeKeyValue(writer, prefix + "rewardedRows", String.valueOf(data.getPlayerRewardedRows(i)));
 
                 for (ColumnColor color : ColumnColor.values()) {
@@ -229,6 +230,9 @@ public class GameStateLoader {
         
         for (String nodeId : data.getAllNodeIds()) {
         	data.restorePostBonusCard(nodeId, values.get("postBonus." + nodeId));
+        	
+        	boolean available = Boolean.parseBoolean(values.getOrDefault("postBonusAvailable." + nodeId, "false"));
+        	data.restorePostBonusAvailable(nodeId, available);
         }
 
         // Restore player states (including Secret Counselors BEFORE any UI observer checks them)

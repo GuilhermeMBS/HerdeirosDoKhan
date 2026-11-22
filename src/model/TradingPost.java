@@ -102,6 +102,7 @@ class TradingPost {
     public int getAnyTreasureCost() { return this.anyAmount; }
     
     public void setCard(BonusCard card) { this.card = card; }
+    public void setBonusAvailable(boolean state) { this.bonusAvailable = state; }
 }
 
 /**
