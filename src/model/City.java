@@ -47,6 +47,11 @@ class City {
         return true;
     }
 
+    /** Sets the conqueror directly when loading a saved match. */
+    void restoreConqueror(Player player) {
+        this.conqueror = player;
+    }
+
     Player dominatedBy() {
         return this.conqueror;
     }

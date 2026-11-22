@@ -614,6 +614,15 @@ class Map {
                     qty.merge(region, 1, Integer::sum);
                 }
             }
+            // A city conquered by the player counts as one yurt in its region
+            // (the rulebook puts a yurt "in the middle of the city"). It never
+            // takes a stop on the map, so it is counted here and not above.
+            for (CityPosition pos : CityPosition.values()) {
+                int cityInd = getCityInd(cities.get(region).get(pos));
+                if (cityInd >= 0 && getCity(cityInd).dominatedBy() == p) {
+                    qty.merge(region, 1, Integer::sum);
+                }
+            }
         }
         return qty;
     }

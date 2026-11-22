@@ -638,7 +638,107 @@ public class GameData implements ObservableIF {
         Player p = players[playerInd];
         evaluatePrivateCounselorProgress(p);
         int privatePts = p.getSecretCard() != null ? p.getSecretCard().gainPoints() : 0;
-        return p.getVotes() + p.getConqueredCities() + privatePts;
+        return p.getVotes() + calculateInfluenceVotes(playerInd) + privatePts;
+    }
+
+    /*
+     * Influence table printed on the main board (index = number of upgrades the
+     * player has in the column of the region, from 0 to 4).
+     */
+    private static final int[] FIRST_PLACE_VOTES  = {1, 1, 2, 2, 3};
+    private static final int[] SECOND_PLACE_VOTES = {0, 1, 1, 2, 2};
+
+    /** The upgrade column that is tied to each region of the map. */
+    private static ColumnColor columnOfRegion(Region region) {
+        switch (region) {
+            case RUSSIA: return ColumnColor.YELLOW;
+            case PERSIA: return ColumnColor.GREEN;
+            default:     return ColumnColor.RED; // CHINA
+        }
+    }
+
+    /**
+     * End-of-game votes for the influence over the 3 regions. In each region the
+     * player with more yurts is 1st and the player with the second most is 2nd;
+     * the votes come from the table above, using the upgrades the player has in
+     * the column of that region.
+     * Ties: a tie for 1st leaves nobody in 2nd place; a tie for 2nd puts
+     * everybody tied in 2nd place. Nobody wins votes in a region with no yurts.
+     *
+     * @param playerInd index of the player
+     * @return votes won from the 3 regions
+     */
+    public int calculateInfluenceVotes(int playerInd) {
+        if (players == null || playerInd < 0 || playerInd >= players.length || players[playerInd] == null) {
+            return 0;
+        }
+        int total = 0;
+        for (Region region : Region.values()) {
+            // yurts of every player in this region
+            int[] yurts = new int[players.length];
+            for (int i = 0; i < players.length; i++) {
+                yurts[i] = getMap().getYurtsPerRegion(players[i]).get(region);
+            }
+
+            int best = 0;
+            for (int y : yurts) {
+                best = Math.max(best, y);
+            }
+            if (best == 0 || yurts[playerInd] == 0) {
+                continue;
+            }
+
+            int upgrades = players[playerInd].getBoard().getColumn(columnOfRegion(region)).getUpgradeCount();
+            upgrades = Math.min(upgrades, FIRST_PLACE_VOTES.length - 1);
+
+            if (yurts[playerInd] == best) {
+                total += FIRST_PLACE_VOTES[upgrades];
+                continue;
+            }
+
+            int tiedForFirst = 0;
+            int second = 0;
+            for (int y : yurts) {
+                if (y == best) {
+                    tiedForFirst++;
+                } else {
+                    second = Math.max(second, y);
+                }
+            }
+            if (tiedForFirst == 1 && yurts[playerInd] == second) {
+                total += SECOND_PLACE_VOTES[upgrades];
+            }
+        }
+        return total;
+    }
+
+    /*
+     * Who conquered each city. Needed to save and load a match, because a
+     * conquered city counts as a yurt of its conqueror for the influence.
+     */
+
+    /** @return index of the player that conquered the city, or -1 if nobody did */
+    public int getCityConquerorIndex(String cityName) {
+        int cityInd = findCityIndexFlexible(cityName);
+        if (cityInd < 0 || players == null) {
+            return -1;
+        }
+        Player owner = getMap().getCity(cityInd).dominatedBy();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == owner && owner != null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** Puts the conqueror back on a city when loading a saved match. */
+    public void restoreCityConqueror(String cityName, int playerInd) {
+        int cityInd = findCityIndexFlexible(cityName);
+        if (cityInd < 0 || players == null || playerInd < 0 || playerInd >= players.length) {
+            return;
+        }
+        getMap().getCity(cityInd).restoreConqueror(players[playerInd]);
     }
 
     public PlayerColor getPlayerColor(int ind) {

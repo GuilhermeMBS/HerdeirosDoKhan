@@ -94,6 +94,12 @@ public class GameStateLoader {
                 writeKeyValue(writer, "city." + asciiName + ".treasures", joinStrings(data.getCityTreasures(cityName)));
             }
 
+            // Save who conquered each city (-1 = nobody); it counts as a yurt in the influence
+            for (String cityName : data.getCityNames()) {
+                writeKeyValue(writer, "city." + toPureAscii(cityName) + ".conqueror",
+                    String.valueOf(data.getCityConquerorIndex(cityName)));
+            }
+
             // Save province resource counts
             for (String provId : data.getAllProvinceIds()) {
                 writeKeyValue(writer, "province." + provId, String.valueOf(data.getProvinceResourceCount(provId)));
@@ -333,6 +339,14 @@ public class GameStateLoader {
                 cityTreasures.put(asciiCity, splitStrings(values.get("city." + asciiCity + ".treasures")));
             }
             data.restoreCitiesState(activeCities, remainingCities, cityTreasures);
+        }
+
+        // Restore who conquered each city (saves from older versions have no such line)
+        for (String cityName : data.getCityNames()) {
+            int conqueror = parseInt(values.get("city." + toPureAscii(cityName) + ".conqueror"), -1);
+            if (conqueror >= 0) {
+                data.restoreCityConqueror(cityName, conqueror);
+            }
         }
 
         // Restore controller lifecycle and active turn state
